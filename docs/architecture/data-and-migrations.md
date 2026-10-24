@@ -173,11 +173,13 @@ committed shift or day close records `sales_wipe_pending` and nothing is deleted
 replaces its Close button with Finish & wipe data, and the wipe runs only after the operator confirms
 through `POST /api/cash-closures/sales-wipe/confirm` for that close. Dismissing the dialog leaves the
 wipe waiting. The wipe deletes every order, bill, payment, refund, customer, loyalty entry, held order,
-expense, cash session, drawer movement, Z report, stock and supply movement, WhatsApp message, and
-pending cloud-sync event, frees all tables, and keeps users, settings, the catalog (products,
-categories, add-ons, variants, recipes, supplies, and stock levels), and store setup. It runs in one
-transaction with `secure_delete` on and then truncates the WAL. Backups made earlier still contain
-the deleted data.
+expense, cash session, drawer movement, Z report, stock and supply movement, WhatsApp message,
+pending cloud-sync event, numbering sequence and row id counter (order, bill, and Z numbers restart), and local
+diagnostic, clears the order and customer search indexes, frees all tables, and keeps users,
+settings, the catalog (products, categories, add-ons, variants, recipes, supplies, and stock
+levels), and store setup. It runs in one transaction, then `VACUUM` rewrites the file and the WAL is
+truncated, so no deleted row survives in free pages. Backups made earlier still contain the deleted
+data.
 
 ### Daily local backup
 

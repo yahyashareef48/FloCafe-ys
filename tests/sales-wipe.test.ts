@@ -43,6 +43,8 @@ const WIPED = [
   'inventory_movements',
   'supply_movements',
   'whatsapp_messages',
+  'sequences',
+  'local_diagnostics',
 ];
 const KEPT = ['users', 'categories', 'products', 'supplies', 'tables', 'expense_categories'];
 
@@ -61,7 +63,15 @@ function seed(): void {
     "INSERT INTO products (id, category_id, name, price, stock_quantity) VALUES ('p1', 'c1', 'Latte', 4, 7)",
   ).run();
   db.prepare("INSERT INTO supplies (id, name, base_unit) VALUES ('s1', 'Milk', 'ml')").run();
-  db.prepare("INSERT INTO customers (id, name) VALUES ('cu1', 'Ana')").run();
+  db.prepare(
+    "INSERT INTO sequences (name, date, current_value) VALUES ('orders', '20261024', 12)",
+  ).run();
+  db.prepare(
+    "INSERT INTO local_diagnostics (event_code, severity, error_class, signature, summary, occurred_at) VALUES ('refund.rejected', 'warning', 'expected', 'sig', 'refund failed', '2026-10-24')",
+  ).run();
+  db.prepare(
+    "INSERT INTO customers (id, name, phone) VALUES ('cu1', 'Zebulon Quixote', '+15557654321')",
+  ).run();
   db.prepare(
     "INSERT INTO tables (id, number, status, reservation_customer_id) VALUES ('t1', '1', 'occupied', 'cu1')",
   ).run();
@@ -208,6 +218,26 @@ async function main(): Promise<void> {
   for (const table of KEPT) assert.equal(count(table), keptBefore[table], `${table} is kept`);
   const db = getDatabase();
   assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), [], 'no dangling references');
+  assert.deepEqual(
+    db
+      .prepare("SELECT rowid FROM customers_search_fts WHERE customers_search_fts MATCH 'Quixote'")
+      .all(),
+    [],
+    'the customer search index holds no deleted customer',
+  );
+  assert.equal(db.pragma('freelist_count', { simple: true }), 0, 'the file has no free pages left');
+  assert.deepEqual(
+    db
+      .prepare("SELECT name FROM sqlite_sequence WHERE name IN ('orders', 'bills', 'refunds')")
+      .all(),
+    [],
+    'row ids restart like a new database',
+  );
+  for (const file of fs.readdirSync(testDir).filter((name) => /\.db(-wal)?$/.test(name))) {
+    const bytes = fs.readFileSync(path.join(testDir, file));
+    assert.equal(bytes.includes('Quixote'), false, `${file} holds no trace of a deleted customer`);
+    assert.equal(bytes.includes('Receipt'), false, `${file} holds no trace of a deleted message`);
+  }
   assert.deepEqual(
     db.prepare("SELECT status, reservation_customer_id FROM tables WHERE id = 't1'").get(),
     { status: 'available', reservation_customer_id: null },

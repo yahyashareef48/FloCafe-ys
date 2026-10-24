@@ -54,32 +54,43 @@ const WIPED_TABLES = [
   'expense_mutations',
   'cash_sessions',
   'cash_drawer_movements',
+  'cash_closures',
   'inventory_movements',
   'supply_movements',
   'cloud_sync_outbox',
+  'sequences',
+  'local_diagnostics',
+  'diagnostics_hourly_aggregates',
+  'diagnostics_delivery_gaps',
+  'store_diagnostics_outbox',
 ] as const;
 
 const PENDING_SETTING_KEY = 'sales_wipe_pending';
 
 export type SalesWipePending = { trigger: SalesWipeTrigger; closureId: number };
 
-/** Removes every order, sale, customer, expense, cash, and stock-history record; keeps catalog, configuration, and users. */
+/**
+ * Removes every order, sale, customer, expense, cash, stock-history, counter, and diagnostic
+ * record and restarts their row ids; keeps catalog, configuration, and users. VACUUM then
+ * rewrites the file so no deleted row survives in free pages, search indexes, or the WAL.
+ */
 export function wipeSalesData(): void {
   const db = getDatabase();
-  const previousSecureDelete = db.pragma('secure_delete', { simple: true });
-  db.pragma('secure_delete = ON');
-  try {
-    db.transaction(() => {
-      for (const table of WIPED_TABLES) db.prepare(`DELETE FROM ${table}`).run();
-      db.prepare('DELETE FROM cash_closures').run();
-      db.prepare(
-        "UPDATE tables SET status = 'available', reservation_customer_id = NULL WHERE status != 'available' OR reservation_customer_id IS NOT NULL",
-      ).run();
-      upsertSettings({ [PENDING_SETTING_KEY]: '' });
-    })();
-  } finally {
-    db.pragma(`secure_delete = ${previousSecureDelete ? 'ON' : 'OFF'}`);
-  }
+  db.transaction(() => {
+    for (const table of WIPED_TABLES) db.prepare(`DELETE FROM ${table}`).run();
+    db.prepare("INSERT INTO orders_search_fts(orders_search_fts) VALUES ('delete-all')").run();
+    db.prepare(
+      "INSERT INTO customers_search_fts(customers_search_fts) VALUES ('delete-all')",
+    ).run();
+    db.prepare(
+      "UPDATE tables SET status = 'available', reservation_customer_id = NULL WHERE status != 'available' OR reservation_customer_id IS NOT NULL",
+    ).run();
+    db.prepare('DELETE FROM settings WHERE key = ?').run(PENDING_SETTING_KEY);
+    db.prepare(
+      `DELETE FROM sqlite_sequence WHERE name IN (${WIPED_TABLES.map(() => '?').join(', ')})`,
+    ).run(...WIPED_TABLES);
+  })();
+  db.exec('VACUUM');
   db.pragma('wal_checkpoint(TRUNCATE)');
 }
 
