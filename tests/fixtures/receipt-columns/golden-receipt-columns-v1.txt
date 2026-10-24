@@ -40,9 +40,6 @@ rule=32 maxFontA=32 max=32
 029 19A |12 Marina Boulevard|
 030 14A |Ph: 9876543210|
 031 18A |GSTIN: GSTIN123456|
-032 00A ||
-033 00A ||
-034 30  |Powered by FloPOS (flopos.com)|
 === backend classic 42 columns ===
 rule=42 maxFontA=42 max=42
 001 30  |Flo Parity Cafe|
@@ -74,9 +71,6 @@ rule=42 maxFontA=42 max=42
 027 19A |12 Marina Boulevard|
 028 14A |Ph: 9876543210|
 029 18A |GSTIN: GSTIN123456|
-030 00A ||
-031 00A ||
-032 30  |Powered by FloPOS (flopos.com)|
 === backend classic 48 columns ===
 rule=48 maxFontA=48 max=48
 001 30  |Flo Parity Cafe|
@@ -106,9 +100,6 @@ rule=48 maxFontA=48 max=48
 025 19A |12 Marina Boulevard|
 026 14A |Ph: 9876543210|
 027 18A |GSTIN: GSTIN123456|
-028 00A ||
-029 00A ||
-030 30  |Powered by FloPOS (flopos.com)|
 === backend compact 32 columns ===
 rule=32 maxFontA=32 max=32
 001 15A |Flo Parity Cafe|
@@ -144,9 +135,6 @@ rule=32 maxFontA=32 max=32
 031 14A |Ph: 9876543210|
 032 18A |GSTIN: GSTIN123456|
 033 10A |Thank you!|
-034 00A ||
-035 00A ||
-036 30  |Powered by FloPOS (flopos.com)|
 === backend compact 42 columns ===
 rule=42 maxFontA=42 max=42
 001 15A |Flo Parity Cafe|
@@ -180,9 +168,6 @@ rule=42 maxFontA=42 max=42
 029 14A |Ph: 9876543210|
 030 18A |GSTIN: GSTIN123456|
 031 10A |Thank you!|
-032 00A ||
-033 00A ||
-034 30  |Powered by FloPOS (flopos.com)|
 === backend compact 48 columns ===
 rule=48 maxFontA=48 max=48
 001 15A |Flo Parity Cafe|
@@ -214,11 +199,8 @@ rule=48 maxFontA=48 max=48
 027 14A |Ph: 9876543210|
 028 18A |GSTIN: GSTIN123456|
 029 10A |Thank you!|
-030 00A ||
-031 00A ||
-032 30  |Powered by FloPOS (flopos.com)|
 === frontend classic 58mm ===
-rule=32 maxFontA=32 max=36
+rule=32 maxFontA=32 max=33
 001 31  | Flo Parity Cafe|
 002 20A |            Table: 4|
 003 21A |           Asha Kumar|
@@ -250,13 +232,12 @@ rule=32 maxFontA=32 max=36
 029 00A ||
 030 00A ||
 031 28A |   Thank you for your visit!|
-032 36  |      Powered by FloPOS (flopos.com)|
+032 00A ||
 033 00A ||
 034 00A ||
 035 00A ||
-036 00A ||
 === frontend classic 80mm ===
-rule=42 maxFontA=42 max=43
+rule=42 maxFontA=42 max=42
 001 36  |      Flo Parity Cafe|
 002 25A |                 Table: 4|
 003 26A |                Asha Kumar|
@@ -286,11 +267,10 @@ rule=42 maxFontA=42 max=43
 027 00A ||
 028 00A ||
 029 33A |        Thank you for your visit!|
-030 43  |             Powered by FloPOS (flopos.com)|
+030 00A ||
 031 00A ||
 032 00A ||
 033 00A ||
-034 00A ||
 === frontend compact 58mm ===
 rule=32 maxFontA=32 max=42
 001 23A |        Flo Parity Cafe|
@@ -317,11 +297,10 @@ rule=32 maxFontA=32 max=42
 022 32A |Card                    Rs517.00|
 023 00A ||
 024 21A |           Thank you!|
-025 36  |      Powered by FloPOS (flopos.com)|
+025 00A ||
 026 00A ||
 027 00A ||
 028 00A ||
-029 00A ||
 === frontend compact 80mm ===
 rule=42 maxFontA=42 max=56
 001 28A |             Flo Parity Cafe|
@@ -348,8 +327,7 @@ rule=42 maxFontA=42 max=56
 022 42A |Card                              Rs517.00|
 023 00A ||
 024 26A |                Thank you!|
-025 43  |             Powered by FloPOS (flopos.com)|
+025 00A ||
 026 00A ||
 027 00A ||
 028 00A ||
-029 00A ||

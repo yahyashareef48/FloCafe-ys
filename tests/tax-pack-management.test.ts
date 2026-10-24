@@ -757,7 +757,6 @@ async function main() {
         footer: {
           useConfiguredFooterNote: true,
           defaultMessage: 'Thank you for your business!',
-          includePoweredByFloPOS: true,
         },
       },
     };

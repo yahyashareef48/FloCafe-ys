@@ -21,7 +21,6 @@ import { resolveTaxComponents } from '../../main/services/tax-components';
 import type { PrinterCutMode } from '../../main/printers/profiles';
 import {
   addonRows,
-  appendPoweredByFooter,
   buildEscPos,
   financialRows,
   formatCurrency,
@@ -208,7 +207,6 @@ export function formatClassicReceiptLegacy(order: any, bill: any, biz: any, cols
 
   if (biz.footer_note) pushCenteredWrapped(lines, biz.footer_note, cols);
 
-  appendPoweredByFooter(lines);
   lines.push('{CUT}');
 
   return buildEscPos(lines, useUnicode, { cutMode, arabicShaping, columns: cols }, warnings);
@@ -316,7 +314,6 @@ export function formatCompactReceiptLegacy(order: any, bill: any, biz: any, cols
   if ((biz.show_tax_id === true || (biz.show_tax_id !== false && hasTax)) && biz.taxRegistrationNumber) pushWrapped(lines, taxIdLabel + ': ' + biz.taxRegistrationNumber, cols);
   if (biz.footer_note) pushCenteredWrapped(lines, biz.footer_note, cols);
   else lines.push('{CENTER}' + printLabel(lang, 'print.thankYouShort') + '{/CENTER}');
-  appendPoweredByFooter(lines);
   lines.push('{CUT}');
 
   return buildEscPos(lines, useUnicode, { cutMode, arabicShaping, columns: cols }, warnings);

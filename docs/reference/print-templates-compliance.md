@@ -24,7 +24,6 @@ different data. Do not model merchant features on this contract.
 | `totals.showTaxRegistrationNumber` | string | no | `when_tax_present_or_enabled`, or the default visibility rule. |
 | `footer.defaultMessage` | string | no | Author footer, used when no configured footer note applies. |
 | `footer.useConfiguredFooterNote` | boolean | no | Prefer the merchant's configured footer note. Defaults on. |
-| `footer.includePoweredByFloPOS` | boolean | no | Append the FloPOS branding footer. Defaults on. |
 | `labels` | object | no | Optional map of semantic label id to override string. See below. |
 
 Unknown fields are tolerated at render time, so a pack that carries a newer field still renders on

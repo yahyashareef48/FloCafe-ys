@@ -9,7 +9,6 @@ import {
 import {
   columnsForReceiptPaperSize,
   displayCellWidth,
-  fitThermalLine,
   graphemeSegments,
   padToDisplayCells,
   truncateToDisplayCells,
@@ -29,7 +28,6 @@ import {
   wrapPrinterText,
   type PrintWarning,
 } from './warnings';
-import { RECEIPT_BRANDING_NAME } from './branding';
 import {
   buildFrontendBillDocument,
   printLabelResolver,
@@ -203,16 +201,6 @@ function printOnlineOrderBanner(
       language,
     ).newline();
   enc.bold(false).align('left');
-}
-
-function printPoweredByFooter(enc: ReceiptPrinterEncoder, columns: number): void {
-  enc
-    .align('center')
-    .size('small')
-    .text(fitThermalLine(RECEIPT_BRANDING_NAME, columns))
-    .newline()
-    .size('normal')
-    .align('left');
 }
 
 // Paper-size fallback only. Callers that know the configured printer pass
@@ -1035,7 +1023,6 @@ export function buildClassicReceiptBytes(
       ).newline();
     }
   }
-  printPoweredByFooter(enc, cols);
 
   enc.newline().newline().newline().cut();
 
@@ -1457,7 +1444,6 @@ export function buildCompactReceiptBytes(
       cols,
     ).newline();
   }
-  printPoweredByFooter(enc, cols);
 
   enc.newline().newline().newline().cut();
 
@@ -1757,7 +1743,6 @@ export function buildDetailedReceiptBytes(
   if (footerNote) {
     safePrinterText(enc, truncate(footerNote, cols), warnings, false, arabicShaping).newline();
   }
-  printPoweredByFooter(enc, cols);
 
   enc.newline().newline().newline().cut();
 

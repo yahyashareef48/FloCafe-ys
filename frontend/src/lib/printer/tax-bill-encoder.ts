@@ -5,7 +5,6 @@ import { normalizeCurrencyToAscii, normalizeThermalText, padCurrencyPrefix } fro
 import {
   columnsForReceiptPaperSize,
   displayCellWidth,
-  fitThermalLine,
   graphemeSegments,
   truncateToDisplayCells,
   truncateToDisplayCellsFromEnd,
@@ -26,7 +25,6 @@ import {
   wrapPrinterText,
   type PrintWarning,
 } from './warnings';
-import { RECEIPT_BRANDING_NAME } from './branding';
 import { printLabelResolver } from './print-document';
 import { formatItemHeading } from './item-heading';
 import {
@@ -83,16 +81,6 @@ const CHARS: Record<58 | 80, number> = {
   58: columnsForReceiptPaperSize(58),
   80: columnsForReceiptPaperSize(80),
 };
-
-function printPoweredByFooter(enc: ReceiptPrinterEncoder, columns: number): void {
-  enc
-    .align('center')
-    .size('small')
-    .text(fitThermalLine(RECEIPT_BRANDING_NAME, columns))
-    .newline()
-    .size('normal')
-    .align('left');
-}
 
 /** Mask phone number for receipt display — shows only last 4 digits. */
 function maskPhoneOnReceipt(phone: string): string {
@@ -642,7 +630,6 @@ export function buildTaxBillBytes(
       ).newline();
     }
   }
-  printPoweredByFooter(enc, cols);
 
   enc.newline().newline().newline().cut();
 

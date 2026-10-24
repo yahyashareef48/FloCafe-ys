@@ -113,7 +113,6 @@ import {
   wrapText,
   pushWrapped,
   pushCenteredWrapped,
-  appendPoweredByFooter,
   normalizeThermalText,
   resolveCurrencyPrefix,
   appendCashDrawerPulse,
@@ -137,7 +136,6 @@ export {
   wrapText,
   pushWrapped,
   pushCenteredWrapped,
-  appendPoweredByFooter,
   normalizeThermalText,
   resolveCurrencyPrefix,
   appendCashDrawerPulse,
@@ -2638,7 +2636,6 @@ function renderEscposLineTemplateV1(
           )) +
         '{/CENTER}',
     );
-  if (payload?.footer?.includePoweredByFloPOS !== false) appendPoweredByFooter(lines, cols);
   lines.push('{CUT}');
 
   return buildEscPos(

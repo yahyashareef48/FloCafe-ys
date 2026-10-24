@@ -29,7 +29,6 @@ import {
 } from '../../shared/print/width';
 import {
   addonRows,
-  appendPoweredByFooter,
   buildEscPos,
   financialRows,
   formatCurrency,
@@ -1212,7 +1211,6 @@ export function renderBillDocumentToClassicLines(
     }
   }
 
-  appendPoweredByFooter(lines, cols);
   lines.push('{CUT}');
 
   return lines;

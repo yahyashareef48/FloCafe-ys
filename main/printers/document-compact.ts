@@ -9,7 +9,6 @@ import type { RasterSemanticLineGroup, RasterTextLayout } from '../../shared/pri
 import { displayCellWidth, padToDisplayCells, truncateToDisplayCells } from '../../shared/print/width';
 import {
   addonRows,
-  appendPoweredByFooter,
   buildEscPos,
   financialRows,
   formatCurrency,
@@ -452,7 +451,6 @@ export function renderBillDocumentToCompactLines(
     messageFooterSourceControlLines.push(lines.at(-1) ?? '');
   }
   markGroup('message', messageFooterStart, messageFooterSourceLines, messageFooterSourceControlLines);
-  appendPoweredByFooter(lines, cols);
   lines.push('{CUT}');
 
   return lines;
