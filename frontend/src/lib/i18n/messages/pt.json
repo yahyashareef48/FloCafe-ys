@@ -1732,7 +1732,7 @@
     "automaticBackupsHintOn": "Os backups agendados neste computador e no Google Drive estão ativados. Desative esta opção para parar todos.",
     "automaticBackupsHintOff": "Todos os backups agendados estão desativados, neste computador e no Google Drive. Backups manuais e os feitos antes de uma atualização continuam funcionando.",
     "salesWipeTitle": "Apagar dados após o fechamento",
-    "salesWipeHint": "Depois de fechar e imprimir o relatório Z, você confirma e o FloCafe apaga todos os pedidos, vendas, clientes, despesas, registros de caixa e relatórios Z. Produtos, configuração do cardápio e da loja, configurações e usuários são mantidos. Isso não pode ser desfeito.",
+    "salesWipeHint": "Depois de fechar e imprimir o relatório Z, você confirma e o FloCafe apaga todos os pedidos, vendas, clientes, despesas, registros de caixa e relatórios Z. Produtos, configuração do cardápio e da loja, configurações e usuários são mantidos. Isso não pode ser desfeito. As quantidades em estoque voltam a 0.",
     "salesWipeShiftClose": "Apagar após fechar o turno",
     "salesWipeDayClose": "Apagar após fechar o dia",
     "salesWipeLoadFailed": "Não foi possível carregar as configurações de exclusão de dados",

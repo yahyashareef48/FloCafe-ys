@@ -1732,7 +1732,7 @@
     "automaticBackupsHintOn": "Cadangan terjadwal ke komputer ini dan Google Drive aktif. Matikan ini untuk menghentikan semuanya.",
     "automaticBackupsHintOff": "Semua cadangan terjadwal nonaktif, di komputer ini dan di Google Drive. Cadangan manual dan cadangan sebelum pembaruan tetap berjalan.",
     "salesWipeTitle": "Hapus data setelah tutup",
-    "salesWipeHint": "Setelah Anda menutup dan mencetak laporan Z, Anda mengonfirmasi dan FloCafe menghapus semua pesanan, penjualan, pelanggan, pengeluaran, catatan kas, dan laporan Z. Produk, pengaturan menu dan toko, pengaturan, dan pengguna tetap disimpan. Tindakan ini tidak dapat dibatalkan.",
+    "salesWipeHint": "Setelah Anda menutup dan mencetak laporan Z, Anda mengonfirmasi dan FloCafe menghapus semua pesanan, penjualan, pelanggan, pengeluaran, catatan kas, dan laporan Z. Produk, pengaturan menu dan toko, pengaturan, dan pengguna tetap disimpan. Tindakan ini tidak dapat dibatalkan. Jumlah stok diatur ulang ke 0.",
     "salesWipeShiftClose": "Hapus setelah tutup shift",
     "salesWipeDayClose": "Hapus setelah tutup hari",
     "salesWipeLoadFailed": "Tidak dapat memuat pengaturan penghapusan data",

@@ -1732,7 +1732,7 @@
     "automaticBackupsHintOn": "Las copias programadas en esta computadora y en Google Drive están activadas. Desactiva esta opción para detenerlas todas.",
     "automaticBackupsHintOff": "Todas las copias programadas están desactivadas, en esta computadora y en Google Drive. Las copias manuales y las que se hacen antes de una actualización siguen funcionando.",
     "salesWipeTitle": "Borrar datos después del cierre",
-    "salesWipeHint": "Después de cerrar e imprimir el reporte Z, confirmas y FloCafe borra todos los pedidos, ventas, clientes, gastos, registros de caja y reportes Z. Se conservan los productos, la configuración del menú y de la tienda, los ajustes y los usuarios. Esto no se puede deshacer.",
+    "salesWipeHint": "Después de cerrar e imprimir el reporte Z, confirmas y FloCafe borra todos los pedidos, ventas, clientes, gastos, registros de caja y reportes Z. Se conservan los productos, la configuración del menú y de la tienda, los ajustes y los usuarios. Esto no se puede deshacer. Las existencias se ponen en 0.",
     "salesWipeShiftClose": "Borrar después del cierre de turno",
     "salesWipeDayClose": "Borrar después del cierre del día",
     "salesWipeLoadFailed": "No se pudo cargar la configuración de borrado de datos",

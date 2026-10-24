@@ -1732,7 +1732,7 @@
     "automaticBackupsHintOn": "Geplante Sicherungen auf diesem Computer und in Google Drive sind aktiv. Schalte dies aus, um alle zu stoppen.",
     "automaticBackupsHintOff": "Alle geplanten Sicherungen sind aus, auf diesem Computer und in Google Drive. Manuelle Sicherungen und Sicherungen vor einem Update funktionieren weiterhin.",
     "salesWipeTitle": "Daten nach dem Abschluss löschen",
-    "salesWipeHint": "Nach dem Abschluss und dem Druck des Z-Berichts bestätigst du, und FloCafe löscht alle Bestellungen, Verkäufe, Kunden, Ausgaben, Kassendaten und Z-Berichte. Produkte, Menü- und Geschäftseinrichtung, Einstellungen und Benutzer bleiben erhalten. Das kann nicht rückgängig gemacht werden.",
+    "salesWipeHint": "Nach dem Abschluss und dem Druck des Z-Berichts bestätigst du, und FloCafe löscht alle Bestellungen, Verkäufe, Kunden, Ausgaben, Kassendaten und Z-Berichte. Produkte, Menü- und Geschäftseinrichtung, Einstellungen und Benutzer bleiben erhalten. Das kann nicht rückgängig gemacht werden. Lagerbestände werden auf 0 gesetzt.",
     "salesWipeShiftClose": "Nach Schichtabschluss löschen",
     "salesWipeDayClose": "Nach Tagesabschluss löschen",
     "salesWipeLoadFailed": "Die Einstellungen zum Löschen der Daten konnten nicht geladen werden",

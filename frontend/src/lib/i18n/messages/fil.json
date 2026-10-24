@@ -1732,7 +1732,7 @@
     "automaticBackupsHintOn": "Naka-on ang mga naka-iskedyul na backup sa computer na ito at sa Google Drive. I-off ito para ihinto ang lahat.",
     "automaticBackupsHintOff": "Naka-off ang lahat ng naka-iskedyul na backup, sa computer na ito at sa Google Drive. Gumagana pa rin ang manual na backup at ang backup bago mag-update.",
     "salesWipeTitle": "Burahin ang data pagkatapos magsara",
-    "salesWipeHint": "Pagkatapos magsara at i-print ang Z report, magkukumpirma ka at buburahin ng FloCafe ang lahat ng order, benta, customer, gastos, rekord ng cash at Z report. Mananatili ang mga produkto, setup ng menu at tindahan, setting at user. Hindi na ito maibabalik.",
+    "salesWipeHint": "Pagkatapos magsara at i-print ang Z report, magkukumpirma ka at buburahin ng FloCafe ang lahat ng order, benta, customer, gastos, rekord ng cash at Z report. Mananatili ang mga produkto, setup ng menu at tindahan, setting at user. Hindi na ito maibabalik. Ibinabalik sa 0 ang bilang ng stock.",
     "salesWipeShiftClose": "Burahin pagkatapos isara ang shift",
     "salesWipeDayClose": "Burahin pagkatapos isara ang araw",
     "salesWipeLoadFailed": "Hindi ma-load ang setting ng pagbura ng data",

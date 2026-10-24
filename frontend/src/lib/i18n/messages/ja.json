@@ -1732,7 +1732,7 @@
     "automaticBackupsHintOn": "このコンピューターと Google Drive への定期バックアップはオンです。すべて停止するにはオフにしてください。",
     "automaticBackupsHintOff": "このコンピューターと Google Drive への定期バックアップはすべてオフです。手動バックアップと更新前のバックアップは引き続き動作します。",
     "salesWipeTitle": "締め後にデータを消去",
-    "salesWipeHint": "締めて Z レポートを印刷したあと、確認すると FloCafe はすべての注文、売上、顧客、経費、現金記録、Z レポートを削除します。商品、メニューと店舗の設定、設定、ユーザーは残ります。元に戻せません。",
+    "salesWipeHint": "締めて Z レポートを印刷したあと、確認すると FloCafe はすべての注文、売上、顧客、経費、現金記録、Z レポートを削除します。商品、メニューと店舗の設定、設定、ユーザーは残ります。元に戻せません。在庫数は 0 にリセットされます。",
     "salesWipeShiftClose": "シフト締め後に消去",
     "salesWipeDayClose": "日締め後に消去",
     "salesWipeLoadFailed": "データ消去の設定を読み込めませんでした",

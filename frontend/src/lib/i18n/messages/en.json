@@ -1732,7 +1732,7 @@
     "automaticBackupsHintOn": "Scheduled backups to this computer and Google Drive are on. Turn this off to stop them all.",
     "automaticBackupsHintOff": "All scheduled backups are off, both on this computer and on Google Drive. Manual backups and backups made before an update still work.",
     "salesWipeTitle": "Wipe data after closing",
-    "salesWipeHint": "After you close and print the Z report, you confirm and FloCafe deletes all orders, sales, customers, expenses, cash records and Z reports. Products, menu and store setup, settings and users are kept. This cannot be undone.",
+    "salesWipeHint": "After you close and print the Z report, you confirm and FloCafe deletes all orders, sales, customers, expenses, cash records and Z reports. Products, menu and store setup, settings and users are kept. This cannot be undone. Stock counts are reset to 0.",
     "salesWipeShiftClose": "Wipe after shift close",
     "salesWipeDayClose": "Wipe after day close",
     "salesWipeLoadFailed": "Could not load the data wipe settings",

@@ -62,7 +62,9 @@ function seed(): void {
   db.prepare(
     "INSERT INTO products (id, category_id, name, price, stock_quantity) VALUES ('p1', 'c1', 'Latte', 4, 7)",
   ).run();
-  db.prepare("INSERT INTO supplies (id, name, base_unit) VALUES ('s1', 'Milk', 'ml')").run();
+  db.prepare(
+    "INSERT INTO supplies (id, name, base_unit, stock_quantity) VALUES ('s1', 'Milk', 'ml', 800)",
+  ).run();
   db.prepare(
     "INSERT INTO sequences (name, date, current_value) VALUES ('orders', '20261024', 12)",
   ).run();
@@ -245,8 +247,13 @@ async function main(): Promise<void> {
   );
   assert.equal(
     (db.prepare("SELECT stock_quantity FROM products WHERE id = 'p1'").get() as any).stock_quantity,
-    7,
-    'stock levels are kept',
+    0,
+    'stock counts are zeroed',
+  );
+  assert.equal(
+    (db.prepare("SELECT stock_quantity FROM supplies WHERE id = 's1'").get() as any).stock_quantity,
+    0,
+    'supply stock counts are zeroed',
   );
   assert.equal(getPendingSalesWipe(), null, 'the pending marker is cleared');
   assert.deepEqual(getSalesWipeSettings(), { dayClose: false, shiftClose: true }, 'settings kept');

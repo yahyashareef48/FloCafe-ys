@@ -1732,7 +1732,7 @@
     "automaticBackupsHintOn": "Sao lưu theo lịch vào máy tính này và Google Drive đang bật. Tắt mục này để dừng tất cả.",
     "automaticBackupsHintOff": "Tất cả sao lưu theo lịch đã tắt, trên máy tính này và Google Drive. Sao lưu thủ công và sao lưu trước khi cập nhật vẫn hoạt động.",
     "salesWipeTitle": "Xóa dữ liệu sau khi chốt",
-    "salesWipeHint": "Sau khi chốt và in báo cáo Z, bạn xác nhận và FloCafe sẽ xóa toàn bộ đơn hàng, doanh số, khách hàng, chi phí, sổ tiền mặt và báo cáo Z. Sản phẩm, thiết lập thực đơn và cửa hàng, cài đặt và người dùng được giữ lại. Không thể hoàn tác.",
+    "salesWipeHint": "Sau khi chốt và in báo cáo Z, bạn xác nhận và FloCafe sẽ xóa toàn bộ đơn hàng, doanh số, khách hàng, chi phí, sổ tiền mặt và báo cáo Z. Sản phẩm, thiết lập thực đơn và cửa hàng, cài đặt và người dùng được giữ lại. Không thể hoàn tác. Số lượng tồn kho được đặt lại về 0.",
     "salesWipeShiftClose": "Xóa sau khi chốt ca",
     "salesWipeDayClose": "Xóa sau khi chốt ngày",
     "salesWipeLoadFailed": "Không thể tải cài đặt xóa dữ liệu",

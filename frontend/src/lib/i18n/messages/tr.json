@@ -1732,7 +1732,7 @@
     "automaticBackupsHintOn": "Bu bilgisayara ve Google Drive'a zamanlanmış yedekler açık. Hepsini durdurmak için kapatın.",
     "automaticBackupsHintOff": "Bu bilgisayarda ve Google Drive'da tüm zamanlanmış yedekler kapalı. Elle alınan yedekler ve güncelleme öncesi yedekler çalışmaya devam eder.",
     "salesWipeTitle": "Kapanıştan sonra verileri sil",
-    "salesWipeHint": "Kapanışı yapıp Z raporunu yazdırdıktan sonra onaylarsınız ve FloCafe tüm siparişleri, satışları, müşterileri, giderleri, kasa kayıtlarını ve Z raporlarını siler. Ürünler, menü ve mağaza kurulumu, ayarlar ve kullanıcılar korunur. Bu işlem geri alınamaz.",
+    "salesWipeHint": "Kapanışı yapıp Z raporunu yazdırdıktan sonra onaylarsınız ve FloCafe tüm siparişleri, satışları, müşterileri, giderleri, kasa kayıtlarını ve Z raporlarını siler. Ürünler, menü ve mağaza kurulumu, ayarlar ve kullanıcılar korunur. Bu işlem geri alınamaz. Stok miktarları 0'a sıfırlanır.",
     "salesWipeShiftClose": "Vardiya kapanışından sonra sil",
     "salesWipeDayClose": "Gün kapanışından sonra sil",
     "salesWipeLoadFailed": "Veri silme ayarları yüklenemedi",

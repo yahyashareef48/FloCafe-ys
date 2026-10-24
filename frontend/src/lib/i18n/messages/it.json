@@ -1732,7 +1732,7 @@
     "automaticBackupsHintOn": "I backup pianificati su questo computer e su Google Drive sono attivi. Disattiva questa opzione per fermarli tutti.",
     "automaticBackupsHintOff": "Tutti i backup pianificati sono disattivati, su questo computer e su Google Drive. I backup manuali e quelli prima di un aggiornamento funzionano ancora.",
     "salesWipeTitle": "Cancella i dati dopo la chiusura",
-    "salesWipeHint": "Dopo la chiusura e la stampa del rapporto Z, confermi e FloCafe elimina tutti gli ordini, le vendite, i clienti, le spese, i movimenti di cassa e i rapporti Z. Prodotti, configurazione di menu e negozio, impostazioni e utenti restano. L’operazione è irreversibile.",
+    "salesWipeHint": "Dopo la chiusura e la stampa del rapporto Z, confermi e FloCafe elimina tutti gli ordini, le vendite, i clienti, le spese, i movimenti di cassa e i rapporti Z. Prodotti, configurazione di menu e negozio, impostazioni e utenti restano. L’operazione è irreversibile. Le giacenze vengono azzerate.",
     "salesWipeShiftClose": "Cancella dopo la chiusura del turno",
     "salesWipeDayClose": "Cancella dopo la chiusura della giornata",
     "salesWipeLoadFailed": "Impossibile caricare le impostazioni di cancellazione dei dati",

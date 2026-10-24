@@ -1732,7 +1732,7 @@
     "automaticBackupsHintOn": "Les sauvegardes planifiées sur cet ordinateur et sur Google Drive sont activées. Désactivez cette option pour toutes les arrêter.",
     "automaticBackupsHintOff": "Toutes les sauvegardes planifiées sont désactivées, sur cet ordinateur et sur Google Drive. Les sauvegardes manuelles et celles faites avant une mise à jour fonctionnent toujours.",
     "salesWipeTitle": "Effacer les données après la clôture",
-    "salesWipeHint": "Après la clôture et l’impression du rapport Z, vous confirmez et FloCafe supprime toutes les commandes, ventes, clients, dépenses, opérations de caisse et rapports Z. Les produits, la configuration du menu et du magasin, les paramètres et les utilisateurs sont conservés. Cette action est irréversible.",
+    "salesWipeHint": "Après la clôture et l’impression du rapport Z, vous confirmez et FloCafe supprime toutes les commandes, ventes, clients, dépenses, opérations de caisse et rapports Z. Les produits, la configuration du menu et du magasin, les paramètres et les utilisateurs sont conservés. Cette action est irréversible. Les stocks sont remis à 0.",
     "salesWipeShiftClose": "Effacer après la clôture du service",
     "salesWipeDayClose": "Effacer après la clôture de la journée",
     "salesWipeLoadFailed": "Impossible de charger les paramètres d’effacement des données",

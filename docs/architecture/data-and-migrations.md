@@ -176,8 +176,8 @@ wipe waiting. The wipe deletes every order, bill, payment, refund, customer, loy
 expense, cash session, drawer movement, Z report, stock and supply movement, WhatsApp message,
 pending cloud-sync event, numbering sequence and row id counter (order, bill, and Z numbers restart), and local
 diagnostic, clears the order and customer search indexes, frees all tables, and keeps users,
-settings, the catalog (products, categories, add-ons, variants, recipes, supplies, and stock
-levels), and store setup. It runs in one transaction, then `VACUUM` rewrites the file and the WAL is
+settings, the catalog (products, categories, add-ons, variants, recipes, and supplies, with every
+stock count set to 0), and store setup. It runs in one transaction, then `VACUUM` rewrites the file and the WAL is
 truncated, so no deleted row survives in free pages. Backups made earlier still contain the deleted
 data.
 

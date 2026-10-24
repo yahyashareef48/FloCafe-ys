@@ -1732,7 +1732,7 @@
     "automaticBackupsHintOn": "备份到此电脑和 Google Drive 的定时备份已开启。关闭此选项即可全部停止。",
     "automaticBackupsHintOff": "此电脑和 Google Drive 的所有定时备份都已关闭。手动备份和更新前的备份仍会执行。",
     "salesWipeTitle": "结账后清除数据",
-    "salesWipeHint": "结账并打印 Z 报表后，您确认即可让 FloCafe 删除所有订单、销售、顾客、支出、现金记录和 Z 报表。商品、菜单和门店设置、设置及用户会保留。此操作无法撤销。",
+    "salesWipeHint": "结账并打印 Z 报表后，您确认即可让 FloCafe 删除所有订单、销售、顾客、支出、现金记录和 Z 报表。商品、菜单和门店设置、设置及用户会保留。此操作无法撤销。库存数量会重置为 0。",
     "salesWipeShiftClose": "交班结账后清除",
     "salesWipeDayClose": "日结后清除",
     "salesWipeLoadFailed": "无法加载数据清除设置",

@@ -71,8 +71,9 @@ export type SalesWipePending = { trigger: SalesWipeTrigger; closureId: number };
 
 /**
  * Removes every order, sale, customer, expense, cash, stock-history, counter, and diagnostic
- * record and restarts their row ids; keeps catalog, configuration, and users. VACUUM then
- * rewrites the file so no deleted row survives in free pages, search indexes, or the WAL.
+ * record, restarts their row ids, and zeroes stock counts; keeps catalog, configuration, and
+ * users. VACUUM then rewrites the file so no deleted row survives in free pages, search indexes,
+ * or the WAL.
  */
 export function wipeSalesData(): void {
   const db = getDatabase();
@@ -82,6 +83,9 @@ export function wipeSalesData(): void {
     db.prepare(
       "INSERT INTO customers_search_fts(customers_search_fts) VALUES ('delete-all')",
     ).run();
+    for (const table of ['products', 'product_variants', 'addons', 'supplies']) {
+      db.prepare(`UPDATE ${table} SET stock_quantity = 0 WHERE stock_quantity != 0`).run();
+    }
     db.prepare(
       "UPDATE tables SET status = 'available', reservation_customer_id = NULL WHERE status != 'available' OR reservation_customer_id IS NOT NULL",
     ).run();
