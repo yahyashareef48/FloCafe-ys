@@ -23,6 +23,7 @@ import {
   type PosItemSort,
 } from '@/lib/pos-sort';
 import CollapsiblePosChoices from './CollapsiblePosChoices';
+import ProductCardLayoutMenu from './ProductCardLayoutMenu';
 
 /** The category chip shared by both category row modes. */
 function CategoryChip({
@@ -305,6 +306,8 @@ interface Props {
   collapseCategories?: boolean;
   categorySort?: PosCategorySort;
   itemSort?: PosItemSort;
+  /** Cashier-POS opt-in: per-device cards-per-row, text size, and picture controls. */
+  editableLayout?: boolean;
 }
 
 export default function ProductGrid({
@@ -327,11 +330,19 @@ export default function ProductGrid({
   collapseCategories = false,
   categorySort = 'saved',
   itemSort = 'saved',
+  editableLayout = false,
 }: Props) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const cart = useCartStore();
-  const { showProductImages: showProductImagesSetting } = usePosSettingsStore();
+  const {
+    showProductImages: showProductImagesSetting,
+    posGridColumns,
+    posCardTextScale,
+  } = usePosSettingsStore();
   const showProductImages = showImages ?? showProductImagesSetting;
+  const gridColumns = editableLayout ? posGridColumns : null;
+  const textScale = editableLayout ? posCardTextScale : 1;
+  const scaledFont = (rem: number) => ({ fontSize: `${rem * textScale}rem` });
   const t = useTranslations('pos');
   const validateSelectionQuantity = (product: Product, quantity: number) => {
     if (isValidProductQuantity(product, quantity)) return true;
@@ -377,69 +388,72 @@ export default function ProductGrid({
       className="flex-1 flex flex-col min-w-0 h-full overflow-hidden"
     >
       <div className="shrink-0 mb-3">
-        <div className="relative mb-2">
-          <Search
-            size={16}
-            className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-          />
-          <input
-            ref={searchInputRef}
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (
-                e.nativeEvent?.isComposing ||
-                (e as { isComposing?: boolean }).isComposing ||
-                e.keyCode === 229
-              ) {
-                return;
-              }
-              if (e.key !== 'Enter' || disabled) return;
-              // Typed or pasted barcode, or multiplier search (e.g. 3*latte)
-              const trimmed = search.trim();
-              if (!trimmed) return;
-              const rawMatch = resolveScannedProduct(trimmed, products);
-              const parsedQty = rawMatch ? null : parseQuantitySearch(trimmed);
-              const targetCode = parsedQty ? parsedQty.query : trimmed;
-              if (!targetCode) return;
-              const quantityToAdd = parsedQty ? parsedQty.quantity : 1;
-              const match = rawMatch ?? resolveScannedProduct(targetCode, products);
-              if (match) {
-                if (match.scaleBarcode) {
-                  const matchedQuantity = match.quantity * quantityToAdd;
-                  if (!validateSelectionQuantity(match.product, matchedQuantity)) return;
-                  onScaledProduct(match.product, matchedQuantity);
-                } else if (match.variant) {
-                  if (!validateSelectionQuantity(match.product, quantityToAdd)) return;
-                  onScannedVariant(match.product, match.variant, quantityToAdd);
-                } else {
-                  if (!validateSelectionQuantity(match.product, quantityToAdd)) return;
-                  onProductClick(match.product, quantityToAdd);
+        <div className="flex items-center gap-2 mb-2">
+          <div className="relative flex-1 min-w-0">
+            <Search
+              size={16}
+              className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+            />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (
+                  e.nativeEvent?.isComposing ||
+                  (e as { isComposing?: boolean }).isComposing ||
+                  e.keyCode === 229
+                ) {
+                  return;
                 }
-                setSearch('');
-                return;
-              }
+                if (e.key !== 'Enter' || disabled) return;
+                // Typed or pasted barcode, or multiplier search (e.g. 3*latte)
+                const trimmed = search.trim();
+                if (!trimmed) return;
+                const rawMatch = resolveScannedProduct(trimmed, products);
+                const parsedQty = rawMatch ? null : parseQuantitySearch(trimmed);
+                const targetCode = parsedQty ? parsedQty.query : trimmed;
+                if (!targetCode) return;
+                const quantityToAdd = parsedQty ? parsedQty.quantity : 1;
+                const match = rawMatch ?? resolveScannedProduct(targetCode, products);
+                if (match) {
+                  if (match.scaleBarcode) {
+                    const matchedQuantity = match.quantity * quantityToAdd;
+                    if (!validateSelectionQuantity(match.product, matchedQuantity)) return;
+                    onScaledProduct(match.product, matchedQuantity);
+                  } else if (match.variant) {
+                    if (!validateSelectionQuantity(match.product, quantityToAdd)) return;
+                    onScannedVariant(match.product, match.variant, quantityToAdd);
+                  } else {
+                    if (!validateSelectionQuantity(match.product, quantityToAdd)) return;
+                    onProductClick(match.product, quantityToAdd);
+                  }
+                  setSearch('');
+                  return;
+                }
 
-              const matchedProduct =
-                filtered.find((p) => p.name.toLowerCase() === targetCode.toLowerCase()) ||
-                (filtered.length === 1 ? filtered[0] : null);
+                const matchedProduct =
+                  filtered.find((p) => p.name.toLowerCase() === targetCode.toLowerCase()) ||
+                  (filtered.length === 1 ? filtered[0] : null);
 
-              if (matchedProduct) {
-                if (!validateSelectionQuantity(matchedProduct, quantityToAdd)) return;
-                onProductClick(matchedProduct, quantityToAdd);
-                setSearch('');
-              }
-            }}
-            placeholder={searchPlaceholder ?? `${t('searchProducts')} [/]`}
-            data-testid="pos-product-search"
-            className="w-full ps-9 pe-8 py-2 bg-card border border-border rounded-xl focus:border-brand outline-none transition-colors text-sm"
-          />
-          {!search && (
-            <kbd className="hidden sm:inline-flex absolute end-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded border border-border bg-muted text-[10px] font-mono text-muted-foreground pointer-events-none">
-              /
-            </kbd>
-          )}
+                if (matchedProduct) {
+                  if (!validateSelectionQuantity(matchedProduct, quantityToAdd)) return;
+                  onProductClick(matchedProduct, quantityToAdd);
+                  setSearch('');
+                }
+              }}
+              placeholder={searchPlaceholder ?? `${t('searchProducts')} [/]`}
+              data-testid="pos-product-search"
+              className="w-full ps-9 pe-8 py-2 bg-card border border-border rounded-xl focus:border-brand outline-none transition-colors text-sm"
+            />
+            {!search && (
+              <kbd className="hidden sm:inline-flex absolute end-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded border border-border bg-muted text-[10px] font-mono text-muted-foreground pointer-events-none">
+                /
+              </kbd>
+            )}
+          </div>
+          {editableLayout && <ProductCardLayoutMenu />}
         </div>
         <CategoryRow
           className="pb-1"
@@ -465,7 +479,14 @@ export default function ProductGrid({
         className="flex-1 min-h-0 overflow-y-auto pb-20 md:pb-0"
       >
         <div
-          className={`grid gap-3 ${gridClassName ?? (sidebarOpen ? 'grid-cols-4' : 'grid-cols-5')}`}
+          className={`grid gap-3 ${gridColumns ? '' : (gridClassName ?? (sidebarOpen ? 'grid-cols-4' : 'grid-cols-5'))}`}
+          style={
+            gridColumns
+              ? {
+                  gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`,
+                }
+              : undefined
+          }
         >
           {filtered.map((product) => {
             const inCartQty = cartQuantities.get(product.id) || 0;
@@ -535,11 +556,34 @@ export default function ProductGrid({
                   </div>
                 )}
 
-                <h3 className="font-medium text-foreground text-sm line-clamp-2 leading-snug">
-                  {product.name}
-                </h3>
+                {showProductImages || !editableLayout ? (
+                  <h3
+                    className="font-medium text-foreground text-sm line-clamp-2 leading-snug"
+                    style={editableLayout ? scaledFont(0.875) : undefined}
+                  >
+                    {product.name}
+                  </h3>
+                ) : (
+                  <div
+                    data-testid="pos-product-text-tile"
+                    className="w-full aspect-[4/3] rounded-lg mb-2 flex items-center justify-center px-1 py-2 text-center"
+                    style={{ backgroundColor: nameToColor(product.name) }}
+                  >
+                    <h3
+                      className="font-bold text-white line-clamp-4 leading-tight break-words hyphens-auto"
+                      style={scaledFont(1)}
+                    >
+                      {product.name}
+                    </h3>
+                  </div>
+                )}
                 <div className="flex items-center justify-between mt-1">
-                  <p className="text-brand font-bold">{fmt(Number(product.price))}</p>
+                  <p
+                    className="text-brand font-bold"
+                    style={editableLayout ? scaledFont(1) : undefined}
+                  >
+                    {fmt(Number(product.price))}
+                  </p>
                   <div className="flex items-center gap-1 shrink-0">
                     {!showProductImages && product.tags && product.tags.length > 0 && (
                       <TagBadge tag={product.tags[0]} />

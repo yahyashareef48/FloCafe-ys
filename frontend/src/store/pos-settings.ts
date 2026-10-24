@@ -9,8 +9,14 @@ export type PrinterPrintMode = 'escpos' | 'browser';
 export type CoreBillTemplate = 'classic' | 'compact';
 export type BillTemplate = CoreBillTemplate | (string & {});
 
+export const POS_CARD_TEXT_SCALE_MIN = 0.8;
+export const POS_CARD_TEXT_SCALE_MAX = 1.6;
+
 export interface PosSettingsState {
   showProductImages: boolean;
+  // Product cards per row in the POS grid; null keeps the automatic 4/5 layout.
+  posGridColumns: number | null;
+  posCardTextScale: number;
   customerMandatory: boolean;
   // Auto-advances phone to name when typed digits form a valid number.
   enforcePhoneLength: boolean;
@@ -62,6 +68,8 @@ export interface PosSettingsState {
   kotLanguagePolicy: KotLanguagePolicy;
   // Actions
   setShowProductImages: (show: boolean) => void;
+  setPosGridColumns: (columns: number | null) => void;
+  setPosCardTextScale: (scale: number) => void;
   setCustomerMandatory: (mandatory: boolean) => void;
   setEnforcePhoneLength: (enabled: boolean) => void;
   setLanguage: (lang: Language) => void;
@@ -145,6 +153,8 @@ export const usePosSettingsStore = create<PosSettingsState>()(
   persist(
     (set) => ({
       showProductImages: true,
+      posGridColumns: null,
+      posCardTextScale: 1,
       customerMandatory: false,
       enforcePhoneLength: false,
       billingType: 'postpaid',
@@ -192,6 +202,14 @@ export const usePosSettingsStore = create<PosSettingsState>()(
       kotLanguagePolicy: defaultPrintLanguagePolicy(),
       // Actions
       setShowProductImages: (show) => set({ showProductImages: show }),
+      setPosGridColumns: (columns) => set({ posGridColumns: columns }),
+      setPosCardTextScale: (scale) =>
+        set({
+          posCardTextScale:
+            Math.round(
+              Math.min(POS_CARD_TEXT_SCALE_MAX, Math.max(POS_CARD_TEXT_SCALE_MIN, scale)) * 10,
+            ) / 10,
+        }),
       setCustomerMandatory: (mandatory) => set({ customerMandatory: mandatory }),
       setEnforcePhoneLength: (enabled) => set({ enforcePhoneLength: enabled }),
       setLanguage: (language) => set({ language }),

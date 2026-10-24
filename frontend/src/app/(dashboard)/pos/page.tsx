@@ -2621,6 +2621,7 @@ export default function POSPage() {
             categorySort={categorySort}
             itemSort={itemSort}
             collapseCategories
+            editableLayout
           />
         </div>
 
