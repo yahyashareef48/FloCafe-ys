@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createBackup, getDatabase, getSettingValue, upsertSettings } from '../db';
+import { areAutomaticBackupsEnabled } from './automatic-backups';
 
 export const LOCAL_BACKUP_SETTING_KEY = 'local_backup_enabled';
 export const LOCAL_BACKUP_RETENTION = 5;
@@ -216,7 +217,7 @@ class LocalBackupService {
   }
 
   private async backupIfDue(): Promise<void> {
-    if (!isLocalBackupEnabled()) return;
+    if (!areAutomaticBackupsEnabled() || !isLocalBackupEnabled()) return;
     const dir = getLocalBackupDir();
     if (!isLocalBackupDue(listLocalBackups(dir)[0])) return;
     if (!hasBusinessData()) return;

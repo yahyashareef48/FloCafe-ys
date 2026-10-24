@@ -89,6 +89,10 @@ import {
   retainBackupLocally,
   setLocalBackupEnabled,
 } from '../main/services/local-backup';
+import {
+  areAutomaticBackupsEnabled,
+  setAutomaticBackupsEnabled,
+} from '../main/services/automatic-backups';
 
 const HOUR = 60 * 60_000;
 
@@ -156,6 +160,16 @@ async function main(): Promise<void> {
   assert.deepEqual(listLocalBackups(backupDir), [], 'disabled setting creates no backup');
 
   setLocalBackupEnabled(true);
+  setAutomaticBackupsEnabled(false);
+  assert.equal(areAutomaticBackupsEnabled(), false);
+  await localBackup.runIfDue();
+  assert.deepEqual(
+    listLocalBackups(backupDir),
+    [],
+    'the automatic backups master switch blocks the local schedule',
+  );
+
+  setAutomaticBackupsEnabled(true);
   await localBackup.runIfDue();
   const [first, ...rest] = listLocalBackups(backupDir);
   assert.ok(first, 'a backup is written when due');
@@ -467,6 +481,25 @@ async function main(): Promise<void> {
     false,
     'local_backup_enabled remains false after direct resetDatabaseWithBackup',
   );
+
+  setAutomaticBackupsEnabled(false);
+  await resetDatabaseWithBackup();
+  assert.equal(
+    areAutomaticBackupsEnabled(),
+    false,
+    'automatic_backups_enabled remains false after direct resetDatabaseWithBackup',
+  );
+  const automaticOnSnapshot = path.join(testDir, 'snapshot-automatic-on.db');
+  setAutomaticBackupsEnabled(true);
+  await createBackup(automaticOnSnapshot);
+  setAutomaticBackupsEnabled(false);
+  assert.equal(restoreBackup(automaticOnSnapshot, true).success, true);
+  assert.equal(
+    areAutomaticBackupsEnabled(),
+    false,
+    'automatic_backups_enabled remains false after restoring a backup taken while it was on',
+  );
+  setAutomaticBackupsEnabled(true);
 
   registerIpcHandlers(undefined, () => mainWin as any);
   const dbInitializeHandler = ipcHandlers.get('db-initialize');

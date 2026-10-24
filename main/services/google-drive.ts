@@ -28,6 +28,7 @@ import {
 import type { BackupPaginationOptions, DatabaseReplacementJournalHandle } from '../db';
 import { SHUTDOWN_TIMEOUT_MS } from '../shutdown';
 import { isOfflineMode } from './offline-mode';
+import { areAutomaticBackupsEnabled } from './automatic-backups';
 import { clearInMemoryRevokedTokens, clearUserAuthCache } from '../middleware/security';
 import { clearJWTSecretCache } from '../security/jwt-secret';
 
@@ -1253,6 +1254,7 @@ class GoogleDriveService {
         return;
       }
     }
+    if (!areAutomaticBackupsEnabled()) return;
     const frequency: BackupFrequency =
       settings.google_drive_frequency === 'weekly' ? 'weekly' : 'daily';
     if (!isBackupDue(settings.google_drive_last_automatic_backup_at || null, frequency)) return;

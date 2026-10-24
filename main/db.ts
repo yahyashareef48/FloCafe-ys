@@ -2023,6 +2023,8 @@ function removeDatabaseFiles(dbPath: string): string[] {
 
 type ResetAfterInit = (freshDb: Database.Database) => void;
 
+const BACKUP_PREFERENCE_SETTING_KEYS = ['local_backup_enabled', 'automatic_backups_enabled'];
+
 /** Resets database under an existing maintenance lock; recovers its safety backup if reset fails. */
 async function resetDatabaseWithBackupUnlocked(
   maintenanceSignal: AbortSignal,
@@ -2033,11 +2035,11 @@ async function resetDatabaseWithBackupUnlocked(
   const dbPath = getDbPath();
   const currentDb = getDatabase();
   const baselineForeignKeyViolations = getForeignKeyViolationKeys(currentDb);
-  const localBackupEnabled = (
-    currentDb.prepare("SELECT value FROM settings WHERE key = 'local_backup_enabled'").get() as
-      | { value?: string }
-      | undefined
-  )?.value;
+  const preservedBackupSettings = currentDb
+    .prepare(
+      `SELECT key, value FROM settings WHERE key IN (${BACKUP_PREFERENCE_SETTING_KEYS.map(() => '?').join(', ')})`,
+    )
+    .all(...BACKUP_PREFERENCE_SETTING_KEYS) as { key: string; value: string }[];
   const recoveryPath = path.join(
     getBackupDir(),
     `flo-reset-recovery-${crypto.randomBytes(8).toString('hex')}.db`,
@@ -2072,10 +2074,11 @@ async function resetDatabaseWithBackupUnlocked(
     await new Promise<void>((resolve) => setImmediate(resolve));
     throwIfDatabaseMaintenanceAborted(maintenanceSignal);
     const freshDb = getDatabase();
-    if (localBackupEnabled !== undefined) {
-      freshDb
-        .prepare('INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)')
-        .run('local_backup_enabled', localBackupEnabled, now());
+    if (preservedBackupSettings.length > 0) {
+      const writeSetting = freshDb.prepare(
+        'INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)',
+      );
+      for (const row of preservedBackupSettings) writeSetting.run(row.key, row.value, now());
       settingsRevision += 1;
     }
     afterInit?.(freshDb);
@@ -2303,7 +2306,7 @@ export async function resetDatabaseForCurrencyChange(
 ): Promise<{ backupPath: string; committed?: boolean; cleanupPending?: boolean }> {
   return withDatabaseMaintenanceLock(async (maintenanceSignal) => {
     const currentDb = getDatabase();
-    const PRESERVED_SETTINGS = ['country', 'currency', 'timezone', 'local_backup_enabled'] as const;
+    const PRESERVED_SETTINGS = ['country', 'currency', 'timezone', ...BACKUP_PREFERENCE_SETTING_KEYS];
     const settingsRows = currentDb
       .prepare(
         `SELECT key, value FROM settings WHERE key IN (${PRESERVED_SETTINGS.map(() => '?').join(', ')})`,
@@ -2331,8 +2334,8 @@ export async function resetDatabaseForCurrencyChange(
         writeSetting.run('currency', regional.currency, now());
         writeSetting.run('currency_symbol', regional.currencySymbol, now());
         writeSetting.run('timezone', regional.timezone, now());
-        if (settings.local_backup_enabled !== undefined) {
-          writeSetting.run('local_backup_enabled', settings.local_backup_enabled, now());
+        for (const key of BACKUP_PREFERENCE_SETTING_KEYS) {
+          if (settings[key] !== undefined) writeSetting.run(key, settings[key], now());
         }
         freshDb.prepare('INSERT OR REPLACE INTO _flo_meta (key, value) VALUES (?, ?)').run(
           'currency_reset_pending',
@@ -3116,7 +3119,7 @@ const RESTORE_PROTECTED_SETTING_KEYS = [
   'cloud_device_secret',
   'cloud_pos_hash',
   'offline_mode',
-  'local_backup_enabled',
+  ...BACKUP_PREFERENCE_SETTING_KEYS,
   'telemetry_enabled',
   'product_analytics_level',
   'diagnostics_consent',

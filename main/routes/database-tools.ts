@@ -17,6 +17,10 @@ import { isMasterPinAvailable, isMasterPinSet, resetMasterPin } from '../service
 import { clearJWTSecretCache } from '../security/jwt-secret';
 import { getHttpRequestSignal } from '../shutdown';
 import { googleDrive } from '../services/google-drive';
+import {
+  areAutomaticBackupsEnabled,
+  setAutomaticBackupsEnabled,
+} from '../services/automatic-backups';
 import { isSupportedCurrencyCode } from '../../shared/currencies';
 import {
   LOCAL_BACKUP_RETENTION,
@@ -135,6 +139,36 @@ router.put('/local-backup', requirePermission('database.manage'), (req: Request,
     res.status(500).json({ error: 'Could not update local backup setting' });
   }
 });
+
+router.get(
+  '/automatic-backups',
+  requirePermission('database.manage'),
+  (_req: Request, res: Response) => {
+    try {
+      res.json({ enabled: areAutomaticBackupsEnabled() });
+    } catch (error: unknown) {
+      console.error('[DB Tools] automatic backups status error:', error);
+      res.status(500).json({ error: 'Could not read automatic backups setting' });
+    }
+  },
+);
+
+router.put(
+  '/automatic-backups',
+  requirePermission('database.manage'),
+  (req: Request, res: Response) => {
+    if (typeof req.body?.enabled !== 'boolean') {
+      return res.status(400).json({ error: 'enabled must be a boolean' });
+    }
+    try {
+      setAutomaticBackupsEnabled(req.body.enabled);
+      res.json({ enabled: areAutomaticBackupsEnabled() });
+    } catch (error: unknown) {
+      console.error('[DB Tools] automatic backups update error:', error);
+      res.status(500).json({ error: 'Could not update automatic backups setting' });
+    }
+  },
+);
 
 router.get(
   '/master-pin/status',

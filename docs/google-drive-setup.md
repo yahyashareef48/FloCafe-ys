@@ -15,7 +15,8 @@ Drive backups are full SQLite database copies and FloCafe does not encrypt them.
 customer data, staff authentication data, and store settings. Anyone with access to the selected
 Google Drive account or folder can read the copy; the FloCafe Master PIN is not a portable
 encryption key. Automatic backups run only while the Electron app is running, with one startup
-catch-up attempt when a backup is due. Drive retention moves only FloCafe-owned automatic files to
+catch-up attempt when a backup is due, and never while the Automatic backups toggle in Backup &
+Data settings is off. Drive retention moves only FloCafe-owned automatic files to
 Trash. Manual files are kept indefinitely, and Drive retention never deletes local backup history.
 
 ## Why this cannot be pre-provisioned

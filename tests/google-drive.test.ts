@@ -1956,6 +1956,16 @@ async function main(): Promise<void> {
         '',
         'fresh automatic run starts with no prior automatic backup timestamp',
       );
+      const automaticBackups = require('../main/services/automatic-backups');
+      automaticBackups.setAutomaticBackupsEnabled(false);
+      await (gd.googleDrive as any).maybeRunScheduled();
+      await settleJobs();
+      assert.equal(
+        readSetting('google_drive_last_automatic_backup_at'),
+        '',
+        'scheduled Drive backup does not run while automatic backups are off',
+      );
+      automaticBackups.setAutomaticBackupsEnabled(true);
       await (gd.googleDrive as any).maybeRunScheduled();
       await settleJobs();
       assert.equal(

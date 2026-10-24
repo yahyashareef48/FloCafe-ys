@@ -25,6 +25,7 @@ import { useTranslations } from 'use-intl';
 import { Ltr } from '@/components/layout/Ltr';
 import { Button } from '@/components/ui/button';
 import { SettingsTabShell } from '@/components/settings/SettingsTabShell';
+import { AutomaticBackupsCard } from '@/components/settings/AutomaticBackupsCard';
 import { LocalBackupCard } from '@/components/settings/LocalBackupCard';
 import {
   Dialog,
@@ -318,6 +319,7 @@ export function DatabaseSettingsTab({
 
   return (
     <SettingsTabShell title={t('tabBackupData')}>
+      <AutomaticBackupsCard />
       <LocalBackupCard />
 
       {/* Database Export */}
