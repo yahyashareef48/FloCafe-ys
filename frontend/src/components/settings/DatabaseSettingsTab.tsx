@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { SettingsTabShell } from '@/components/settings/SettingsTabShell';
 import { AutomaticBackupsCard } from '@/components/settings/AutomaticBackupsCard';
 import { LocalBackupCard } from '@/components/settings/LocalBackupCard';
+import { SalesWipeCard } from '@/components/settings/SalesWipeCard';
 import {
   Dialog,
   DialogContent,
@@ -321,6 +322,7 @@ export function DatabaseSettingsTab({
     <SettingsTabShell title={t('tabBackupData')}>
       <AutomaticBackupsCard />
       <LocalBackupCard />
+      <SalesWipeCard />
 
       {/* Database Export */}
       <div className="bg-card rounded-xl border border-border p-6">

@@ -42,7 +42,12 @@ import {
   withTxn,
   tenantBusinessDayStartTime,
 } from '../db';
-import { requirePermission } from '../services/authorization';
+import { requireAnyPermission, requirePermission } from '../services/authorization';
+import {
+  getPendingSalesWipe,
+  markSalesWipePending,
+  wipeSalesData,
+} from '../services/sales-wipe';
 import { nextZNumber } from '../db';
 import { getTenantCurrency } from '../services/refund';
 import { openSessionBlockingDayClose } from '../services/cash-day-close-guards';
@@ -1292,8 +1297,9 @@ router.post('/', requirePermission('cash.day-close'), (req: Request, res: Respon
       };
     });
     operationCommitted = true;
+    const salesWipePending = markSalesWipePending('day', result.id);
 
-    res.status(201).json({ zReport: result });
+    res.status(201).json({ zReport: result, salesWipePending });
   } catch (error: any) {
     const status = error.statusCode || 500;
     if (status === 500) console.error('[CashClosures] Internal error:', error);
@@ -1328,6 +1334,32 @@ router.post('/', requirePermission('cash.day-close'), (req: Request, res: Respon
     res.status(status).json(payload);
   }
 });
+
+router.get(
+  '/sales-wipe/pending',
+  requireAnyPermission('cash.shifts.close', 'cash.day-close'),
+  (_req: Request, res: Response) => {
+    res.json({ pending: getPendingSalesWipe() });
+  },
+);
+
+router.post(
+  '/sales-wipe/confirm',
+  requireAnyPermission('cash.shifts.close', 'cash.day-close'),
+  (req: Request, res: Response) => {
+    try {
+      const pending = getPendingSalesWipe();
+      if (!pending || pending.closureId !== Number(req.body?.closure_id)) {
+        return res.status(409).json({ error: 'No data wipe is waiting for this close' });
+      }
+      wipeSalesData();
+      res.json({ success: true });
+    } catch (error: unknown) {
+      console.error('[CashClosures] Sales data wipe failed:', error);
+      res.status(500).json({ error: 'Sales data wipe failed' });
+    }
+  },
+);
 
 export { router as cashClosureRoutes };
 

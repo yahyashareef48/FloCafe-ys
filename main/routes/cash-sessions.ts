@@ -23,6 +23,7 @@ import {
   nextZNumber,
 } from '../db';
 import { requirePermission } from '../services/authorization';
+import { markSalesWipePending } from '../services/sales-wipe';
 import { closedDayExists } from '../services/cash-drawer-movements';
 import { findUnpaidInShiftOrders } from '../services/cash-day-close-guards';
 import { getOpenSession, type CashSessionRow } from '../services/shift-session-gate';
@@ -425,7 +426,8 @@ router.post('/:id/close', requirePermission('cash.shifts.close'), (req: Request,
       return closedSession;
     });
     operationCommitted = true;
-    res.json(result);
+    const salesWipePending = markSalesWipePending('shift', result.closure_id);
+    res.json({ ...result, sales_wipe_pending: salesWipePending });
   } catch (error: unknown) {
     const status = errorStatus(error);
     const safeMessage =

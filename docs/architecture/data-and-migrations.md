@@ -164,6 +164,21 @@ Google Drive backup both skip; manual backups, the pre-migration backup, the rec
 initialize, currency reset, and restore make, and retries of a Drive upload already in progress
 still run. Resets and restores preserve the setting the same way as `local_backup_enabled`.
 
+### Data wipe after shift or day close
+
+`main/services/sales-wipe.ts` holds two switches, `shift_close_wipe_enabled` and
+`day_close_wipe_enabled` (both off unless `'true'`), exposed as `GET`/`PUT /api/db-tools/sales-wipe`
+and the Wipe data after closing card in Backup & Data settings. When the matching switch is on, a
+committed shift or day close records `sales_wipe_pending` and nothing is deleted yet: the Z screen
+replaces its Close button with Finish & wipe data, and the wipe runs only after the operator confirms
+through `POST /api/cash-closures/sales-wipe/confirm` for that close. Dismissing the dialog leaves the
+wipe waiting. The wipe deletes every order, bill, payment, refund, customer, loyalty entry, held order,
+expense, cash session, drawer movement, Z report, stock and supply movement, WhatsApp message, and
+pending cloud-sync event, frees all tables, and keeps users, settings, the catalog (products,
+categories, add-ons, variants, recipes, supplies, and stock levels), and store setup. It runs in one
+transaction with `secure_delete` on and then truncates the WAL. Backups made earlier still contain
+the deleted data.
+
 ### Daily local backup
 
 `main/services/local-backup.ts` writes one backup a day to `Documents/FloCafe/Backups`, outside
@@ -207,6 +222,7 @@ Directory syncing is skipped on Windows, which does not support it.
 | `npm run test:schema-reference-cache` | Recovery schema reference caching and migration registry invalidation. |
 | `npm run test:backup` | Backup and restore behaviour. |
 | `npm run test:local-backup` | The daily local backup: naming, due logic, retention (including future-dated files), opt-out, empty-database skip, and the Initialize copy warning. |
+| `npm run test:sales-wipe`   | The close data wipe: off by default, waits for confirmation, removes every sales record, and keeps catalog, setup, and users.                       |
 | `npm run test:sequence` | Order and bill sequence generation, repair performance, and no-reuse invariants. |
 | `npm run test:issue-278-fail-closed-db` | The missing-database guard. |
 

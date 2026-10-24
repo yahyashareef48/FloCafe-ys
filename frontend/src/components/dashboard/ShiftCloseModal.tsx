@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Loader2, Lock, Printer, AlertTriangle } from 'lucide-react';
 import type { CashSessionModel } from '@/hooks/useCashSession';
+import { SalesWipeConfirm } from '@/components/dashboard/SalesWipeConfirm';
 
 /** Shift-close ("Cerrar turno") modal. Pure view over useCashSession:
  *  count form with live expected + variance preview, then the immutable
@@ -181,9 +182,14 @@ export function ShiftCloseModal({ model }: { model: CashSessionModel }) {
         <DialogFooter>
           {closedResult ? (
             <>
-              <Button variant="outline" onClick={() => closeModal(false)} disabled={printing}>
-                {tCommon('close')}
-              </Button>
+              <SalesWipeConfirm
+                closureId={closedResult.closure_id}
+                fallback={
+                  <Button variant="outline" onClick={() => closeModal(false)} disabled={printing}>
+                    {tCommon('close')}
+                  </Button>
+                }
+              />
               <Button
                 onClick={async () => {
                   if (!closedResult) return;

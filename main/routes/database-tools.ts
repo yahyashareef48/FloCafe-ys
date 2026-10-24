@@ -21,6 +21,7 @@ import {
   areAutomaticBackupsEnabled,
   setAutomaticBackupsEnabled,
 } from '../services/automatic-backups';
+import { getSalesWipeSettings, setSalesWipeSettings } from '../services/sales-wipe';
 import { isSupportedCurrencyCode } from '../../shared/currencies';
 import {
   LOCAL_BACKUP_RETENTION,
@@ -169,6 +170,31 @@ router.put(
     }
   },
 );
+
+router.get('/sales-wipe', requirePermission('database.manage'), (_req: Request, res: Response) => {
+  try {
+    res.json(getSalesWipeSettings());
+  } catch (error: unknown) {
+    console.error('[DB Tools] sales wipe status error:', error);
+    res.status(500).json({ error: 'Could not read data wipe settings' });
+  }
+});
+
+router.put('/sales-wipe', requirePermission('database.manage'), (req: Request, res: Response) => {
+  const { dayClose, shiftClose } = req.body ?? {};
+  if (
+    (dayClose !== undefined && typeof dayClose !== 'boolean') ||
+    (shiftClose !== undefined && typeof shiftClose !== 'boolean')
+  ) {
+    return res.status(400).json({ error: 'dayClose and shiftClose must be booleans' });
+  }
+  try {
+    res.json(setSalesWipeSettings({ dayClose, shiftClose }));
+  } catch (error: unknown) {
+    console.error('[DB Tools] sales wipe update error:', error);
+    res.status(500).json({ error: 'Could not update data wipe settings' });
+  }
+});
 
 router.get(
   '/master-pin/status',

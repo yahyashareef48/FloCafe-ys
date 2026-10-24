@@ -14,6 +14,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { SalesWipeConfirm } from '@/components/dashboard/SalesWipeConfirm';
 import {
   Lock,
   Loader2,
@@ -580,9 +581,14 @@ export function CashCloseModal({ model }: { model: CashCloseModel }) {
                     </Button>
                   )}
                 </div>
-                <Button variant="outline" onClick={() => setCloseOpen(false)}>
-                  {tCommon('close')}
-                </Button>
+                <SalesWipeConfirm
+                  closureId={closedZ?.id}
+                  fallback={
+                    <Button variant="outline" onClick={() => setCloseOpen(false)}>
+                      {tCommon('close')}
+                    </Button>
+                  }
+                />
                 {hasPrintedFresh || hydratedZ ? (
                   <Button
                     onClick={() => {
