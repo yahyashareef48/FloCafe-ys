@@ -2354,6 +2354,7 @@
     "showRestaurantName": "Name des Geschäfts",
     "showRestaurantPhone": "Telefonnummer des Geschäfts",
     "showTableNumber": "Tischnummer",
+    "highlightTokenNumber": "Große Token-Nummer",
     "showTaxBreakdown": "Steueraufschlüsselung",
     "showTaxId": "Steuer-ID-Nummer",
     "softwareUpdates": "Software-Updates",

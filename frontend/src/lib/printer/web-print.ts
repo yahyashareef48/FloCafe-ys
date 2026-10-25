@@ -89,6 +89,7 @@ export interface WebPrintOptions {
   showCustomerPhone?: boolean;
   deliveryShowCustomerPhoneAlways?: boolean;
   showTableNumber?: boolean;
+  highlightToken?: boolean;
   /** Ignored for browser receipts: HTML uses locale currency formatting and code fallback. */
   useUnicode?: boolean;
   /** Show a large "REPRINT" banner so a reprinted bill can't be mistaken for the original. */
@@ -254,6 +255,7 @@ export function generateBillHtml(
     showCustomerPhone = true,
     deliveryShowCustomerPhoneAlways,
     showTableNumber = true,
+    highlightToken = false,
     isReprint = false,
     trimDecimals = false,
   } = opts;
@@ -279,6 +281,7 @@ export function generateBillHtml(
     showCustomerPhone,
     deliveryShowCustomerPhoneAlways,
     showTableNumber,
+    highlightToken,
     isReprint,
     trimDecimals,
     languages,
@@ -364,6 +367,8 @@ export function generateBillHtml(
       ${header?.phone && header.phoneLabel ? `<p>${escapeHtml(header.phoneLabel.primary)}: ${directionalValue(header.phone, base)}</p>` : ''}
       ${header?.taxId ? `<p>${escapeHtml(header.taxId.label.primary)}: ${directionalValue(header.taxId.value, base)}</p>` : ''}
     </div>
+
+    ${meta?.token ? `<div style="text-align:center;font-size:32px;font-weight:700;line-height:1.2;margin:6px 0">${escapeHtml(meta.token.text)}</div>` : ''}
 
     <!-- Bill Details -->
     <div class="bill-details">

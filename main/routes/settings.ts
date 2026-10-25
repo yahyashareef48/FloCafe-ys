@@ -160,6 +160,7 @@ const OPTIONAL_SETTING_DEFAULTS: Record<string, string> = {
   bill_template: 'classic',
   bill_footer_message: '',
   bill_show_logo: 'false',
+  bill_highlight_token: 'false',
   receipt_logo: '',
   receipt_logo_raster: '',
   printer_trim_decimals: 'false',
@@ -255,6 +256,7 @@ function businessShape(s: Record<string, string>) {
       s.bill_delivery_show_customer_phone_always !== 'false',
     bill_show_table_number: s.bill_show_table_number !== 'false',
     bill_show_logo: s.bill_show_logo === 'true',
+    bill_highlight_token: s.bill_highlight_token === 'true',
     receipt_logo: s.receipt_logo || '',
     receipt_logo_raster: s.receipt_logo_raster || '',
     bill_footer_message: s.bill_footer_message || '',
@@ -1830,7 +1832,7 @@ const PRINTING_BOOLEAN_KEYS = [
   'bill_delivery_show_customer_phone_always',
 ] as const;
 
-const OPTIONAL_PRINTING_BOOLEAN_KEYS = ['bill_show_logo'] as const;
+const OPTIONAL_PRINTING_BOOLEAN_KEYS = ['bill_show_logo', 'bill_highlight_token'] as const;
 
 const PRINTING_BATCH_KEYS = new Set<string>([
   ...PRINTING_BOOLEAN_KEYS,

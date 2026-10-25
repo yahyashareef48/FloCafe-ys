@@ -52,6 +52,7 @@ export interface BillBusinessOptions {
   showCustomerPhone?: boolean;
   deliveryShowCustomerPhoneAlways?: boolean;
   showTableNumber?: boolean;
+  highlightToken?: boolean;
   isReprint?: boolean;
 }
 
@@ -230,6 +231,7 @@ export function buildBillPrintData(bill: Bill, opts: BillBusinessOptions = {}): 
       showTaxId: showTaxId ? 'force' : 'never',
       showTaxBreakdown: opts.showTaxBreakdown === true,
       showTableNumber: opts.showTableNumber !== false,
+      highlightToken: opts.highlightToken === true,
       showCustomerName: opts.showCustomerName !== false,
       showCustomerPhone: shouldShowCustomerNumber({
         showOnReceipts: opts.showCustomerPhone !== false,

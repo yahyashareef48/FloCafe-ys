@@ -2353,6 +2353,7 @@
     "showRestaurantName": "Nom du restaurant",
     "showRestaurantPhone": "Téléphone du restaurant",
     "showTableNumber": "Numéro de table",
+    "highlightTokenNumber": "Grand numéro de ticket",
     "showTaxBreakdown": "Ventilation des taxes",
     "showTaxId": "Numéro d’identification fiscale",
     "softwareUpdates": "Mises à jour logicielles",

@@ -92,6 +92,8 @@ export interface ReceiptOptions {
   deliveryShowCustomerPhoneAlways?: boolean;
   /** Show the table number when available. Default: true */
   showTableNumber?: boolean;
+  /** Print the invoice number's trailing counter as a large token. Default: false */
+  highlightToken?: boolean;
   /** If false (default), replace ₹/€/£/etc. with ASCII (Rs, EUR, GBP…). */
   useUnicode?: boolean;
   /** Printer firmware performs Arabic/Persian contextual shaping. Default: false. */
@@ -353,6 +355,7 @@ function buildReceiptEnvironment(
     showCustomerPhone: opts.showCustomerPhone,
     deliveryShowCustomerPhoneAlways: opts.deliveryShowCustomerPhoneAlways,
     showTableNumber: opts.showTableNumber,
+    highlightToken: opts.highlightToken,
     isReprint: opts.isReprint,
     trimDecimals: opts.trimDecimals,
     languages,

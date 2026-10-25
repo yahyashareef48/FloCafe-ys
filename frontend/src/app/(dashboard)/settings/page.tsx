@@ -1418,6 +1418,7 @@ export default function SettingsPage() {
     billShowCustomerPhone: posSettings.billShowCustomerPhone,
     billDeliveryShowCustomerPhoneAlways: posSettings.billDeliveryShowCustomerPhoneAlways,
     billShowTableNumber: posSettings.billShowTableNumber,
+    billHighlightToken: posSettings.billHighlightToken,
   });
   const [printingForm, setPrintingForm] = useState<PrintingForm>(initPrinting);
   const [savedPrinting, setSavedPrinting] = useState<PrintingForm>(initPrinting);
@@ -1503,6 +1504,7 @@ export default function SettingsPage() {
         bill_show_customer_phone: formSnapshot.billShowCustomerPhone,
         bill_delivery_show_customer_phone_always: formSnapshot.billDeliveryShowCustomerPhoneAlways,
         bill_show_table_number: formSnapshot.billShowTableNumber,
+        bill_highlight_token: formSnapshot.billHighlightToken,
         ...(formSnapshot.cashDrawerPulseEnabled !== undefined
           ? {
               cash_drawer_pulse_enabled: formSnapshot.cashDrawerPulseEnabled,
@@ -1534,6 +1536,7 @@ export default function SettingsPage() {
         formSnapshot.billDeliveryShowCustomerPhoneAlways,
       );
       posSettings.setBillShowTableNumber(formSnapshot.billShowTableNumber);
+      posSettings.setBillHighlightToken(formSnapshot.billHighlightToken);
       setSavedPrinting(formSnapshot);
       if (!silent) toast.success(t('printingSettingsSaved'));
     } finally {
@@ -1859,6 +1862,7 @@ export default function SettingsPage() {
         billShowCustomerPhone: d.bill_show_customer_phone !== false,
         billDeliveryShowCustomerPhoneAlways: d.bill_delivery_show_customer_phone_always !== false,
         billShowTableNumber: d.bill_show_table_number !== false,
+        billHighlightToken: d.bill_highlight_token === true,
       };
       setPrintingForm((previous) => ({ ...previous, ...billDisplay }));
       setSavedPrinting((previous) => ({ ...previous, ...billDisplay }));
@@ -2204,6 +2208,7 @@ export default function SettingsPage() {
           billShowCustomerPhone: d.bill_show_customer_phone !== false,
           billDeliveryShowCustomerPhoneAlways: d.bill_delivery_show_customer_phone_always !== false,
           billShowTableNumber: d.bill_show_table_number !== false,
+          billHighlightToken: d.bill_highlight_token === true,
         };
         mergeHydratedPrinting(billDisplay, printingAtHydrationStart, hydrationTouchSnapshot);
         setSavedPrinting((previous) => ({ ...previous, ...billDisplay }));

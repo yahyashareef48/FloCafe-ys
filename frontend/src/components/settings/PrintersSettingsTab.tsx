@@ -98,6 +98,7 @@ export type PrintingForm = {
   billShowCustomerPhone: boolean;
   billDeliveryShowCustomerPhoneAlways: boolean;
   billShowTableNumber: boolean;
+  billHighlightToken: boolean;
 };
 
 export type BillTemplateForm = {
@@ -1087,6 +1088,7 @@ export function PrintersSettingsTab({
                     { label: t('showCustomerName'), key: 'billShowCustomerName' as const },
                     { label: t('showCustomerPhone'), key: 'billShowCustomerPhone' as const },
                     { label: t('showTableNumber'), key: 'billShowTableNumber' as const },
+                    { label: t('highlightTokenNumber'), key: 'billHighlightToken' as const },
                   ] as const
                 ).map((item) => (
                   <div

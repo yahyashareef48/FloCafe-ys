@@ -200,6 +200,7 @@ export function buildBillPrintData(
             : 'auto',
       showTaxBreakdown: business?.show_tax_breakdown === true,
       showTableNumber: business?.show_table_number !== false,
+      highlightToken: business?.highlight_token === true,
       showCustomerName: business?.show_customer_name !== false,
       showCustomerPhone: business?.show_customer_phone !== false,
       showLogo: business?.show_logo === true,
@@ -662,6 +663,15 @@ export function renderBillDocumentToClassicLines(
         if (labelOf(block.title) !== defaultTitle) {
           segment.main.push('{CENTER}' + normalize(labelOf(block.title)) + '{/CENTER}');
           segment.sourceLines.main.push(labelOf(block.title));
+          segment.sourceControlLines.main.push(segment.main.at(-1) ?? '');
+        }
+        if (block.token) {
+          segment.main.push(
+            '{CENTER}{BOLD}{DOUBLE_HEIGHT}{DOUBLE_WIDTH}' +
+              normalize(block.token.text) +
+              '{/DOUBLE_WIDTH}{/DOUBLE_HEIGHT}{/BOLD}{/CENTER}',
+          );
+          segment.sourceLines.main.push(block.token.text);
           segment.sourceControlLines.main.push(segment.main.at(-1) ?? '');
         }
         segment.main.push(

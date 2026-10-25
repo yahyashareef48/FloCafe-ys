@@ -1084,6 +1084,7 @@ router.post(
         show_tax_breakdown: settings.bill_show_tax_breakdown !== 'false',
         show_customer_name: settings.bill_show_customer_name !== 'false',
         show_table_number: settings.bill_show_table_number !== 'false',
+        highlight_token: settings.bill_highlight_token === 'true',
         show_logo: settings.bill_show_logo === 'true',
         receipt_logo: settings.receipt_logo || '',
         receipt_logo_raster: settings.receipt_logo_raster || '',

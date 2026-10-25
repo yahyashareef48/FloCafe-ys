@@ -257,6 +257,7 @@ export const usePrinterStore = create<PrinterState>()(
             billShowCustomerPhone,
             billDeliveryShowCustomerPhoneAlways,
             billShowTableNumber,
+            billHighlightToken,
             printerPaperSize,
             printerUseUnicode,
             printerArabicShaping,
@@ -314,6 +315,7 @@ export const usePrinterStore = create<PrinterState>()(
                 showCustomerPhone: billShowCustomerPhone,
                 deliveryShowCustomerPhoneAlways: billDeliveryShowCustomerPhoneAlways,
                 showTableNumber: billShowTableNumber,
+                highlightToken: billHighlightToken,
                 useUnicode: printerUseUnicode,
                 isReprint,
                 trimDecimals: printerTrimDecimals,
@@ -403,6 +405,7 @@ export const usePrinterStore = create<PrinterState>()(
             showCustomerPhone: billShowCustomerPhone,
             deliveryShowCustomerPhoneAlways: billDeliveryShowCustomerPhoneAlways,
             showTableNumber: billShowTableNumber,
+            highlightToken: billHighlightToken,
             useUnicode: printerUseUnicode,
             arabicShaping: printerArabicShaping,
             isReprint,
@@ -549,6 +552,7 @@ export const usePrinterStore = create<PrinterState>()(
             billShowCustomerPhone,
             billDeliveryShowCustomerPhoneAlways,
             billShowTableNumber,
+            billHighlightToken,
           } = usePosSettingsStore.getState();
           const configuredPaperWidth: PaperWidth = printerPaperSize === 'thermal80' ? 80 : 58;
           const taxBillColumns = columnsForConfiguredPrinter(
@@ -592,6 +596,7 @@ export const usePrinterStore = create<PrinterState>()(
               showCustomerPhone: billShowCustomerPhone,
               deliveryShowCustomerPhoneAlways: billDeliveryShowCustomerPhoneAlways,
               showTableNumber: billShowTableNumber,
+              highlightToken: billHighlightToken,
               useUnicode: printerUseUnicode,
               trimDecimals: printerTrimDecimals,
             });

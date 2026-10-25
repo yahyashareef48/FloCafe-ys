@@ -2353,6 +2353,7 @@
     "showRestaurantName": "Restaurant Name",
     "showRestaurantPhone": "Restaurant Phone",
     "showTableNumber": "Table Number",
+    "highlightTokenNumber": "Big token number",
     "showTaxBreakdown": "Tax Breakdown",
     "showTaxId": "Tax ID Number",
     "softwareUpdates": "Software Updates",

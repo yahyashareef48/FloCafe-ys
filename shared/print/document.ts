@@ -189,6 +189,8 @@ export interface BusinessSnapshot {
   readonly showTaxId: 'force' | 'never' | 'auto';
   readonly showTaxBreakdown: boolean;
   readonly showTableNumber: boolean;
+  /** Repeat the invoice number's trailing counter as a large token line. */
+  readonly highlightToken?: boolean;
   readonly showCustomerName: boolean;
   readonly showCustomerPhone: boolean;
   readonly showLogo?: boolean;
@@ -278,6 +280,8 @@ export interface DocumentMetaBlock {
   readonly timestamp: DirectionalText;
   /** Table reference with its (uninterpolated) label concept. */
   readonly table: { readonly label: SemanticLabel; readonly name: DirectionalText } | null;
+  /** Trailing counter of the invoice number, printed large when highlighting is on. */
+  readonly token?: DirectionalText | null;
 }
 
 /** Customer identity lines (name / number / delivery address), when present and shown. */
@@ -511,6 +515,11 @@ function optionalDirectional(
   return directionalText(String(text), base);
 }
 
+/** Trailing digit run of an invoice number, e.g. "INV-20261026-0358" -> "0358". */
+export function tokenOf(invoiceNumber: string): string {
+  return /(\d+)\D*$/.exec(invoiceNumber)?.[1] ?? '';
+}
+
 function toFiniteNumber(value: unknown): number {
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : 0;
@@ -615,6 +624,7 @@ export function buildBillDocument(printData: PrintData, printContext: PrintConte
         : null,
   });
 
+  const invoiceNumber = bill.billNumber.length > 0 ? bill.billNumber : order.orderNumber;
   const meta: DocumentMetaBlock = Object.freeze({
     kind: 'document-meta',
     direction: base,
@@ -622,10 +632,8 @@ export function buildBillDocument(printData: PrintData, printContext: PrintConte
     invoiceNumberLabel: resolveSemanticLabel(labels, 'print.invoiceNumber'),
     billNumberLabel: resolveSemanticLabel(labels, 'receipt.billNumber'),
     dateLabel: resolveSemanticLabel(labels, 'receipt.date'),
-    invoiceNumber: directionalText(
-      bill.billNumber.length > 0 ? bill.billNumber : order.orderNumber,
-      base,
-    ),
+    invoiceNumber: directionalText(invoiceNumber, base),
+    token: business.highlightToken ? optionalDirectional(tokenOf(invoiceNumber), base) : null,
     timestamp: directionalText(order.createdAt, base),
     table:
       business.showTableNumber && order.tableName.length > 0
@@ -1378,6 +1386,7 @@ function isPrintDocumentBlock(value: unknown): value is PrintDocumentBlock {
         isSemanticLabel(value.dateLabel) &&
         isDirectionalText(value.invoiceNumber) &&
         isDirectionalText(value.timestamp) &&
+        (value.token === undefined || isOptionalDirectionalText(value.token)) &&
         (value.table === null ||
           (isRecord(value.table) &&
             isSemanticLabel(value.table.label) &&
