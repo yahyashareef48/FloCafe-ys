@@ -2,7 +2,13 @@ import { test, expect, type Page, type Route } from '@playwright/test';
 import { E2E_BASE_URL as BASE } from './helpers/urls';
 
 const OWNER = {
-  user: { id: 'e2e-owner', name: 'E2E Owner', email: 'owner@flo.local', role: 'owner', category_ids: [] },
+  user: {
+    id: 'e2e-owner',
+    name: 'E2E Owner',
+    email: 'owner@flo.local',
+    role: 'owner',
+    category_ids: [],
+  },
   tenants: [
     {
       id: 1,
@@ -114,16 +120,35 @@ test('closing a shift with the wipe on asks for confirmation before wiping', asy
 
   await page.goto(`${BASE}/auth/login`);
   await page.waitForURL(/\/pos(?:\/|$)/, { timeout: 20000 });
-  await page.getByRole('button', { name: /close shift/i }).first().click();
+  await page
+    .getByRole('button', { name: /close shift/i })
+    .first()
+    .click();
   await page.locator('#shift-counted-cash').fill('0');
-  await page.locator('button').filter({ hasText: /close shift/i }).last().click();
+  await page
+    .locator('button')
+    .filter({ hasText: /close shift/i })
+    .last()
+    .click();
 
   const finish = page.getByTestId('sales-wipe-finish');
   await expect(finish).toBeVisible();
+  const closeDialog = page.getByRole('dialog');
+  const outside = await closeDialog.evaluate((dialog) => {
+    const box = dialog.getBoundingClientRect();
+    return [...dialog.querySelectorAll('button')]
+      .filter((button) => {
+        const r = button.getBoundingClientRect();
+        return r.width > 0 && (r.left < box.left - 1 || r.right > box.right + 1);
+      })
+      .map((button) => button.textContent);
+  });
+  expect(outside, 'Z report footer buttons stay inside the dialog').toEqual([]);
   await finish.click();
 
   const confirm = page.getByTestId('sales-wipe-confirm');
   await expect(confirm).toContainText('This cannot be undone.');
+  await expect(confirm).toHaveAttribute('role', 'dialog');
   expect(confirms).toEqual([]);
   await confirm.getByRole('button', { name: 'Wipe now' }).click();
   await expect.poll(() => confirms).toEqual([{ closure_id: 42 }]);

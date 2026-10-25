@@ -120,6 +120,25 @@ test('POS card layout sets cards per row, text size, and text-only cards per dev
     expect(await rowWidth()).toBe(6);
 
     await page.getByTestId('pos-card-layout-button').click();
+    await menu.getByRole('button', { name: '8', exact: true }).click();
+    for (let i = 0; i < 7; i++) await menu.getByRole('button', { name: 'Larger text' }).click();
+    await expect(menu.getByTestId('pos-card-text-size')).toHaveText('160%');
+    await page.keyboard.press('Escape');
+    await expect(menu).toBeHidden();
+    const overflowing = await cards.evaluateAll((elements) =>
+      elements.flatMap((card) => {
+        const box = card.getBoundingClientRect();
+        return [...card.querySelectorAll('h3, p')]
+          .filter((text) => {
+            const r = text.getBoundingClientRect();
+            return r.left < box.left - 1 || r.right > box.right + 1;
+          })
+          .map((text) => text.textContent);
+      }),
+    );
+    expect(overflowing, 'names and prices stay inside narrow cards').toEqual([]);
+
+    await page.getByTestId('pos-card-layout-button').click();
     await menu.getByRole('button', { name: 'Auto' }).click();
     await menu.getByRole('switch', { name: 'Show pictures' }).click();
     await expect(page.getByTestId('pos-product-text-tile')).toHaveCount(0);
