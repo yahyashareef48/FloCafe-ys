@@ -9,6 +9,8 @@ export type PrinterPrintMode = 'escpos' | 'browser';
 export type CoreBillTemplate = 'classic' | 'compact';
 export type BillTemplate = CoreBillTemplate | (string & {});
 
+export type PosCardShape = 'square' | 'rectangle' | 'tall' | 'rows';
+
 export const POS_CARD_TEXT_SCALE_MIN = 0.8;
 export const POS_CARD_TEXT_SCALE_MAX = 1.6;
 
@@ -17,6 +19,7 @@ export interface PosSettingsState {
   // Product cards per row in the POS grid; null keeps the automatic 4/5 layout.
   posGridColumns: number | null;
   posCardTextScale: number;
+  posCardShape: PosCardShape;
   customerMandatory: boolean;
   // Auto-advances phone to name when typed digits form a valid number.
   enforcePhoneLength: boolean;
@@ -70,6 +73,7 @@ export interface PosSettingsState {
   setShowProductImages: (show: boolean) => void;
   setPosGridColumns: (columns: number | null) => void;
   setPosCardTextScale: (scale: number) => void;
+  setPosCardShape: (shape: PosCardShape) => void;
   setCustomerMandatory: (mandatory: boolean) => void;
   setEnforcePhoneLength: (enabled: boolean) => void;
   setLanguage: (lang: Language) => void;
@@ -155,6 +159,7 @@ export const usePosSettingsStore = create<PosSettingsState>()(
       showProductImages: true,
       posGridColumns: null,
       posCardTextScale: 1,
+      posCardShape: 'square',
       customerMandatory: false,
       enforcePhoneLength: false,
       billingType: 'postpaid',
@@ -203,6 +208,7 @@ export const usePosSettingsStore = create<PosSettingsState>()(
       // Actions
       setShowProductImages: (show) => set({ showProductImages: show }),
       setPosGridColumns: (columns) => set({ posGridColumns: columns }),
+      setPosCardShape: (shape) => set({ posCardShape: shape }),
       setPosCardTextScale: (scale) =>
         set({
           posCardTextScale:

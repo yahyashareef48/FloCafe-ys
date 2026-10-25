@@ -1,6 +1,14 @@
 'use client';
 
-import { LayoutGrid, Minus, Plus } from 'lucide-react';
+import {
+  LayoutGrid,
+  Minus,
+  Plus,
+  RectangleHorizontal,
+  RectangleVertical,
+  Rows3,
+  Square,
+} from 'lucide-react';
 import { useTranslations } from 'use-intl';
 import {
   DropdownMenu,
@@ -12,9 +20,16 @@ import {
   POS_CARD_TEXT_SCALE_MAX,
   POS_CARD_TEXT_SCALE_MIN,
   usePosSettingsStore,
+  type PosCardShape,
 } from '@/store/pos-settings';
 
 const COLUMN_CHOICES = [2, 3, 4, 5, 6, 7, 8] as const;
+const SHAPE_CHOICES = [
+  { shape: 'square', label: 'cardShapeSquare', Icon: Square },
+  { shape: 'rectangle', label: 'cardShapeRectangle', Icon: RectangleHorizontal },
+  { shape: 'tall', label: 'cardShapeTall', Icon: RectangleVertical },
+  { shape: 'rows', label: 'cardShapeRows', Icon: Rows3 },
+] as const satisfies readonly { shape: PosCardShape; label: string; Icon: typeof Square }[];
 
 /** Per-device product card layout: cards per row, text size, and pictures on or off. */
 export default function ProductCardLayoutMenu() {
@@ -26,6 +41,8 @@ export default function ProductCardLayoutMenu() {
     setPosCardTextScale,
     showProductImages,
     setShowProductImages,
+    posCardShape,
+    setPosCardShape,
   } = usePosSettingsStore();
   const choiceClass = (active: boolean) =>
     `h-8 min-w-8 px-2 rounded-md border text-sm font-medium transition-colors ${
@@ -72,6 +89,24 @@ export default function ProductCardLayoutMenu() {
                 onClick={() => setPosGridColumns(columns)}
               >
                 {columns}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-foreground mb-2">{t('cardShape')}</p>
+          <div className="grid grid-cols-4 gap-1.5">
+            {SHAPE_CHOICES.map(({ shape, label, Icon }) => (
+              <button
+                key={shape}
+                type="button"
+                data-testid={`pos-card-shape-${shape}`}
+                className={`${choiceClass(posCardShape === shape)} h-auto py-1.5 flex flex-col items-center gap-1 text-xs`}
+                aria-pressed={posCardShape === shape}
+                onClick={() => setPosCardShape(shape)}
+              >
+                <Icon size={16} />
+                {t(label)}
               </button>
             ))}
           </div>

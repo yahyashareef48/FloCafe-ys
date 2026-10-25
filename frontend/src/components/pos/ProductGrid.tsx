@@ -338,10 +338,19 @@ export default function ProductGrid({
     showProductImages: showProductImagesSetting,
     posGridColumns,
     posCardTextScale,
+    posCardShape,
   } = usePosSettingsStore();
   const showProductImages = showImages ?? showProductImagesSetting;
   const gridColumns = editableLayout ? posGridColumns : null;
   const textScale = editableLayout ? posCardTextScale : 1;
+  const cardShape = editableLayout ? posCardShape : 'square';
+  const rows = cardShape === 'rows';
+  const aspectClass =
+    cardShape === 'rectangle'
+      ? 'aspect-[4/3]'
+      : cardShape === 'tall'
+        ? 'aspect-[3/4]'
+        : 'aspect-square';
   const scaledFont = (rem: number) => ({ fontSize: `${rem * textScale}rem` });
   const t = useTranslations('pos');
   const validateSelectionQuantity = (product: Product, quantity: number) => {
@@ -479,7 +488,7 @@ export default function ProductGrid({
         className="flex-1 min-h-0 overflow-y-auto pb-20 md:pb-0"
       >
         <div
-          className={`grid gap-3 ${gridColumns ? '' : (gridClassName ?? (sidebarOpen ? 'grid-cols-4' : 'grid-cols-5'))}`}
+          className={`grid ${rows ? 'gap-2' : 'gap-3'} ${gridColumns ? '' : rows ? 'grid-cols-1' : (gridClassName ?? (sidebarOpen ? 'grid-cols-4' : 'grid-cols-5'))}`}
           style={
             gridColumns
               ? {
@@ -490,33 +499,108 @@ export default function ProductGrid({
         >
           {filtered.map((product) => {
             const inCartQty = cartQuantities.get(product.id) || 0;
+            const stockBadge = !product.track_inventory
+              ? null
+              : product.stock_quantity <= 0
+                ? {
+                    label: t('outOfStock'),
+                    className:
+                      'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/40',
+                  }
+                : product.stock_quantity <= (product.low_stock_threshold || 0)
+                  ? {
+                      label: t('lowStock'),
+                      className:
+                        'bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800/40',
+                    }
+                  : null;
+            const selectProduct = () => {
+              if (disabled) return;
+              const quantity = parsedSearch?.quantity ?? 1;
+              if (!validateSelectionQuantity(product, quantity)) return;
+              onProductClick(product, quantity);
+            };
+
+            if (rows) {
+              return (
+                <button
+                  key={product.id}
+                  data-testid="pos-product-card"
+                  data-shape="rows"
+                  type="button"
+                  disabled={disabled}
+                  onClick={selectProduct}
+                  className="bg-card rounded-xl px-3 py-2.5 border border-border hover:border-brand/40 active:border-brand active:bg-muted/40 transition-all text-start cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 min-w-0"
+                >
+                  {showProductImages && (
+                    <span
+                      className="relative shrink-0 w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center text-xs font-bold text-white/80"
+                      style={{ backgroundColor: nameToColor(product.name) }}
+                    >
+                      {product.name.substring(0, 2).toUpperCase()}
+                      {product.has_image && (
+                        <img
+                          src={`${api.defaults.baseURL}/products/${product.id}/image?t=${product.updated_at ? parseDbTimestamp(product.updated_at).getTime() : 0}`}
+                          alt=""
+                          className="absolute inset-0 w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      )}
+                    </span>
+                  )}
+                  <span className="flex-1 min-w-0">
+                    <span
+                      className="block font-medium text-foreground truncate"
+                      style={scaledFont(0.9375)}
+                    >
+                      {product.name}
+                    </span>
+                    {stockBadge && (
+                      <span
+                        className={`inline-block mt-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full border ${stockBadge.className}`}
+                      >
+                        {stockBadge.label}
+                      </span>
+                    )}
+                  </span>
+                  {product.tags && product.tags.length > 0 && <TagBadge tag={product.tags[0]} />}
+                  {productNeedsCustomizer(product) && (
+                    <SlidersHorizontal
+                      size={16}
+                      className="shrink-0 text-muted-foreground"
+                      aria-label={t('customisable')}
+                    />
+                  )}
+                  {inCartQty > 0 && (
+                    <span className="shrink-0 bg-brand text-white text-xs min-w-6 h-6 px-1.5 rounded-full flex items-center justify-center font-bold">
+                      {inCartQty}
+                    </span>
+                  )}
+                  <span className="shrink-0 text-brand font-bold" style={scaledFont(1)}>
+                    {fmt(Number(product.price))}
+                  </span>
+                </button>
+              );
+            }
 
             return (
               <button
                 key={product.id}
                 data-testid="pos-product-card"
+                data-shape={cardShape}
                 type="button"
                 disabled={disabled}
-                onClick={() => {
-                  if (disabled) return;
-                  const quantity = parsedSearch?.quantity ?? 1;
-                  if (!validateSelectionQuantity(product, quantity)) return;
-                  onProductClick(product, quantity);
-                }}
+                onClick={selectProduct}
                 className="min-h-36 bg-card rounded-xl p-2.5 border border-border hover:border-brand/40 active:border-brand active:bg-muted/40 hover:shadow-md transition-all text-start relative cursor-pointer overflow-hidden touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {!!product.track_inventory && (
-                  <>
-                    {product.stock_quantity <= 0 ? (
-                      <span className="absolute top-2 start-2 bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-[10px] font-bold px-2 py-0.5 rounded-full z-10 shadow-sm border border-red-200 dark:border-red-800/40 pointer-events-none">
-                        {t('outOfStock')}
-                      </span>
-                    ) : product.stock_quantity <= (product.low_stock_threshold || 0) ? (
-                      <span className="absolute top-2 start-2 bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 text-[10px] font-bold px-2 py-0.5 rounded-full z-10 shadow-sm border border-orange-200 dark:border-orange-800/40 pointer-events-none">
-                        {t('lowStock')}
-                      </span>
-                    ) : null}
-                  </>
+                {stockBadge && (
+                  <span
+                    className={`absolute top-2 start-2 text-[10px] font-bold px-2 py-0.5 rounded-full z-10 shadow-sm border pointer-events-none ${stockBadge.className}`}
+                  >
+                    {stockBadge.label}
+                  </span>
                 )}
                 {inCartQty > 0 && (
                   <span className="absolute top-0 end-0 bg-brand text-white text-xs w-6 h-6 rounded-es-lg flex items-center justify-center font-bold z-10">
@@ -525,7 +609,7 @@ export default function ProductGrid({
                 )}
 
                 {showProductImages && (
-                  <div className="w-full aspect-square rounded-lg mb-3 relative overflow-hidden">
+                  <div className={`w-full ${aspectClass} rounded-lg mb-3 relative overflow-hidden`}>
                     {/* Always-visible background tile — no flash when image loads */}
                     <div
                       className="absolute inset-0 flex items-center justify-center"
@@ -566,7 +650,7 @@ export default function ProductGrid({
                 ) : (
                   <div
                     data-testid="pos-product-text-tile"
-                    className="w-full aspect-[4/3] rounded-lg mb-2 flex items-center justify-center px-1 py-2 text-center"
+                    className={`w-full ${aspectClass} rounded-lg mb-2 flex items-center justify-center px-1 py-2 text-center`}
                     style={{ backgroundColor: nameToColor(product.name) }}
                   >
                     <h3
