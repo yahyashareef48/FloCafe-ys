@@ -244,7 +244,7 @@ assert.equal('frame' in (printPopup?.overrideBrowserWindowOptions || {}), false)
 
 const kitchenPopup = localWindowOpenHandler({ url: 'http://localhost:3001/kds' });
 assert.equal(kitchenPopup?.action, 'allow');
-assert.equal(kitchenPopup?.overrideBrowserWindowOptions.title, 'Flo - Kitchen Display');
+assert.equal(kitchenPopup?.overrideBrowserWindowOptions.title, 'Al Baik POS - Kitchen Display');
 assert.equal(kitchenPopup?.overrideBrowserWindowOptions.width, 1280);
 assert.equal(kitchenPopup?.overrideBrowserWindowOptions.height, 800);
 

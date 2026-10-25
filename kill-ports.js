@@ -28,11 +28,13 @@ const isLinux = os.platform() === 'linux';
 // In dev: `electron .` with app.name = 'flo-desktop'
 // Packaged:
 //   - Linux: executableName "flocafe" (snap/AppImage/deb binary path)
-//   - Mac/Windows: productName "Flo Cafe"
+//   - Mac/Windows: productName "Al Baik POS" (earlier builds: "Flo Cafe")
 const FLO_PATTERNS = [
   /(?:^|[\s\\/])flocafe(?:\.exe)?(?:$|\s)/i,
   /(?:^|[\s\\/])Flo[\s_\-]*Cafe(?:\.exe)?(?:$|\s)/i,
   /(?:^|[\s\\/])Flo Cafe\.app(?:[\\/]Contents[\\/]MacOS[\\/]Flo Cafe)?(?:$|\s)/i,
+  /(?:^|[\s\\/])Al[\s_\-]*Baik[\s_\-]*POS(?:\.exe)?(?:$|\s)/i,
+  /(?:^|[\s\\/])Al Baik POS\.app(?:[\\/]Contents[\\/]MacOS[\\/]Al Baik POS)?(?:$|\s)/i,
   /(?:^|\s)com\.flo\.desktop(?:\.\S*)?(?:$|\s)/i,
   /(?:^|\s)flo[_\-]?pos(?:-service)?(?:\.exe)?(?:$|\s)/i,
   /(?:^|\s)electron(?:\s+\S+)*\s+--appName=flo[_\-]?desktop(?:$|\s)/i,

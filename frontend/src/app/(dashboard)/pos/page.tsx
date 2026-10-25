@@ -550,7 +550,7 @@ export default function POSPage() {
     const clientTicketId = createOperationReference() || '';
     setSupportError({
       title: entry.title,
-      subject: 'FloCafe order problem',
+      subject: 'Al Baik POS order problem',
       code: entry.code,
       message: entry.message,
       nextStep: entry.nextStep,

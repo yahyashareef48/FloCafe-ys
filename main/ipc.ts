@@ -324,7 +324,7 @@ export function registerIpcHandlers(
       } else if (!fs.existsSync(backupPath)) {
         return { success: false, error: 'Backup file no longer exists' };
       } else if (!isManagedBackupFile(backupPath)) {
-        return { success: false, error: 'Restore source must be a Flo-managed backup file' };
+        return { success: false, error: 'Restore source must be an Al Baik POS backup file' };
       }
 
       const backupVersion = getSchemaVersionFromBackup(backupPath);
@@ -333,7 +333,7 @@ export function registerIpcHandlers(
         return {
           success: false,
           error:
-            'Invalid backup file: missing schema version metadata. This backup may have been created with an older version of FloDesktop.',
+            'Invalid backup file: missing schema version metadata. This backup may have been created with an older version of Al Baik POS.',
         };
       }
 

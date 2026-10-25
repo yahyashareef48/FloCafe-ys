@@ -969,7 +969,7 @@ router.post('/setup/initialize', (req: Request, res: Response) => {
     }
 
     if (!VALID_BUSINESS_TYPES.has(normalizedBusinessType)) {
-      return res.status(400).json({ error: 'FloCafe setup only supports restaurant businesses' });
+      return res.status(400).json({ error: 'Al Baik POS setup only supports restaurant businesses' });
     }
 
     if (!VALID_SETUP_PROFILES.has(normalizedSetupProfile)) {

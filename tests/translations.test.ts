@@ -571,9 +571,9 @@ const TR_INTENTIONAL_IDENTICAL = new Set<string>([
   'dashboard.exportCsv', // format label "CSV (.csv)"
   'dashboard.exportXlsx', // format label "Excel (.xlsx)"
   'settings.paymentMethodUpi', // technical acronym (payment rail name)
-  'common.appTitle', // brand name "Flo"
-  'common.brandName', // brand name "Flo Cafe"
-  'common.logoAlt', // brand name "Flo Cafe"
+  'common.appTitle', // brand name
+  'common.brandName', // brand name
+  'common.logoAlt', // brand name
   'nav.portLabel', // technical term "Port"
   'nav.whatsapp', // product name "WhatsApp"
   'pos.addonPrice', // pure format "+{currency}{price}"
@@ -1123,7 +1123,7 @@ function itFallbackErrors(itFlat: Record<string, string>, enFlat: Record<string,
 
 /** Russian translation safeguards. */
 const RU_INTENTIONAL_IDENTICAL = new Set<string>([
-  'common.appTitle', 'common.brandName',
+  'common.appTitle', 'common.brandName', 'common.logoAlt',
   'dashboard.exportCsv', 'dashboard.exportXlsx', 'dashboard.ticketMethodCount',
   'kds.emptyColumn', 'nav.kds', 'nav.pos', 'nav.whatsapp',
   'pos.addonPrice', 'pos.loadingEllipsis', 'pos.tagCount', 'pos.taxLine',
@@ -1433,6 +1433,9 @@ function hiFallbackErrors(hiFlat: Record<string, string>, enFlat: Record<string,
 
 /** Bengali translation safeguards. */
 const BN_INTENTIONAL_IDENTICAL = new Set<string>([
+  'common.appTitle', // brand name
+  'common.brandName', // brand name
+  'common.logoAlt', // brand name
   'auth.emailPlaceholder', 'dashboard.exportCsv', 'nav.pos', 'pos.addonPrice', 'pos.loadingEllipsis',
   'printTest.escpos', 'print.hsn', 'print.zReport.paymentCount', 'products.saleUnitCl',
   'products.saleUnitFlOz', 'products.saleUnitG', 'products.saleUnitL', 'products.saleUnitOz',
@@ -1623,6 +1626,9 @@ function thFallbackErrors(thFlat: Record<string, string>, enFlat: Record<string,
 
 /** Nepali translation safeguards. */
 const NE_INTENTIONAL_IDENTICAL = new Set<string>([
+  'common.appTitle', // brand name
+  'common.brandName', // brand name
+  'common.logoAlt', // brand name
   'auth.emailPlaceholder', 'dashboard.exportCsv', 'dashboard.ticketMethodCount',
   'kds.emptyColumn', 'nav.kds', 'nav.pos', 'pos.addonPrice', 'pos.loadingEllipsis',
   'pos.tagCount', 'pos.taxLine', 'printTest.escpos', 'print.hsn',

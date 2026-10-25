@@ -259,7 +259,7 @@ async function submitTicketHandler(req: Request, res: Response) {
     ...queued,
     status: queued.queued ? 'queued' : 'unavailable',
     message: queued.queued
-      ? 'Your request is queued and will be sent when FloCafe is online.'
+      ? 'Your request is queued and will be sent when Al Baik POS is online.'
       : 'Cloud data deletion is in progress; please try again later.',
   });
 }

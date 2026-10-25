@@ -7,8 +7,8 @@ import { KdsHtmlLang } from '@/components/kds/KdsHtmlLang';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Flo Server App',
-  description: 'Tableside ordering for FloCafe',
+  title: 'Al Baik POS Server App',
+  description: 'Tableside ordering for Al Baik POS',
 };
 
 export default function ServerStandaloneLayout({

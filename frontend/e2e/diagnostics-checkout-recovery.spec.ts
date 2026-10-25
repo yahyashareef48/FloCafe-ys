@@ -321,7 +321,7 @@ test('a lost prepaid payment response replays the same saved request after bill 
     await expect(
       page
         .getByRole('main')
-        .getByText('FloCafe could not confirm whether the order or payment was saved.', {
+        .getByText('Al Baik POS could not confirm whether the order or payment was saved.', {
           exact: true,
         }),
     ).toBeVisible();
@@ -498,7 +498,7 @@ test('an unrelated payment does not resolve another cashier’s pending payment 
   await expect(
     page
       .getByRole('main')
-      .getByText('FloCafe could not confirm whether the order or payment was saved.', {
+      .getByText('Al Baik POS could not confirm whether the order or payment was saved.', {
         exact: false,
       }),
   ).toBeVisible();

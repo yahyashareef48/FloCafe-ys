@@ -15,7 +15,7 @@ const POSTPAID_ATTEMPT_PREFIX = 'flo.postpaid.order.attempt';
 const PREPAID_ATTEMPT_KEY = 'flo.prepaid.checkout.attempt';
 
 const STORAGE_UNAVAILABLE_MESSAGE =
-  'Order not saved because this device is blocking local storage. Free up disk space or restart FloCafe, then try again.';
+  'Order not saved because this device is blocking local storage. Free up disk space or restart Al Baik POS, then try again.';
 
 interface StorageBlockOptions {
   prefixes: string[];
@@ -289,7 +289,7 @@ test('postpaid: a sessionStorage fallback keeps the retry key across a reload wi
     // A legacy HTTP 500 does not prove the order was rejected, so the result
     // stays unknown and the durable attempt remains available for recovery.
     await expect(page.getByRole('status')).toContainText(
-      'FloCafe could not confirm whether the order or payment was saved.',
+      'Al Baik POS could not confirm whether the order or payment was saved.',
     );
     await page.getByText('Show exactly what will be sent').click();
     const helpPayload = page.getByRole('main').locator('details pre');

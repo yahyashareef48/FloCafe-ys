@@ -26,13 +26,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Flo',
+  title: 'Al Baik POS',
   description: 'Smart Point of Sale for restaurants',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Flo',
+    title: 'Al Baik POS',
   },
   icons: {
     icon: [

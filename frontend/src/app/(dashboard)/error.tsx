@@ -57,7 +57,7 @@ export default function DashboardError({ error, reset }: { error: Error & { dige
             <>
               <div className="flex gap-2">
                 <Button onClick={() => reset()}>Try Again</Button>
-                <Button variant="outline" onClick={() => window.location.reload()}>Reload Flo</Button>
+                <Button variant="outline" onClick={() => window.location.reload()}>Reload Al Baik POS</Button>
               </div>
               <p className="text-xs text-muted-foreground">
                 {reportStatus === 'pending' && 'Sending a diagnostic report to help us fix this…'}

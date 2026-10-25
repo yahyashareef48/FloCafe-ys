@@ -213,6 +213,8 @@ if (args[0] === 'ls') {
     'node /Users/dev/FloCafe/dist/main/index.js',
     'node C:\\FloCafe\\dist\\main\\index.js',
     '/Applications/Flo Cafe.app/Contents/MacOS/Flo Cafe',
+    '/Applications/Al Baik POS.app/Contents/MacOS/Al Baik POS',
+    'C:\\Users\\pos\\AppData\\Local\\Programs\\Al Baik POS\\Al Baik POS.exe',
     '/usr/bin/flocafe --no-sandbox',
     'electron . --appName=flo-desktop',
     'node /path/to/FloCafe/dev-server.js',

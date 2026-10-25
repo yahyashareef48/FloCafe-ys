@@ -330,7 +330,7 @@
     "test:product-variants-screen": "ts-node --transpile-only -P tests/tsconfig.json tests/product-variants-screen.test.ts"
   },
   "author": {
-    "name": "Flo",
+    "name": "Al Baik POS",
     "email": "support@flo.local"
   },
   "homepage": "https://flopos.com",
@@ -410,7 +410,7 @@
   },
   "build": {
     "appId": "com.flo.desktop",
-    "productName": "Flo Cafe",
+    "productName": "Al Baik POS",
     "icon": "assets/icon-512.png",
     "afterPack": "scripts/afterPack.js",
     "asar": true,
@@ -467,7 +467,7 @@
       "publisherDisplayName": "Codify Apps Private Limited",
       "identityName": "CodifyAppsPrivateLimited.FloCafe",
       "publisher": "CN=34AFD24D-EC88-44B8-B309-08BB8A6BB5F7",
-      "displayName": "Flo Cafe",
+      "displayName": "Al Baik POS",
       "languages": [
         "en-US"
       ]
@@ -499,7 +499,7 @@
       "notarize": true,
       "artifactName": "flocafe-${version}-mac-${arch}.${ext}",
       "extendInfo": {
-        "NSLocalNetworkUsageDescription": "Flo Cafe connects to thermal printers, KDS displays, and the Waiter & Table Terminal on your local network.",
+        "NSLocalNetworkUsageDescription": "Al Baik POS connects to thermal printers, KDS displays, and the Waiter & Table Terminal on your local network.",
         "NSBonjourServices": [
           "_http._tcp"
         ]
@@ -517,7 +517,7 @@
       "type": "distribution",
       "extendInfo": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSLocalNetworkUsageDescription": "Flo Cafe connects to thermal printers, KDS displays, and the Waiter & Table Terminal on your local network.",
+        "NSLocalNetworkUsageDescription": "Al Baik POS connects to thermal printers, KDS displays, and the Waiter & Table Terminal on your local network.",
         "NSBonjourServices": [
           "_http._tcp"
         ]
@@ -535,7 +535,7 @@
     },
     "linux": {
       "synopsis": "Self-hosted Point of Sale for cafes and restaurants",
-      "description": "Flo is a free, open-source point-of-sale system for cafes, restaurants, and small kitchens. Local-first, offline-capable, no cloud lock-in, no per-seat fees.",
+      "description": "Al Baik POS is a free, open-source point-of-sale system for cafes, restaurants, and small kitchens. Local-first, offline-capable, no cloud lock-in, no per-seat fees.",
       "target": [
         {
           "target": "AppImage",
@@ -582,7 +582,7 @@
       ],
       "desktop": {
         "entry": {
-          "Name": "Flo Cafe",
+          "Name": "Al Baik POS",
           "Comment": "Free, open-source POS for cafes and restaurants",
           "GenericName": "Point of Sale",
           "Keywords": "pos;point of sale;restaurant;cafe;billing;invoice;",

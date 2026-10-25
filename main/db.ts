@@ -93,7 +93,7 @@ function createDatabaseMissingError(dbPath: string): Error & { code: string } {
   const error = new Error(
     `Database file is missing at ${dbPath}, but this install was previously initialized. ` +
       'Refusing to start with a new, empty database to avoid silently losing existing data. ' +
-      'Restore from a backup (Settings → Backup & Restore, or the backups folder) and restart Flo Cafe.',
+      'Restore from a backup (Settings → Backup & Restore, or the backups folder) and restart Al Baik POS.',
   ) as Error & { code: string };
   error.code = 'ERR_DATABASE_MISSING';
   return error;
@@ -3789,7 +3789,7 @@ export function restoreBackup(
         backupSchemaVersion: 0,
         currentSchemaVersion: getCurrentSchemaVersion(),
         tablesRestored: 0,
-        error: 'Restore source is not a readable Flo database file',
+        error: 'Restore source is not a readable Al Baik POS database file',
       };
     }
 
@@ -7824,7 +7824,7 @@ export class SchemaVersionMismatchError extends Error {
     super(
       `Database schema (v${dbVersion}) is newer than this app version supports (v${appVersion}). ` +
         `This usually means another device or a previous update already upgraded this database. ` +
-        `Please update Flo Cafe to the latest version before continuing.`,
+        `Please update Al Baik POS to the latest version before continuing.`,
     );
     this.name = 'SchemaVersionMismatchError';
   }

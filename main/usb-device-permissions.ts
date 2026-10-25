@@ -84,7 +84,7 @@ export function registerUsbDevicePermissions(session: Session, trustedOrigin: st
       defaultId: 0,
       cancelId: 1,
       title: 'Connect USB printer',
-      message: 'FloCafe wants to connect to a USB device',
+      message: 'Al Baik POS wants to connect to a USB device',
       detail: deviceLabel,
     }).then((result) => {
       if (result.response === 0) {

@@ -216,7 +216,7 @@ test('About hydrates More Apps only when activated', async ({ page }) => {
   const apiPaths = collectApiPaths(page);
 
   await page.goto(`${BASE}/settings?tab=about`);
-  await expect(page.getByRole('heading', { name: 'About FloCafe', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'About Al Baik POS', exact: true })).toBeVisible();
   await expect(page.getByText('No apps to show yet.', { exact: true })).toBeVisible();
   expect(apiPaths.filter((path) => path === '/api/more-apps')).toHaveLength(1);
   expect(apiPaths.filter((path) => path === '/api/more-apps/revflo')).toHaveLength(0);

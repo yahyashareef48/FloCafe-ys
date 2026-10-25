@@ -266,7 +266,7 @@ function run(): void {
   {
     const buf80 = buildTestPage('80mm');
     const text80 = buf80.toString('utf8');
-    assert('en test page title unchanged', text80.includes('Flo Printer Test'));
+    assert('en test page title unchanged', text80.includes('Al Baik POS Printer Test'));
     assert('en test page reports columns', text80.includes('Columns: 48'));
     const esText = buildTestPage('80mm', 'full', 'es').toString('utf8');
     assert('es test page title translated', esText.includes('Prueba de impresora Flo'));

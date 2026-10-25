@@ -26,9 +26,9 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
       <body style={{ margin: 0, fontFamily: 'system-ui, sans-serif', background: '#f8f8f8', color: '#1a1a1a' }}>
         <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ maxWidth: 420, textAlign: 'center' }}>
-            <h1 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Flo needs to restart</h1>
+            <h1 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Al Baik POS needs to restart</h1>
             <p style={{ fontSize: 14, color: '#555', marginBottom: 16 }}>
-              Something went wrong loading Flo. Your data is safe.{' '}
+              Something went wrong loading Al Baik POS. Your data is safe.{' '}
               {reportStatus === 'pending' && 'Sending a diagnostic report…'}
               {reportStatus === 'sent' && 'A diagnostic report was sent automatically.'}
               {reportStatus === 'failed' && "Couldn't send a diagnostic report automatically."}
@@ -44,7 +44,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
                 onClick={() => window.location.reload()}
                 style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #ccc', background: '#fff', cursor: 'pointer' }}
               >
-                Reload Flo
+                Reload Al Baik POS
               </button>
             </div>
           </div>
