@@ -5,11 +5,22 @@ import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { usePosSettingsStore } from "@/store/pos-settings"
+import { getLanguageDirection } from "@/lib/i18n"
 
 function DropdownMenu({
+  dir,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
-  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+  // Follow the UI language direction instead of Radix's hardcoded "ltr" default.
+  const language = usePosSettingsStore((s) => s.language)
+  return (
+    <DropdownMenuPrimitive.Root
+      data-slot="dropdown-menu"
+      dir={dir ?? getLanguageDirection(language)}
+      {...props}
+    />
+  )
 }
 
 function DropdownMenuPortal({

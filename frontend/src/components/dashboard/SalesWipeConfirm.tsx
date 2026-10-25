@@ -5,6 +5,14 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { useTranslations } from 'use-intl';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import api from '@/lib/api';
 
 /** Replaces the Z screen's Close button while a data wipe waits on this close. */
@@ -48,29 +56,38 @@ export function SalesWipeConfirm({
     }
   };
 
-  if (!confirming) {
-    return (
-      <Button variant="destructive" onClick={() => setConfirming(true)} data-testid="sales-wipe-finish">
+  return (
+    <>
+      <Button
+        variant="destructive"
+        onClick={() => setConfirming(true)}
+        data-testid="sales-wipe-finish"
+      >
         <Trash2 size={14} />
         {t('salesWipeFinish')}
       </Button>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-2 sm:items-end" data-testid="sales-wipe-confirm">
-      <p role="alert" className="text-sm text-destructive">
-        {t('salesWipeConfirmText')}
-      </p>
-      <div className="flex gap-2">
-        <Button variant="outline" onClick={() => setConfirming(false)} disabled={wiping}>
-          {t('cancel')}
-        </Button>
-        <Button variant="destructive" onClick={() => void wipe()} disabled={wiping}>
-          {wiping ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-          {t('salesWipeConfirm')}
-        </Button>
-      </div>
-    </div>
+      <Dialog open={confirming} onOpenChange={(open) => !wiping && setConfirming(open)}>
+        <DialogContent className="sm:max-w-md" data-testid="sales-wipe-confirm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 size={18} className="text-destructive" />
+              {t('salesWipeFinish')}
+            </DialogTitle>
+            <DialogDescription className="text-destructive">
+              {t('salesWipeConfirmText')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirming(false)} disabled={wiping}>
+              {t('cancel')}
+            </Button>
+            <Button variant="destructive" onClick={() => void wipe()} disabled={wiping}>
+              {wiping ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+              {t('salesWipeConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -562,10 +562,10 @@ export function CashCloseModal({ model }: { model: CashCloseModel }) {
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="sm:flex-wrap">
             {closeStep === 3 ? (
               <>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 sm:me-auto">
                   {exportMenu('z')}
                   {canSendWhatsApp && (
                     <Button
@@ -581,45 +581,47 @@ export function CashCloseModal({ model }: { model: CashCloseModel }) {
                     </Button>
                   )}
                 </div>
-                <SalesWipeConfirm
-                  closureId={closedZ?.id}
-                  fallback={
-                    <Button variant="outline" onClick={() => setCloseOpen(false)}>
-                      {tCommon('close')}
+                <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                  <SalesWipeConfirm
+                    closureId={closedZ?.id}
+                    fallback={
+                      <Button variant="outline" onClick={() => setCloseOpen(false)}>
+                        {tCommon('close')}
+                      </Button>
+                    }
+                  />
+                  {hasPrintedFresh || hydratedZ ? (
+                    <Button
+                      onClick={() => {
+                        if (closedZ) printZ(closedZ, true);
+                      }}
+                      disabled={printingZ || !closedZ}
+                    >
+                      {printingZ ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Printer size={14} />
+                      )}
+                      {t('reprintZ')}
                     </Button>
-                  }
-                />
-                {hasPrintedFresh || hydratedZ ? (
-                  <Button
-                    onClick={() => {
-                      if (closedZ) printZ(closedZ, true);
-                    }}
-                    disabled={printingZ || !closedZ}
-                  >
-                    {printingZ ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <Printer size={14} />
-                    )}
-                    {t('reprintZ')}
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={async () => {
-                      if (!closedZ) return;
-                      const ok = await printZ(closedZ, false);
-                      if (ok) setHasPrintedFresh(true);
-                    }}
-                    disabled={printingZ || !closedZ}
-                  >
-                    {printingZ ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <Printer size={14} />
-                    )}
-                    {t('printZReport')}
-                  </Button>
-                )}
+                  ) : (
+                    <Button
+                      onClick={async () => {
+                        if (!closedZ) return;
+                        const ok = await printZ(closedZ, false);
+                        if (ok) setHasPrintedFresh(true);
+                      }}
+                      disabled={printingZ || !closedZ}
+                    >
+                      {printingZ ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Printer size={14} />
+                      )}
+                      {t('printZReport')}
+                    </Button>
+                  )}
+                </div>
               </>
             ) : (
               <>

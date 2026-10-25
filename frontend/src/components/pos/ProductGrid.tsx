@@ -351,7 +351,10 @@ export default function ProductGrid({
       : cardShape === 'tall'
         ? 'aspect-[3/4]'
         : 'aspect-square';
-  const scaledFont = (rem: number) => ({ fontSize: `${rem * textScale}rem` });
+  // cqi caps keep text inside narrow cards (many per row or large text) instead of overflowing.
+  const scaledFont = (rem: number, maxCqi?: number) => ({
+    fontSize: maxCqi ? `min(${rem * textScale}rem, ${maxCqi}cqi)` : `${rem * textScale}rem`,
+  });
   const t = useTranslations('pos');
   const validateSelectionQuantity = (product: Product, quantity: number) => {
     if (isValidProductQuantity(product, quantity)) return true;
@@ -590,6 +593,7 @@ export default function ProductGrid({
                 key={product.id}
                 data-testid="pos-product-card"
                 data-shape={cardShape}
+                style={editableLayout ? { containerType: 'inline-size' } : undefined}
                 type="button"
                 disabled={disabled}
                 onClick={selectProduct}
@@ -643,7 +647,7 @@ export default function ProductGrid({
                 {showProductImages || !editableLayout ? (
                   <h3
                     className="font-medium text-foreground text-sm line-clamp-2 leading-snug"
-                    style={editableLayout ? scaledFont(0.875) : undefined}
+                    style={editableLayout ? scaledFont(0.875, 11) : undefined}
                   >
                     {product.name}
                   </h3>
@@ -655,7 +659,7 @@ export default function ProductGrid({
                   >
                     <h3
                       className="font-bold text-white line-clamp-4 leading-tight break-words hyphens-auto"
-                      style={scaledFont(1)}
+                      style={scaledFont(1, 13)}
                     >
                       {product.name}
                     </h3>
@@ -664,7 +668,7 @@ export default function ProductGrid({
                 <div className="flex items-center justify-between mt-1">
                   <p
                     className="text-brand font-bold"
-                    style={editableLayout ? scaledFont(1) : undefined}
+                    style={editableLayout ? scaledFont(1, 10) : undefined}
                   >
                     {fmt(Number(product.price))}
                   </p>
