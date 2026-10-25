@@ -28,7 +28,6 @@ import {
   ChevronDown,
   FileSpreadsheet,
   FileText,
-  MessageCircle,
 } from 'lucide-react';
 import type { CashCloseModel } from '@/hooks/useCashClose';
 import {
@@ -37,7 +36,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { SendWhatsAppReportModal } from '@/components/dashboard/SendWhatsAppReportModal';
 
 /** Day-close wizard modal (steps 1 Revisar / 2 Contar / 3 Cerrar).
  *  Pure view over useCashClose: every value and action arrives on
@@ -81,13 +79,6 @@ export function CashCloseModal({ model }: { model: CashCloseModel }) {
     todayLocal,
     submitClose,
     printZ,
-    canSendWhatsApp,
-    canViewSettings,
-    openWhatsAppReport,
-    whatsAppOpen,
-    setWhatsAppOpen,
-    sendWhatsAppReport,
-    whatsappCountry,
   } = model;
   const tPos = useTranslations('pos');
   const blockingOpenShift = xReport?.blockingOpenShift ?? null;
@@ -117,12 +108,6 @@ export function CashCloseModal({ model }: { model: CashCloseModel }) {
           <FileText size={14} />
           {t('exportCsv')}
         </DropdownMenuItem>
-        {canSendWhatsApp && (report === 'x' ? xReport : closedZ) && (
-          <DropdownMenuItem onSelect={() => openWhatsAppReport(report)}>
-            <MessageCircle size={14} className="text-emerald-500" />
-            {t('sendViaWhatsApp')}
-          </DropdownMenuItem>
-        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -562,26 +547,13 @@ export function CashCloseModal({ model }: { model: CashCloseModel }) {
             )}
           </div>
 
-          <DialogFooter className="sm:flex-wrap">
+          <DialogFooter className="sm:flex-wrap sm:items-center">
             {closeStep === 3 ? (
               <>
-                <div className="flex items-center gap-2 sm:me-auto">
+                <div className="sm:me-auto [&>button]:w-full sm:[&>button]:w-auto">
                   {exportMenu('z')}
-                  {canSendWhatsApp && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      aria-label={t('sendViaWhatsApp')}
-                      title={t('sendViaWhatsApp')}
-                      disabled={!closedZ}
-                      onClick={() => openWhatsAppReport('z')}
-                    >
-                      <MessageCircle size={16} className="text-emerald-500" />
-                    </Button>
-                  )}
                 </div>
-                <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                <div className="flex flex-col-reverse gap-2 sm:ms-auto sm:flex-row">
                   <SalesWipeConfirm
                     closureId={closedZ?.id}
                     fallback={
@@ -698,13 +670,6 @@ export function CashCloseModal({ model }: { model: CashCloseModel }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <SendWhatsAppReportModal
-        open={whatsAppOpen}
-        country={whatsappCountry}
-        canViewSettings={canViewSettings}
-        onOpenChange={setWhatsAppOpen}
-        onSend={sendWhatsAppReport}
-      />
     </>
   );
 }
