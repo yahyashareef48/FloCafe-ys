@@ -1,6 +1,6 @@
-# Contributing to FloCafe
+# Contributing to Al Baik POS
 
-FloCafe welcomes outside contributions from developers, designers, operators, and translators.
+Al Baik POS welcomes outside contributions from developers, designers, operators, and translators.
 
 All contributors are expected to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
 
@@ -8,7 +8,7 @@ All contributors are expected to adhere to our [Code of Conduct](CODE_OF_CONDUCT
 
 ## Contribution philosophy
 
-FloCafe is an actively developed, offline-first desktop POS used in real deployments. While core business operations and data safety are stable, internal and extension architecture continues to evolve.
+Al Baik POS is an actively developed, offline-first desktop POS used in real deployments. While core business operations and data safety are stable, internal and extension architecture continues to evolve.
 
 > **An open issue is not automatic approval of a proposed implementation.**
 
@@ -57,7 +57,7 @@ Draft PRs are welcome for sharing early prototypes, demonstrating bug reproducti
 
 ## Set up a development copy
 
-FloCafe requires **Node.js 22 or later** and npm. On Windows, [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (with the "Desktop development with C++" workload) is recommended for compiling native modules such as SQLite.
+Al Baik POS requires **Node.js 22 or later** and npm. On Windows, [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (with the "Desktop development with C++" workload) is recommended for compiling native modules such as SQLite.
 
 ```sh
 # Clone your fork
@@ -132,7 +132,7 @@ is not installed, use the manual formatter and lint commands above; CI remains t
 Use `HUSKY=0 npm install` inside linked worktrees, which share Git configuration with the main
 checkout.
 
-> **Port configuration:** FloCafe uses ports `3001` (Main API), `3002` (KDS), and `3003` (Server App). If these ports are in use (e.g. by Docker), FloCafe automatically falls back to subsequent available ports. You can also customize them via `PORT`, `KDS_PORT`, and `SERVER_APP_PORT` in `.env`.
+> **Port configuration:** Al Baik POS uses ports `3001` (Main API), `3002` (KDS), and `3003` (Server App). If these ports are in use (e.g. by Docker), Al Baik POS automatically falls back to subsequent available ports. You can also customize them via `PORT`, `KDS_PORT`, and `SERVER_APP_PORT` in `.env`.
 
 ---
 
@@ -166,7 +166,7 @@ Use clear commit messages following Conventional Commits (`feat:`, `fix:`, `docs
 
 ## AI-assisted contributions
 
-AI coding assistants and tools are welcome. FloCafe itself utilizes AI-assisted engineering workflows.
+AI coding assistants and tools are welcome. Al Baik POS itself utilizes AI-assisted engineering workflows.
 
 - **Contributor responsibility:** Contributors remain fully responsible for understanding, explaining, testing, and maintaining everything they submit.
 - **Low-quality submissions:** Bulk-generated, speculative, issue-farming, or low-understanding PRs may be closed regardless of whether they were written by a human or an AI tool.
@@ -193,7 +193,7 @@ Changes touching database migrations, customer data handling, authentication, ta
 
 ## Database and customer-data safety
 
-FloCafe runs on real business data that must survive software upgrades.
+Al Baik POS runs on real business data that must survive software upgrades.
 
 - **Versioned migrations:** Every schema modification must use a new integer migration version via SQLite's `PRAGMA user_version` in `main/db.ts`.
 - **Destructive changes:** Destructive schema modifications require explicit maintainer approval, a documented data-preservation strategy, a tested upgrade path, and an appropriate recovery/rollback plan.
@@ -204,7 +204,7 @@ FloCafe runs on real business data that must survive software upgrades.
 
 ## Translations and i18n
 
-FloCafe currently provides translations for English (`en`), Spanish (`es`), French (`fr`), Brazilian Portuguese (`pt`), Russian (`ru`), Filipino (`fil`), Turkish (`tr`), Persian (`fa`, including RTL support), Arabic (`ar`, including RTL support), Urdu (`ur`, including RTL support), German (`de`), Italian (`it`), Japanese (`ja`), Simplified Chinese (`zh`), Traditional Chinese for Taiwan (`zh-tw`), Korean (`ko`), Bahasa Indonesia (`id`), Dutch (`nl`), Hindi (`hi`), Bengali/Bangla (`bn`), Albanian (`sq`), Vietnamese (`vi`), Thai (`th`), and Nepali (`ne`).
+Al Baik POS currently provides translations for English (`en`), Spanish (`es`), French (`fr`), Brazilian Portuguese (`pt`), Russian (`ru`), Filipino (`fil`), Turkish (`tr`), Persian (`fa`, including RTL support), Arabic (`ar`, including RTL support), Urdu (`ur`, including RTL support), German (`de`), Italian (`it`), Japanese (`ja`), Simplified Chinese (`zh`), Traditional Chinese for Taiwan (`zh-tw`), Korean (`ko`), Bahasa Indonesia (`id`), Dutch (`nl`), Hindi (`hi`), Bengali/Bangla (`bn`), Albanian (`sq`), Vietnamese (`vi`), Thai (`th`), and Nepali (`ne`).
 
 - **Existing languages:** Narrowly scoped fixes and improvements to existing translation strings are always welcome. Verify changes with `npm run i18n:check`.
 - **New languages:** Adding an entirely new language requires maintainer coordination through an issue first.
@@ -218,12 +218,12 @@ For complete authoring, scaffolding, RTL support, and verification instructions,
 
 ## Tax packs and compliance contributions
 
-FloCafe uses a generic calculation engine paired with data-only country tax packs (`main/tax-packs/`).
+Al Baik POS uses a generic calculation engine paired with data-only country tax packs (`main/tax-packs/`).
 
 - **Authoritative sources:** Tax rules must be backed by authoritative references (official tax authorities, enacted legislation, or official administrative guidelines). Blog posts or AI summaries are not sufficient primary sources.
 - **Jurisdictional scope:** Clearly identify the geographic and legal scope of the pack (country-wide VAT, state/province sales taxes, intra/inter-state rules).
 - **Process:** Open a proposal issue before authoring a pack. Follow the [tax pack authoring procedure](docs/guides/adding-a-tax-pack.md) for executable calculation fixtures and verification against `main/tax-packs/types.ts`.
-- **Disclaimer:** FloCafe is software, not certified legal or tax advice. Tax packs do not by themselves guarantee compliance with local regulations.
+- **Disclaimer:** Al Baik POS is software, not certified legal or tax advice. Tax packs do not by themselves guarantee compliance with local regulations.
 
 For the pack schema, trust model, and catalog mechanics, see the [tax pack reference](docs/reference/tax-packs.md). For the authoring procedure, see [Adding a tax pack](docs/guides/adding-a-tax-pack.md).
 

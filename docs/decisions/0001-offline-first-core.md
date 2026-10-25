@@ -9,11 +9,11 @@ considered and rejected, or what a re-introduction would cost.
 
 ## Context
 
-FloCafe runs on a single computer on a merchant's premises. A café may have no internet
+Al Baik POS runs on a single computer on a merchant's premises. A café may have no internet
 connection at all, or an intermittent one. Orders, billing, kitchen display, and printing are the
 product; they cannot depend on a remote service being reachable.
 
-At the same time FloCafe has accumulated real integrations with remote systems: Google Drive
+At the same time Al Baik POS has accumulated real integrations with remote systems: Google Drive
 backup, anonymous telemetry, store-attributed diagnostics, WhatsApp receipt delivery, and FloAdmin
 cloud sync. Each of these is genuinely useful and none of them is required to take an order.
 

@@ -1,14 +1,16 @@
-# FloCafe
+# Al Baik POS
+
+<p align="center"><img src="logo/AlBaikPOS.png" alt="Al Baik POS logo" width="420"></p>
 
 **Punto de venta gratuito, de código abierto y diseñado para funcionar sin conexión para cafeterías, restaurantes y pequeñas cocinas.**
 
 [English](README.md) | **Español** | [Português](README.pt.md) | [Français](README.fr.md) | [Türkçe](README.tr.md) | [Filipino](README.fil.md) | [Deutsch](README.de.md) | [简体中文](README.zh-CN.md)
 
-FloCafe funciona directamente en el ordenador del negocio. Los pedidos, clientes, recibos y copias de seguridad se guardan en una base de datos SQLite local, por lo que el servicio de mostrador y las pantallas de cocina pueden seguir funcionando sin conexión a Internet. No se necesita una cuenta alojada ni en la nube para las funciones principales del TPV. Las integraciones opcionales, como las copias de seguridad en Google Drive, el envío de facturas por WhatsApp y los informes conectados a la nube, pueden activarse cuando sea necesario.
+Al Baik POS funciona directamente en el ordenador del negocio. Los pedidos, clientes, recibos y copias de seguridad se guardan en una base de datos SQLite local, por lo que el servicio de mostrador y las pantallas de cocina pueden seguir funcionando sin conexión a Internet. No se necesita una cuenta alojada ni en la nube para las funciones principales del TPV. Las integraciones opcionales, como las copias de seguridad en Google Drive, el envío de facturas por WhatsApp y los informes conectados a la nube, pueden activarse cuando sea necesario.
 
-## Obtener FloCafe
+## Obtener Al Baik POS
 
-Descarga el instalador más reciente desde [GitHub Releases](https://github.com/FreeOpenSourcePOS/FloCafe/releases), o instala FloCafe desde la tienda de aplicaciones de tu plataforma. También puedes usar la [Mac App Store](https://apps.apple.com/in/app/flo-cafe/id6763136018), [Microsoft Store](https://apps.microsoft.com/detail/9n1md6585p4q) o [Snap Store](https://snapcraft.io/flocafe).
+Descarga el instalador más reciente desde [GitHub Releases](https://github.com/FreeOpenSourcePOS/FloCafe/releases), o instala Al Baik POS desde la tienda de aplicaciones de tu plataforma. También puedes usar la [Mac App Store](https://apps.apple.com/in/app/flo-cafe/id6763136018), [Microsoft Store](https://apps.microsoft.com/detail/9n1md6585p4q) o [Snap Store](https://snapcraft.io/flocafe).
 
 Las versiones incluyen instaladores para Windows, DMG para macOS y paquetes AppImage, `.deb`, `.rpm` y Snap para Linux. Consulta la [guía de instalación y soporte de Linux](docs/linux.md) para obtener información específica sobre paquetes, actualizaciones, FUSE, permisos de impresión y la bandeja del sistema.
 
@@ -20,7 +22,7 @@ Las versiones incluyen instaladores para Windows, DMG para macOS y paquetes AppI
 | Memoria | 4 GB de RAM |
 | Almacenamiento | 500 MB libres, además del espacio para copias de seguridad locales |
 
-Node.js solo es necesario para desarrollar FloCafe, no para ejecutar una versión empaquetada.
+Node.js solo es necesario para desarrollar Al Baik POS, no para ejecutar una versión empaquetada.
 
 <details>
 <summary>Desinstalar una versión descargada directamente</summary>
@@ -56,33 +58,33 @@ Ambos scripts preguntan si quieres conservar los datos de la aplicación. No eli
 
 ## Estado del proyecto
 
-FloCafe está en desarrollo activo y ya se utiliza en instalaciones reales. La seguridad de los datos de clientes y las actualizaciones se trata con cuidado mediante migraciones explícitas y mecanismos de recuperación. Parte de la arquitectura interna y orientada a extensiones todavía está evolucionando, por lo que los detalles de implementación y los contratos internos pueden cambiar.
+Al Baik POS está en desarrollo activo y ya se utiliza en instalaciones reales. La seguridad de los datos de clientes y las actualizaciones se trata con cuidado mediante migraciones explícitas y mecanismos de recuperación. Parte de la arquitectura interna y orientada a extensiones todavía está evolucionando, por lo que los detalles de implementación y los contratos internos pueden cambiar.
 
 ## Diseñado para funcionar sin conexión
 
 Las funciones principales del TPV y los datos locales funcionan sin conexión. La creación de pedidos, la facturación, la coordinación con KDS y la impresión de recibos no dependen de Internet ni de servicios externos en la nube.
 
 - La base de datos SQLite y las copias locales se guardan en el directorio de datos del usuario, separado de los binarios instalados. Las actualizaciones normales no los eliminan; se recomienda crear una copia manual antes de reinstalar, cambiar de equipo o cambiar de canal de distribución.
-- FloCafe crea automáticamente una copia de seguridad con fecha y hora antes de ejecutar migraciones del esquema.
+- Al Baik POS crea automáticamente una copia de seguridad con fecha y hora antes de ejecutar migraciones del esquema.
 - Servicios como las copias de seguridad en Google Drive, el envío de facturas por WhatsApp y los informes en la nube solo se comunican por la red cuando el propietario del negocio los configura y activa explícitamente.
 
 ## Idiomas y soporte regional
 
-FloCafe incluye traducciones de la interfaz en inglés, español, francés, portugués brasileño, filipino, turco, persa (farsi) con soporte RTL, alemán, italiano, japonés, chino simplificado, coreano y bahasa indonesio. El idioma de la interfaz es independiente del país de la tienda y de la configuración regional. Las reglas de cálculo de impuestos son un aspecto separado. Para contribuir traducciones o añadir idiomas, consulta la [guía de internacionalización y traducciones](docs/architecture/internationalization.md).
+Al Baik POS incluye traducciones de la interfaz en inglés, español, francés, portugués brasileño, filipino, turco, persa (farsi) con soporte RTL, alemán, italiano, japonés, chino simplificado, coreano y bahasa indonesio. El idioma de la interfaz es independiente del país de la tienda y de la configuración regional. Las reglas de cálculo de impuestos son un aspecto separado. Para contribuir traducciones o añadir idiomas, consulta la [guía de internacionalización y traducciones](docs/architecture/internationalization.md).
 
-FloCafe incluye perfiles para 131 países y 109 monedas. Cada perfil establece una moneda, configuración regional y zona horaria predeterminadas; el propietario puede cambiar la zona horaria durante la configuración o más adelante en Ajustes.
+Al Baik POS incluye perfiles para 131 países y 109 monedas. Cada perfil establece una moneda, configuración regional y zona horaria predeterminadas; el propietario puede cambiar la zona horaria durante la configuración o más adelante en Ajustes.
 
 ## Soporte fiscal
 
-FloCafe incluye un motor de cálculo genérico y paquetes fiscales regionales firmados y versionados para reglas regionales, categorías fiscales y políticas de redondeo. La cobertura de países se amplía mediante el catálogo y la disponibilidad varía. También permite configurar reglas y tipos impositivos manuales localmente.
+Al Baik POS incluye un motor de cálculo genérico y paquetes fiscales regionales firmados y versionados para reglas regionales, categorías fiscales y políticas de redondeo. La cobertura de países se amplía mediante el catálogo y la disponibilidad varía. También permite configurar reglas y tipos impositivos manuales localmente.
 
-> **Aviso:** FloCafe es software, no asesoramiento legal ni fiscal. Los paquetes fiscales y las herramientas de configuración no certifican por sí mismos el cumplimiento de las normativas locales; cada operador debe verificar los requisitos aplicables a su negocio.
+> **Aviso:** Al Baik POS es software, no asesoramiento legal ni fiscal. Los paquetes fiscales y las herramientas de configuración no certifican por sí mismos el cumplimiento de las normativas locales; cada operador debe verificar los requisitos aplicables a su negocio.
 
 Para obtener información sobre la creación, validación y el esquema de los paquetes, consulta la [guía para desarrolladores de paquetes fiscales](docs/reference/tax-packs.md).
 
 ## Desarrollo
 
-Para desarrollar FloCafe necesitas Node.js 22 o posterior:
+Para desarrollar Al Baik POS necesitas Node.js 22 o posterior:
 
 ```sh
 git clone https://github.com/FreeOpenSourcePOS/FloCafe.git
@@ -115,7 +117,7 @@ Las contribuciones son bienvenidas. Consulta [CONTRIBUTING.md](CONTRIBUTING.md) 
 - **Las correcciones pequeñas, mejoras de documentación y pruebas específicas** pueden iniciarse libremente.
 - **Las funciones nuevas, cambios de esquema de base de datos y refactorizaciones arquitectónicas** requieren conversación y aprobación de los mantenedores antes de implementarse.
 
-Si FloCafe te resulta útil, considera marcar el repositorio con una estrella.
+Si Al Baik POS te resulta útil, considera marcar el repositorio con una estrella.
 
 ## Ayuda y documentación
 
@@ -130,4 +132,4 @@ Si FloCafe te resulta útil, considera marcar el repositorio con una estrella.
 
 ## Licencia
 
-FloCafe es software de código abierto bajo la [licencia MIT](LICENSE).
+Al Baik POS es software de código abierto bajo la [licencia MIT](LICENSE).

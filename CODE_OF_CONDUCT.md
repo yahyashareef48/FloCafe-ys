@@ -2,7 +2,7 @@
 
 ## Our commitment
 
-FloCafe is a place for people to build and improve software together. We expect members, contributors, and maintainers to make participation free from harassment, discrimination, and intimidation, regardless of experience, identity, background, ability, religion, nationality, or sexual orientation.
+Al Baik POS is a place for people to build and improve software together. We expect members, contributors, and maintainers to make participation free from harassment, discrimination, and intimidation, regardless of experience, identity, background, ability, religion, nationality, or sexual orientation.
 
 ## Expected behavior
 
@@ -14,7 +14,7 @@ Harassment; threats; hateful, sexualized, insulting, or demeaning language; pers
 
 ## Scope and enforcement
 
-This policy applies in FloCafe's GitHub repository, discussions, community channels, and any public space where someone represents the project.
+This policy applies in Al Baik POS's GitHub repository, discussions, community channels, and any public space where someone represents the project.
 
 Maintainers may remove, edit, or reject contributions and communications that violate this policy. Depending on the conduct and context, a response may range from a private correction to a warning, temporary ban, or permanent ban. Maintainers will handle reports fairly and protect the reporter's privacy as far as they can.
 

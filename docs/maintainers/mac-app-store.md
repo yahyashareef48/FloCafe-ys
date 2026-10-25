@@ -83,7 +83,7 @@ the most recently modified `.pkg` from `release/`.
 `deliver` is invoked with the App Store Connect API key, a 20-minute key duration, the app
 identifier and version from `package.json`, and the release notes keyed by
 `MAS_RELEASE_LOCALE`. Screenshots are skipped, the precheck is not run before submission, and the
-export compliance answers declare that FloCafe does not use encryption and does not contain
+export compliance answers declare that Al Baik POS does not use encryption and does not contain
 third-party content.
 
 ## Store review is external

@@ -1,6 +1,6 @@
 # Desktop releases
 
-FloCafe desktop releases use one electron-builder pipeline and publish to GitHub Releases for
+Al Baik POS desktop releases use one electron-builder pipeline and publish to GitHub Releases for
 Windows (NSIS), macOS (DMG and ZIP), and Linux (AppImage, deb, rpm, Snap). AppX and Mac App Store
 packages are produced by the same tag build and uploaded as GitHub release assets; they are not
 consumed by `electron-updater` and are not submitted to their stores by this pipeline. Snap Store
@@ -176,7 +176,7 @@ observe.
 ## Manual pre-release QA
 
 CI covers Chromium in Electron and the packaged desktop app. The standalone server app on port
-`3003` is the one surface FloCafe does not control the runtime for: staff reach it from whatever
+`3003` is the one surface Al Baik POS does not control the runtime for: staff reach it from whatever
 browser their device has. Before promoting a stable release, check it on:
 
 - **Safari on iOS**, current major version.

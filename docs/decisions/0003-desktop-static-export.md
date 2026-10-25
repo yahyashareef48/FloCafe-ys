@@ -10,7 +10,7 @@ considered and rejected, or what a re-introduction would cost.
 ## Context
 
 `frontend/` is a Next.js application. The obvious assumption is that a Next.js application has a
-server runtime, route handlers, server components fetching data, and server actions. FloCafe's
+server runtime, route handlers, server components fetching data, and server actions. Al Baik POS's
 desktop build has none of them.
 
 When `NEXT_BUILD_MODE=desktop`, `frontend/next.config.ts` sets `output: 'export'`. The build

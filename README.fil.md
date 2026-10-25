@@ -1,12 +1,14 @@
-# FloCafe
+# Al Baik POS
+
+<p align="center"><img src="logo/AlBaikPOS.png" alt="Al Baik POS logo" width="420"></p>
 
 **Libre, open-source, at offline-first na point of sale para sa mga café, restaurant, at maliliit na kusina.**
 
 [English](README.md) | [Español](README.es.md) | [Português](README.pt.md) | [Français](README.fr.md) | [Türkçe](README.tr.md) | **Filipino** | [Deutsch](README.de.md) | [简体中文](README.zh-CN.md)
 
-Direktang tumatakbo ang FloCafe sa computer ng negosyo. Naka-save ang mga order, customer, resibo, at backup sa lokal na SQLite database, kaya patuloy na gagana ang counter service at kitchen display kahit walang koneksyon sa Internet. Hindi kailangan ng hosted o cloud account para sa pangunahing operasyon ng POS. Maaaring paganahin kapag kailangan ang mga opsyonal na integration gaya ng Google Drive backup, pagpapadala ng bill sa WhatsApp, at cloud-connected reporting.
+Direktang tumatakbo ang Al Baik POS sa computer ng negosyo. Naka-save ang mga order, customer, resibo, at backup sa lokal na SQLite database, kaya patuloy na gagana ang counter service at kitchen display kahit walang koneksyon sa Internet. Hindi kailangan ng hosted o cloud account para sa pangunahing operasyon ng POS. Maaaring paganahin kapag kailangan ang mga opsyonal na integration gaya ng Google Drive backup, pagpapadala ng bill sa WhatsApp, at cloud-connected reporting.
 
-## Kunin ang FloCafe
+## Kunin ang Al Baik POS
 
 I-download ang pinakabagong installer mula sa [GitHub Releases](https://github.com/FreeOpenSourcePOS/FloCafe/releases), o i-install ito mula sa app store ng iyong platform. Maaari ring gamitin ang [Mac App Store](https://apps.apple.com/in/app/flo-cafe/id6763136018), [Microsoft Store](https://apps.microsoft.com/detail/9n1md6585p4q), o [Snap Store](https://snapcraft.io/flocafe).
 
@@ -20,7 +22,7 @@ May Windows installer, macOS DMG, at AppImage, `.deb`, `.rpm`, at Snap package p
 | Memory | 4 GB RAM |
 | Storage | 500 MB na libre, dagdag pa para sa lokal na backup |
 
-Kailangan lamang ang Node.js para sa pag-develop ng FloCafe, hindi para patakbuhin ang naka-package na bersyon.
+Kailangan lamang ang Node.js para sa pag-develop ng Al Baik POS, hindi para patakbuhin ang naka-package na bersyon.
 
 <details>
 <summary>I-uninstall ang direktang na-download na build</summary>
@@ -56,27 +58,27 @@ Itatanong ng dalawang script kung pananatilihin ang application data. Huwag pili
 
 ## Status ng proyekto
 
-Aktibong dine-develop ang FloCafe at ginagamit na sa mga aktuwal na deployment. Pinangangalagaan ang customer data at upgrade safety sa pamamagitan ng malinaw na database migration at recovery mechanism. Patuloy pang umuunlad ang ilang bahagi ng internal at extension-facing architecture, kaya maaaring magbago ang implementation details at internal contract.
+Aktibong dine-develop ang Al Baik POS at ginagamit na sa mga aktuwal na deployment. Pinangangalagaan ang customer data at upgrade safety sa pamamagitan ng malinaw na database migration at recovery mechanism. Patuloy pang umuunlad ang ilang bahagi ng internal at extension-facing architecture, kaya maaaring magbago ang implementation details at internal contract.
 
 ## Offline-first
 
 Gumagana offline ang pangunahing POS operation at lokal na data. Hindi nakadepende sa Internet o external cloud service ang order entry, billing, KDS coordination, at receipt printing.
 
 - Nasa user-data directory ang SQLite database at lokal na backup, hiwalay sa naka-install na application binary. Hindi inaalis ng karaniwang update ang mga ito; pinakamainam na gumawa ng manual backup bago mag-reinstall, lumipat ng computer, o magpalit ng distribution channel.
-- Awtomatikong gumagawa ang FloCafe ng timestamped backup bago magpatakbo ng schema migration.
+- Awtomatikong gumagawa ang Al Baik POS ng timestamped backup bago magpatakbo ng schema migration.
 - Ang Google Drive backup, pagpapadala ng bill sa WhatsApp, at cloud reporting ay nakikipag-ugnayan lamang sa network kapag tahasang na-configure at na-enable ng may-ari ng negosyo.
 
 ## Mga wika at regional support
 
-May UI translation ang FloCafe para sa English, Spanish, French, Brazilian Portuguese, Filipino, Turkish, Persian (Farsi) na may RTL support, German, Italian, Japanese, Simplified Chinese, Korean, at Bahasa Indonesia. Hiwalay ang UI language sa country at regional setting ng store, at hiwalay din ang tax calculation rules. Para sa pag-aambag ng translation o pagdaragdag ng wika, tingnan ang [Internationalization and translation guide](docs/architecture/internationalization.md).
+May UI translation ang Al Baik POS para sa English, Spanish, French, Brazilian Portuguese, Filipino, Turkish, Persian (Farsi) na may RTL support, German, Italian, Japanese, Simplified Chinese, Korean, at Bahasa Indonesia. Hiwalay ang UI language sa country at regional setting ng store, at hiwalay din ang tax calculation rules. Para sa pag-aambag ng translation o pagdaragdag ng wika, tingnan ang [Internationalization and translation guide](docs/architecture/internationalization.md).
 
-May profile ang FloCafe para sa 131 bansa at 109 currency. Tinutukoy ng bawat profile ang default currency, locale, at timezone; maaaring baguhin ng may-ari ang timezone sa setup o sa Settings.
+May profile ang Al Baik POS para sa 131 bansa at 109 currency. Tinutukoy ng bawat profile ang default currency, locale, at timezone; maaaring baguhin ng may-ari ang timezone sa setup o sa Settings.
 
 ## Tax support
 
-May generic calculation engine at signed, versioned regional tax pack ang FloCafe para sa regional rules, tax category, at rounding policy. Lumalawak ang country coverage sa pamamagitan ng catalog at nag-iiba ang availability. Maaari ring mag-configure ng manual tax rule at rate nang lokal.
+May generic calculation engine at signed, versioned regional tax pack ang Al Baik POS para sa regional rules, tax category, at rounding policy. Lumalawak ang country coverage sa pamamagitan ng catalog at nag-iiba ang availability. Maaari ring mag-configure ng manual tax rule at rate nang lokal.
 
-> **Paalala:** Software ang FloCafe, hindi legal o tax advice. Hindi awtomatikong nagpapatunay ng pagsunod sa lokal na regulasyon ang tax pack at configuration tool; responsibilidad ng operator na beripikahin ang mga requirement para sa negosyo nito.
+> **Paalala:** Software ang Al Baik POS, hindi legal o tax advice. Hindi awtomatikong nagpapatunay ng pagsunod sa lokal na regulasyon ang tax pack at configuration tool; responsibilidad ng operator na beripikahin ang mga requirement para sa negosyo nito.
 
 Para sa detalye tungkol sa pag-author, validation, at schema ng pack, tingnan ang [tax pack developer guide](docs/reference/tax-packs.md).
 
@@ -115,7 +117,7 @@ Malugod na tinatanggap ang mga contribution. Tingnan ang [CONTRIBUTING.md](CONTR
 - **Ang maliliit na bug fix, documentation improvement, at focused test** ay maaaring simulan nang malaya.
 - **Ang bagong feature, database schema change, at architectural refactor** ay nangangailangan ng talakayan at pag-apruba ng maintainer bago ipatupad.
 
-Kung kapaki-pakinabang sa iyo ang FloCafe, pag-isipang i-star ang repository.
+Kung kapaki-pakinabang sa iyo ang Al Baik POS, pag-isipang i-star ang repository.
 
 ## Tulong at dokumentasyon
 
@@ -130,4 +132,4 @@ Kung kapaki-pakinabang sa iyo ang FloCafe, pag-isipang i-star ang repository.
 
 ## Lisensya
 
-Ang FloCafe ay open-source software sa ilalim ng [MIT License](LICENSE).
+Ang Al Baik POS ay open-source software sa ilalim ng [MIT License](LICENSE).

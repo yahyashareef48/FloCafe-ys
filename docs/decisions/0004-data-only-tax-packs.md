@@ -18,7 +18,7 @@ multiplies the review burden: a pack that computes tax wrongly is indistinguisha
 that steals data, and the signing story has to be airtight for arbitrary code rather than for
 declarative rules.
 
-FloCafe instead has one calculation engine and data-only packs.
+Al Baik POS instead has one calculation engine and data-only packs.
 
 ## Decision
 
@@ -38,7 +38,7 @@ entered in settings is turned into a synthetic `publisher: 'local'` pack and run
 engine, so there is no second calculation path.
 
 A signed pack may carry a declarative print-template artifact, and that artifact is validated and
-rendered by FloCafe code. It is data, and it is not executed.
+rendered by Al Baik POS code. It is data, and it is not executed.
 
 ## Consequences
 

@@ -1,6 +1,6 @@
 # Data and migrations
 
-FloCafe stores everything in one SQLite file managed with `better-sqlite3`. Schema change is
+Al Baik POS stores everything in one SQLite file managed with `better-sqlite3`. Schema change is
 append-only and versioned. This page covers where the file lives, how a version becomes a
 migration, what protects customer data on the way, and how to verify all of it.
 

@@ -1,6 +1,6 @@
 # Cloud integrations
 
-Every network feature FloCafe has, what it talks to, what enables it, and what happens when the
+Every network feature Al Baik POS has, what it talks to, what enables it, and what happens when the
 network is absent. The principle that keeps all of them optional is
 [0001: offline-first core](../decisions/0001-offline-first-core.md); this page is the current
 inventory, not the rationale.
@@ -351,7 +351,7 @@ it is in a terminal shutdown state, or when the request signal is aborted. Work 
 cancelled when Offline mode turns on or during shutdown rather than left to fail late.
 
 **Credential handling.** The session directory is created with mode `0o700`. The session credential
-is not encrypted at rest, which is a deliberate consequence of the library FloCafe uses for the
+is not encrypted at rest, which is a deliberate consequence of the library Al Baik POS uses for the
 WhatsApp protocol and is a reason the containing filesystem matters.
 
 ## FloAdmin cloud sync

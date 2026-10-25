@@ -9,7 +9,7 @@ considered and rejected, or what a re-introduction would cost.
 
 ## Context
 
-FloCafe is an Electron application: a React renderer, a Node backend, and a local SQLite database.
+Al Baik POS is an Electron application: a React renderer, a Node backend, and a local SQLite database.
 A renderer-side implementation of an authorization check or a tax calculation is technically
 straightforward and looks reasonable in isolation. It also fails open the moment someone opens the
 developer tools, points a modified client at the API, or runs the frontend against a different

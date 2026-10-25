@@ -1,6 +1,6 @@
 # Google Drive backup integration: maintainer setup
 
-FloCafe can optionally upload database backups to a store owner's own Google Drive on a schedule.
+Al Baik POS can optionally upload database backups to a store owner's own Google Drive on a schedule.
 This is off by default and needs two things before it works in a given build:
 
 1. A Google Cloud OAuth client. This page covers that, and it is a one-time task for a maintainer.
@@ -11,12 +11,12 @@ If the OAuth client is not configured, the Backup & Data UI reports that the int
 configured for this build and the Connect button is disabled. The app does not attempt to reach
 Google's APIs at all in that state.
 
-Drive backups are full SQLite database copies and FloCafe does not encrypt them. They can contain
+Drive backups are full SQLite database copies and Al Baik POS does not encrypt them. They can contain
 customer data, staff authentication data, and store settings. Anyone with access to the selected
-Google Drive account or folder can read the copy; the FloCafe Master PIN is not a portable
+Google Drive account or folder can read the copy; the Al Baik POS Master PIN is not a portable
 encryption key. Automatic backups run only while the Electron app is running, with one startup
 catch-up attempt when a backup is due, and never while the Automatic backups toggle in Backup &
-Data settings is off. Drive retention moves only FloCafe-owned automatic files to
+Data settings is off. Drive retention moves only Al Baik POS-owned automatic files to
 Trash. Manual files are kept indefinitely, and Drive retention never deletes local backup history.
 
 ## Why this cannot be pre-provisioned
@@ -58,7 +58,7 @@ installed-app client secret is not confidential, and it is never stored in SQLit
 
 1. Go to **APIs & Services > Credentials**.
 2. Click **Create Credentials > OAuth client ID**.
-3. Choose application type **Desktop app**. This matches the loopback flow FloCafe uses: it opens
+3. Choose application type **Desktop app**. This matches the loopback flow Al Baik POS uses: it opens
    the consent screen in the system browser and catches the redirect on a local server bound to
    `127.0.0.1` on an ephemeral port. No fixed redirect URI needs registering for this client type.
 4. Name it.
@@ -66,7 +66,7 @@ installed-app client secret is not confidential, and it is never stored in SQLit
    secret again after leaving that screen, though you can generate a new one from the Credentials
    page.
 
-## 5. Wire the credentials into a FloCafe build
+## 5. Wire the credentials into a Al Baik POS build
 
 Set two environment variables wherever the build is compiled and run:
 
@@ -76,7 +76,7 @@ GOOGLE_DRIVE_CLIENT_SECRET=xxxxxxxx
 ```
 
 For local development, copy `.env.example` to `.env` and fill these in. For packaged builds, set
-them in the build environment, through CI secrets or your build pipeline. FloCafe reads them from
+them in the build environment, through CI secrets or your build pipeline. Al Baik POS reads them from
 `process.env` at runtime, the same pattern used for `JWT_SECRET`.
 
 Once both variables are set and the app is restarted, **Settings > Backup & Data > Google Drive**
@@ -86,7 +86,7 @@ shows a **Connect** button instead of the not-configured message.
 
 The flow is worth knowing before you change it, because several details are load-bearing.
 
-- **Requested scopes are `drive.file`, `openid`, and `email`.** `drive.file` lets FloCafe see only
+- **Requested scopes are `drive.file`, `openid`, and `email`.** `drive.file` lets Al Baik POS see only
   the files it creates itself, never the user's whole Drive. `openid` and `email` are used to bind
   one stable Google account subject per installation. Do **not** add the broader `drive` or
   `drive.readonly` scopes. The constant `DRIVE_FILE_SCOPE` in
@@ -100,7 +100,7 @@ The flow is worth knowing before you change it, because several details are load
 - **State is 32 random bytes**, base64url-encoded, and the returned state is compared with
   `crypto.timingSafeEqual` before the code is accepted. A missing code, a Google-side error, or a
   state mismatch all fail the attempt the same way.
-- **The authorization URL is validated before it is opened.** FloCafe refuses to open a URL that
+- **The authorization URL is validated before it is opened.** Al Baik POS refuses to open a URL that
   does not pass `isSafeGoogleAuthorizationUrl`.
 - **The flow requests `access_type: 'offline'` with `prompt: 'consent'`**, so a refresh token is
   issued without relying on a prior grant.
@@ -109,7 +109,7 @@ The flow is worth knowing before you change it, because several details are load
 
 - **Tokens are encrypted at rest with Electron `safeStorage`**, the same mechanism used for the
   Master PIN, and are written to their own file. They are never written to the SQLite database.
-  If `safeStorage` reports encryption unavailable, FloCafe does not store a token.
+  If `safeStorage` reports encryption unavailable, Al Baik POS does not store a token.
 - **Account identity is read from the OpenID Connect userinfo endpoint** after connection, and the
   stable subject and email are stored so an install stays bound to one account.
 - **Disconnecting revokes the token with Google**, by POSTing it to
@@ -118,6 +118,6 @@ The flow is worth knowing before you change it, because several details are load
   silently treated as done.
 - **Uploaded backups are the same artifact local backups produce.** There is no separate Drive
   export path, so a Drive copy and a local copy of the same moment are the same database file.
-- **Pre-existing Drive files without FloCafe app properties are preserved.** They are excluded from
-  automatic retention and from in-app restore, and FloCafe does not guess whether an unmarked file
+- **Pre-existing Drive files without Al Baik POS app properties are preserved.** They are excluded from
+  automatic retention and from in-app restore, and Al Baik POS does not guess whether an unmarked file
   was automatic or manual.

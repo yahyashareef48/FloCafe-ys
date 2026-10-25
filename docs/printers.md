@@ -1,6 +1,6 @@
 # Printer setup
 
-FloCafe prints receipts and kitchen order tickets from the desktop app. Configure printers in
+Al Baik POS prints receipts and kitchen order tickets from the desktop app. Configure printers in
 **Settings > Printers**, then use **Test Print** before service.
 
 > For how the print pipeline is put together, see
@@ -19,17 +19,17 @@ FloCafe prints receipts and kitchen order tickets from the desktop app. Configur
 
 Set the paper width to match the printer, either 58 mm or 80 mm. The first configured printer
 becomes the default; choose a different default in Settings when another printer should receive
-ordinary receipts. If no hardware printer is configured, FloCafe falls back to system print when
+ordinary receipts. If no hardware printer is configured, Al Baik POS falls back to system print when
 printing bills.
 
 Enable **Open cash drawer on checkout** on a receipt printer only when a till is connected to that
-printer's drawer-kick port. When enabled, FloCafe appends the standard ESC/POS drawer pulse to
+printer's drawer-kick port. When enabled, Al Baik POS appends the standard ESC/POS drawer pulse to
 printed receipt jobs for that printer, and only for payment methods on the drawer's allowlist.
 
 ## Receipt logos
 
 Upload a PNG, JPEG, or WebP image under **Settings > General > Store Logo**. The source file can be
-up to 5 MB. FloCafe processes it in the browser and creates a monochrome raster for ESC/POS output.
+up to 5 MB. Al Baik POS processes it in the browser and creates a monochrome raster for ESC/POS output.
 In **Settings > Printers > Bill Content**, enable **Store Logo** to include the logo on supported
 bill print paths. The setting is off by default. Browser bills center the logo above the business
 header. See the [printing architecture](architecture/printing.md) for the renderer details.
@@ -50,7 +50,7 @@ rendered.
 
 ## Printer profiles and paper width
 
-FloCafe resolves a printer to a capability profile in three steps, in order:
+Al Baik POS resolves a printer to a capability profile in three steps, in order:
 
 1. An explicitly selected profile id on the configured printer, if one is set.
 2. A match against the printer's name, make, or model. Matching is a case-insensitive substring
@@ -95,7 +95,7 @@ an explicit operator warning. The exact warning contract and the direct-write ex
 ## Receipt and kitchen-ticket languages
 
 Receipt labels (invoice title, bill number, date, totals, payment methods) and kitchen-ticket labels
-are resolved from the tenant's language configuration. During authenticated POS bootstrap, FloCafe
+are resolved from the tenant's language configuration. During authenticated POS bootstrap, Al Baik POS
 loads the bundles selected by the receipt and kitchen-ticket policies before releasing the
 dashboard, so the first print does not depend on visiting Settings. If a bundle cannot load, the
 app surfaces an actionable error and the print warning reports any English fallback explicitly.
@@ -114,12 +114,12 @@ Language-specific script and print constraints are in the
 
 ## Kitchen printing
 
-FloCafe can print kitchen order tickets to the default printer or route items to configured kitchen
+Al Baik POS can print kitchen order tickets to the default printer or route items to configured kitchen
 stations. Configure stations under **Settings > Operations > Kitchen Stations**, whether or not KDS
 is enabled. Each category can belong to only one active station, and the station editor separates
 categories selected for the current station, categories still available, and categories assigned
 elsewhere. Selecting a category from another station moves it to the current station when saved.
-Each station maps its categories to any configured FloCafe printer.
+Each station maps its categories to any configured Al Baik POS printer.
 
 When KDS is enabled, a station can be assigned to multiple active chef accounts for shift coverage.
 An assigned chef's KDS view is limited to their assigned stations and categories. A Chef account
@@ -137,37 +137,37 @@ print requests are sent.
 ### Quick checks
 
 1. Use **Settings > Printers > Test Print** to verify printer connectivity before live service.
-2. Keep FloCafe's local API and network printers confined to your private business network. The
+2. Keep Al Baik POS's local API and network printers confined to your private business network. The
    local API is unencrypted; see
    [authentication and authorization](architecture/authentication-and-authorization.md).
 
 ### Adding a printer manually by name
 
-FloCafe dispatches USB and OS-queue print jobs by sending the printer's exact name to the OS
+Al Baik POS dispatches USB and OS-queue print jobs by sending the printer's exact name to the OS
 (`lp -d <name>` on macOS and Linux, `OpenPrinterW` on Windows). There is no fuzzy matching. If a
 printer is not found by **Settings > Printers > Detect**, use **Add Manually**, but the name must
 match the OS print queue identifier exactly, not just the printer's name on your desktop.
 
 - Prefer picking the name from the autocomplete list under the name field, which is sourced from the
-  same detection FloCafe uses, over typing it by hand.
+  same detection Al Baik POS uses, over typing it by hand.
 - On macOS and Linux, the CUPS queue name can differ from the display name shown in system
   settings, because spaces are sometimes replaced with underscores. Check the exact queue name with
   `lpstat -p`.
 - On Windows, check **Settings > Printers & scanners** for the exact printer name, including a
   suffix like `(Copy 1)`.
 - If you rename or reinstall the printer at the OS level, its queue identifier can change. Re-add or
-  edit the printer in FloCafe with the new name.
+  edit the printer in Al Baik POS with the new name.
 
 ### Network printers
 
-- Confirm the FloCafe machine can reach the printer on the trusted local business network.
+- Confirm the Al Baik POS machine can reach the printer on the trusted local business network.
 - Verify the printer's IP address has not changed. Check your router's DHCP lease table, or configure
   a static IP or DHCP reservation.
 - Verify the configured port. The default for ESC/POS printers is `9100`.
 
 ### Windows USB and spooler printers
 
-FloCafe sends raw ESC/POS byte streams directly to the Windows print queue, bypassing the printer
+Al Baik POS sends raw ESC/POS byte streams directly to the Windows print queue, bypassing the printer
 driver. This requires the queue's print processor to be set to `winprint` with datatype `RAW`.
 
 Manufacturer driver packages often install GDI graphics drivers that register proprietary print
@@ -177,22 +177,22 @@ processors or reject raw byte streams. If prints fail or come out garbled:
    print processor is `winprint` with datatype `RAW`.
 2. If issues persist, reinstall the printer using the Windows built-in **Generic / Text Only**
    driver, or the manufacturer's dedicated raw ESC/POS mode.
-3. Re-select the printer in FloCafe's printer settings, because renaming or reinstalling changes
+3. Re-select the printer in Al Baik POS's printer settings, because renaming or reinstalling changes
    the stored queue identifier.
 
 ### macOS and Linux CUPS printers
 
 - If a printer was unplugged, the CUPS print queue may be in a disabled or paused state. Re-enable
-  the queue in your operating system printer settings; FloCafe resumes sending print jobs once the
+  the queue in your operating system printer settings; Al Baik POS resumes sending print jobs once the
   queue is active.
 - For Linux USB permissions, ensure your user account is in the `lp` group. See
   [Linux installation and support](linux.md#printing).
 
 ### Bluetooth and OS-paired printers
 
-FloCafe does not manage standalone Bluetooth RFCOMM transport or discovery. To use a Bluetooth
+Al Baik POS does not manage standalone Bluetooth RFCOMM transport or discovery. To use a Bluetooth
 receipt printer, pair the device in your operating system so it registers as an active printer queue
-through CUPS on macOS and Linux, or the Windows Print Spooler. FloCafe detects and dispatches print
+through CUPS on macOS and Linux, or the Windows Print Spooler. Al Baik POS detects and dispatches print
 jobs through that OS-managed queue.
 
 ### WebUSB printers

@@ -1,11 +1,11 @@
-# FloCafe documentation
+# Al Baik POS documentation
 
 `docs/` describes the current supported system: how it is put together, what contracts it holds,
 and how to perform a recurring task against it. It does not preserve development history. Plans,
 research notes, audits, verification transcripts, and future proposals live in issues, pull
 requests, and git history.
 
-**Current code and tests define what FloCafe does.** Existing documentation is research material,
+**Current code and tests define what Al Baik POS does.** Existing documentation is research material,
 not authority. When code and documentation disagree, the code wins and the documentation is wrong.
 Before writing a behavioral claim, verify it against the code, the tests, or the configuration.
 

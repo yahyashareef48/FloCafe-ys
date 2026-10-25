@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flo-v19';
+const CACHE_NAME = 'flo-v20';
 const PRECACHE_URLS = [
   '/dashboard',
   '/pos',

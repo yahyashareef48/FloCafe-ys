@@ -1,4 +1,4 @@
-# Writing FloCafe documentation
+# Writing Al Baik POS documentation
 
 `docs/` describes the current supported system. This file describes how to write it.
 It applies to agents and human contributors alike. See [AGENTS.md](AGENTS.md) for the short policy

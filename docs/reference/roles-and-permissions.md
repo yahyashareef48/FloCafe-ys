@@ -1,6 +1,6 @@
 # Roles and permissions
 
-FloCafe has five fixed staff identities: owner, manager, cashier, server, and chef. This page is
+Al Baik POS has five fixed staff identities: owner, manager, cashier, server, and chef. This page is
 the in-app **permission editor and UI capability matrix**: what each role can reach in the
 interface, and how an owner changes that.
 

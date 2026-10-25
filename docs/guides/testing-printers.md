@@ -27,7 +27,7 @@ unsupported; it runs on one of the two generic profiles, chosen by paper width.
 
 To determine which profile a printer actually resolves to:
 
-1. In FloCafe, open **Settings -> Printers**, add the printer, and save it.
+1. In Al Baik POS, open **Settings -> Printers**, add the printer, and save it.
 2. Read the resolved `profile_id` from the stored printer row, or call the profile listing endpoint
    that the printer settings page uses.
 3. If it resolved to a generic profile but you expected a specific one, the name did not match any

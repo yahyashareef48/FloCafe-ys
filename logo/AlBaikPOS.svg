@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E53935"/><stop offset="1" stop-color="#A3161A"/></linearGradient></defs>
+<g transform="translate(20 20) scale(0.5078125)"><rect width="512" height="512" rx="112" fill="url(#bg)"/><path fill="#FFFFFF" fill-rule="evenodd" d="M80 376 L152 120 H208 L280 376 H226 L212 322 H148 L134 376 Z M160 274 H200 L180 196 Z"/>
+<path fill="#FFFFFF" fill-rule="evenodd" d="M296 120 H372 C420 120 444 144 444 182 C444 206 432 226 410 236 C438 246 452 270 452 300 C452 346 422 376 368 376 H296 Z M346 164 V226 H366 C386 226 396 216 396 195 C396 174 386 164 366 164 Z M346 268 V332 H372 C392 332 402 320 402 300 C402 280 392 268 372 268 Z"/>
+<rect x="80" y="404" width="372" height="26" rx="13" fill="#FFC72C"/></g>
+<text x="320" y="196" font-family="Inter, 'Inter Display', 'Helvetica Neue', Arial, sans-serif" font-size="132" font-weight="800" fill="#B71C1C">Al Baik <tspan fill="#1F2937">POS</tspan></text></svg>

@@ -1,6 +1,6 @@
 # API reference
 
-This page is the endpoint and WebSocket contract for the three HTTP servers FloCafe runs. It
+This page is the endpoint and WebSocket contract for the three HTTP servers Al Baik POS runs. It
 describes what each server exposes, which role each endpoint requires, and the parameters each
 handler reads. It is the API surface only. Behaviour that belongs to another subject is linked
 rather than restated, at the end of each section.

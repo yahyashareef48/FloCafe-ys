@@ -1,6 +1,6 @@
-# FloCafe agent guide
+# Al Baik POS agent guide
 
-FloCafe is an open-source, offline-first Electron desktop POS.
+Al Baik POS is an open-source, offline-first Electron desktop POS.
 
 ## Orientation & layout
 
@@ -39,9 +39,9 @@ implementation must not violate.
 1. **Offline-first operation:** Core POS operation (orders, billing, KDS, printing) must function without internet connectivity. Optional network features (Google Drive, WhatsApp, cloud reporting) run only when explicitly configured and must fail gracefully when offline.
 2. **Data safety:** Existing customer data must survive upgrades. Never reset, truncate, or drop user databases as a shortcut for migration design.
 3. **Architecture boundaries:** UI language, tenant regional settings, and tax/compliance behavior are separate, decoupled domains.
-4. **Business timestamps:** Persisted timestamps follow FloCafe's canonical storage conventions; configured store timezone applies to business-local presentation, day/shift boundaries, and reporting intervals.
+4. **Business timestamps:** Persisted timestamps follow Al Baik POS's canonical storage conventions; configured store timezone applies to business-local presentation, day/shift boundaries, and reporting intervals.
 5. **Backend authority:** Security-critical, payment, and tax calculations remain backend-authoritative.
-6. **Orders are never ownership-gated:** FloCafe is an open system for order visibility — any staff role with order access can see and act on any order, regardless of who created it. Authorization is restricted by role (page/feature access) and by specific action (e.g. KDS stage transitions are chef/manager/owner-only, narrowed further by station/category assignment), never by comparing `order.user_id`/item creator against the current user. Accountability comes from audit attribution (every write is recorded against the authenticated actor), not from hiding orders between staff. Do not add or reintroduce a `role === 'server' && order.user_id !== user.userId`-style check anywhere in the backend; see `docs/reference/product-invariants.md` and [`docs/reference/roles-and-permissions.md`](docs/reference/roles-and-permissions.md).
+6. **Orders are never ownership-gated:** Al Baik POS is an open system for order visibility — any staff role with order access can see and act on any order, regardless of who created it. Authorization is restricted by role (page/feature access) and by specific action (e.g. KDS stage transitions are chef/manager/owner-only, narrowed further by station/category assignment), never by comparing `order.user_id`/item creator against the current user. Accountability comes from audit attribution (every write is recorded against the authenticated actor), not from hiding orders between staff. Do not add or reintroduce a `role === 'server' && order.user_id !== user.userId`-style check anywhere in the backend; see `docs/reference/product-invariants.md` and [`docs/reference/roles-and-permissions.md`](docs/reference/roles-and-permissions.md).
 7. **Reuse before adding:** Reuse existing helpers, utilities, and dependencies before introducing new packages.
 8. **Scope discipline:** Implement only the approved task. Do not make opportunistic refactors across unrelated files.
 
@@ -66,7 +66,7 @@ implementation must not violate.
 
 ## Commands
 
-FloCafe requires **Node.js 22 or later**.
+Al Baik POS requires **Node.js 22 or later**.
 
 ```sh
 npm run clean            # Kill processes holding ports 3001, 3002, 3003

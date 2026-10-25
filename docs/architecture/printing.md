@@ -1,6 +1,6 @@
 # Printing architecture
 
-FloCafe prints through one semantic document model, several renderers, and several transports. This
+Al Baik POS prints through one semantic document model, several renderers, and several transports. This
 page describes how those layers divide responsibility, so a change lands in the right one.
 
 For the merchant-authored template wire contract see
@@ -232,7 +232,7 @@ does not raster at full width.
 scripts limited to `ascii`, transliteration enabled, unsupported text on a non-financial row is
 skipped, and unsupported text on a financial row refuses the print.
 
-When a financial row contains text the printer cannot represent, FloCafe refuses the whole receipt
+When a financial row contains text the printer cannot represent, Al Baik POS refuses the whole receipt
 rather than printing a total that is not the real total. The refusal message is:
 
 ```text

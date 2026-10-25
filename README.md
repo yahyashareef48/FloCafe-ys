@@ -1,5 +1,6 @@
 <div align="center">
-  <h1>FloCafe</h1>
+  <img src="logo/AlBaikPOS.png" alt="Al Baik POS logo" width="420">
+  <h1>Al Baik POS</h1>
   <p><a href="README.es.md">Español</a> · <a href="README.pt.md">Português</a> · <a href="README.fr.md">Français</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.fil.md">Filipino</a> · <a href="README.de.md">Deutsch</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.ar.md">العربية</a> · <a href="README.ur.md">اردو</a></p>
   <p><strong>Free, open-source, offline-first point of sale for cafés, restaurants, and small kitchens.</strong></p>
   <p>
@@ -17,12 +18,12 @@
 </div>
 
 <p align="center">
-  <img src="docs/images/flo-cafe-pos.webp" alt="FloCafe POS screen showing product selection and an active dine-in order" width="100%">
+  <img src="docs/images/flo-cafe-pos.webp" alt="Al Baik POS screen showing product selection and an active dine-in order" width="100%">
 </p>
 
-FloCafe runs directly on the business's own computer. Orders, customers, receipts, and backups are stored in a local SQLite database, allowing counter service and kitchen displays to continue operating without an internet connection. No hosted or cloud account is required for core POS operation. Optional integrations—such as Google Drive backup, WhatsApp bill delivery, and cloud-connected reporting—can be enabled when needed.
+Al Baik POS runs directly on the business's own computer. Orders, customers, receipts, and backups are stored in a local SQLite database, allowing counter service and kitchen displays to continue operating without an internet connection. No hosted or cloud account is required for core POS operation. Optional integrations—such as Google Drive backup, WhatsApp bill delivery, and cloud-connected reporting—can be enabled when needed.
 
-## Get FloCafe
+## Get Al Baik POS
 
 Download the latest installer from [GitHub Releases](https://github.com/FreeOpenSourcePOS/FloCafe/releases), or install through your platform's app store:
 
@@ -51,9 +52,9 @@ installation and support](docs/linux.md).
 | Memory | 4 GB RAM |
 | Storage | 500 MB free space, plus room for local backups |
 
-Node.js is only required to develop FloCafe, not to run a packaged release.
+Node.js is only required to develop Al Baik POS, not to run a packaged release.
 
-FloCafe does not build or publish 32-bit installers. A terminal that can only
+Al Baik POS does not build or publish 32-bit installers. A terminal that can only
 run a 32-bit OS can still be used from a lightweight browser, without
 installing the desktop app locally:
 
@@ -98,7 +99,7 @@ Both scripts ask whether to keep application data. Do not choose their data-purg
     <td width="50%">
       <picture>
         <source srcset="docs/assets/showcase/pos-checkout.gif" type="image/gif">
-        <img src="docs/assets/showcase/pos-checkout.poster.jpg" alt="FloCafe counter POS checkout flow with cart item selection and cash payment confirmation" width="100%">
+        <img src="docs/assets/showcase/pos-checkout.poster.jpg" alt="Al Baik POS counter POS checkout flow with cart item selection and cash payment confirmation" width="100%">
       </picture>
     </td>
   </tr>
@@ -110,7 +111,7 @@ Both scripts ask whether to keep application data. Do not choose their data-purg
     <td width="50%">
       <picture>
         <source srcset="docs/assets/showcase/addon-modifiers.gif" type="image/gif">
-        <img src="docs/assets/showcase/addon-modifiers.poster.jpg" alt="FloCafe modal modifier selector choosing oat milk and espresso shots" width="100%">
+        <img src="docs/assets/showcase/addon-modifiers.poster.jpg" alt="Al Baik POS modal modifier selector choosing oat milk and espresso shots" width="100%">
       </picture>
     </td>
   </tr>
@@ -123,7 +124,7 @@ Both scripts ask whether to keep application data. Do not choose their data-purg
     <td width="50%">
       <picture>
         <source srcset="docs/assets/showcase/kds-kanban.gif" type="image/gif">
-        <img src="docs/assets/showcase/kds-kanban.poster.jpg" alt="FloCafe standalone Kitchen Display System Kanban board tracking tickets across prep stages" width="100%">
+        <img src="docs/assets/showcase/kds-kanban.poster.jpg" alt="Al Baik POS standalone Kitchen Display System Kanban board tracking tickets across prep stages" width="100%">
       </picture>
     </td>
   </tr>
@@ -135,7 +136,7 @@ Both scripts ask whether to keep application data. Do not choose their data-purg
     <td width="50%">
       <picture>
         <source srcset="docs/assets/showcase/floorplan-tables.gif" type="image/gif">
-        <img src="docs/assets/showcase/floorplan-tables.poster.jpg" alt="FloCafe interactive floor plan and table turnover monitoring" width="100%">
+        <img src="docs/assets/showcase/floorplan-tables.poster.jpg" alt="Al Baik POS interactive floor plan and table turnover monitoring" width="100%">
       </picture>
     </td>
   </tr>
@@ -147,7 +148,7 @@ Both scripts ask whether to keep application data. Do not choose their data-purg
     <td width="50%">
       <picture>
         <source srcset="docs/assets/showcase/server-app.gif" type="image/gif">
-        <img src="docs/assets/showcase/server-app.poster.jpg" alt="FloCafe handheld mobile waiter app taking orders table-side" width="100%">
+        <img src="docs/assets/showcase/server-app.poster.jpg" alt="Al Baik POS handheld mobile waiter app taking orders table-side" width="100%">
       </picture>
     </td>
   </tr>
@@ -159,7 +160,7 @@ Both scripts ask whether to keep application data. Do not choose their data-purg
     <td width="50%">
       <picture>
         <source srcset="docs/assets/showcase/split-payments.gif" type="image/gif">
-        <img src="docs/assets/showcase/split-payments.poster.jpg" alt="FloCafe equal share split payment calculator dividing check across diners" width="100%">
+        <img src="docs/assets/showcase/split-payments.poster.jpg" alt="Al Baik POS equal share split payment calculator dividing check across diners" width="100%">
       </picture>
     </td>
   </tr>
@@ -171,7 +172,7 @@ Both scripts ask whether to keep application data. Do not choose their data-purg
     <td width="50%">
       <picture>
         <source srcset="docs/assets/showcase/recipe-inventory.gif" type="image/gif">
-        <img src="docs/assets/showcase/recipe-inventory.poster.jpg" alt="FloCafe inventory management with supplies, recipe portions, and stock movement logs" width="100%">
+        <img src="docs/assets/showcase/recipe-inventory.poster.jpg" alt="Al Baik POS inventory management with supplies, recipe portions, and stock movement logs" width="100%">
       </picture>
     </td>
   </tr>
@@ -184,7 +185,7 @@ Both scripts ask whether to keep application data. Do not choose their data-purg
     <td width="50%">
       <picture>
         <source srcset="docs/assets/showcase/thermal-printing.gif" type="image/gif">
-        <img src="docs/assets/showcase/thermal-printing.poster.jpg" alt="FloCafe thermal printer test interface for 58mm and 80mm receipts and KOT tickets" width="100%">
+        <img src="docs/assets/showcase/thermal-printing.poster.jpg" alt="Al Baik POS thermal printer test interface for 58mm and 80mm receipts and KOT tickets" width="100%">
       </picture>
     </td>
   </tr>
@@ -204,19 +205,19 @@ Both scripts ask whether to keep application data. Do not choose their data-purg
 
 ## Project status
 
-FloCafe is actively developed and already used in real deployments. Core customer data and upgrade safety are treated carefully, including explicit database migrations and recovery mechanisms. Some internal and extension-facing architecture is still evolving, so implementation details and internal contracts may change as the project matures.
+Al Baik POS is actively developed and already used in real deployments. Core customer data and upgrade safety are treated carefully, including explicit database migrations and recovery mechanisms. Some internal and extension-facing architecture is still evolving, so implementation details and internal contracts may change as the project matures.
 
 ## Offline-first by design
 
 Core POS operation and local data are offline-first. Order entry, billing, KDS coordination, and receipt printing do not depend on internet access or external cloud services.
 
 - **Data location:** The SQLite database and local backups reside in the operating system user-data directory, separate from installed application binaries. Standard in-place application updates do not remove them. As a best practice, create a manual backup before reinstalling, moving to a new machine, or changing distribution channels.
-- **Pre-migration backups:** FloCafe automatically creates a timestamped database backup before running schema migrations.
+- **Pre-migration backups:** Al Baik POS automatically creates a timestamped database backup before running schema migrations.
 - **Optional network features:** Services such as Google Drive backups, WhatsApp bill delivery, and cloud reporting communicate over the network only when explicitly configured and enabled by the store owner.
 
 ## Languages and regional support
 
-FloCafe includes UI translations for:
+Al Baik POS includes UI translations for:
 
 - English
 - Spanish
@@ -245,7 +246,7 @@ FloCafe includes UI translations for:
 
 UI language is independent of store country and regional settings, and tax calculation rules remain a separate concern. For details on contributing translations or adding languages, see the [Internationalization and translation guide](docs/architecture/internationalization.md).
 
-FloCafe ships with 131 country profiles covering 109 currencies. Each profile sets a default currency, locale, and setup timezone; store owners can override the timezone during setup or later in Settings.
+Al Baik POS ships with 131 country profiles covering 109 currencies. Each profile sets a default currency, locale, and setup timezone; store owners can override the timezone during setup or later in Settings.
 
 <details>
 <summary>Supported country profiles, currencies, and default timezones</summary>
@@ -388,9 +389,9 @@ FloCafe ships with 131 country profiles covering 109 currencies. Each profile se
 
 ## Tax support
 
-FloCafe includes a generic calculation engine and supports signed, versioned country tax packs for regional rules, tax categories, and rounding policies. Country coverage is expanding through the catalog, and availability varies. Operators can also configure manual tax rules and rates locally.
+Al Baik POS includes a generic calculation engine and supports signed, versioned country tax packs for regional rules, tax categories, and rounding policies. Country coverage is expanding through the catalog, and availability varies. Operators can also configure manual tax rules and rates locally.
 
-> **Notice:** FloCafe is software, not legal or tax advice. Tax packs and configuration tools do not by themselves certify compliance with local regulations. Operators remain responsible for verifying the requirements that apply to their business.
+> **Notice:** Al Baik POS is software, not legal or tax advice. Tax packs and configuration tools do not by themselves certify compliance with local regulations. Operators remain responsible for verifying the requirements that apply to their business.
 
 For pack authoring, validation, and schema details, see the [Tax packs developer guide](docs/reference/tax-packs.md).
 
@@ -429,7 +430,7 @@ Contributions are welcome. Please check [CONTRIBUTING.md](CONTRIBUTING.md) befor
 - **Small bug fixes, documentation improvements, and focused tests** can be started freely.
 - **New features, database schema changes, and architectural refactors** require maintainer discussion and approval before implementation.
 
-If FloCafe is useful to you, consider starring the repository.
+If Al Baik POS is useful to you, consider starring the repository.
 
 ## Help and documentation
 
@@ -443,4 +444,4 @@ If FloCafe is useful to you, consider starring the repository.
 
 ## License
 
-FloCafe is open-source software licensed under the [MIT License](LICENSE).
+Al Baik POS is open-source software licensed under the [MIT License](LICENSE).

@@ -1,6 +1,6 @@
 # Linux installation and support
 
-FloCafe runs on current Linux distributions through AppImage, deb, rpm, and Snap packages. Choose
+Al Baik POS runs on current Linux distributions through AppImage, deb, rpm, and Snap packages. Choose
 the format your distribution supports best.
 
 ## Packages
@@ -45,7 +45,7 @@ If FUSE is unavailable or the AppImage will not mount, run it extracted:
 ## Updates
 
 The in-app updater is available only when the app is launched from a downloaded AppImage, because
-that is the only case where FloCafe can see `APPIMAGE` in its environment. It is not used for an
+that is the only case where Al Baik POS can see `APPIMAGE` in its environment. It is not used for an
 extracted AppImage, a deb, or an rpm installation.
 
 Update deb and rpm installations with your distribution's package manager. Snap installations are
@@ -99,6 +99,6 @@ as `trayer` or `stalonetray`. Alternatively use **File > Exit** inside the app.
 
 ## Get help
 
-Include your FloCafe version, Linux distribution and version, package format, and the relevant app
+Include your Al Baik POS version, Linux distribution and version, package format, and the relevant app
 logs when reporting a problem. Do not delete your local database to diagnose a startup issue. Create
 or restore a backup first.

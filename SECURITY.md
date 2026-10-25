@@ -18,10 +18,10 @@ We will confirm receipt, assess the report, and coordinate disclosure for confir
 
 ## Scope
 
-Reports are welcome for FloCafe's desktop application, local API and kitchen-display server, authentication and authorization, data import or export, printing, release artifacts, dependencies, and GitHub Actions workflows.
+Reports are welcome for Al Baik POS's desktop application, local API and kitchen-display server, authentication and authorization, data import or export, printing, release artifacts, dependencies, and GitHub Actions workflows.
 
 Reports that require social engineering, access to someone else's device or account, or a deliberately insecure local configuration may be closed without a fix. If you are unsure whether something is in scope, report it privately.
 
-## Run FloCafe safely
+## Run Al Baik POS safely
 
-Keep FloCafe updated and keep its local API and kitchen-display ports off the public internet. Protect the computer and its operating-system user account because they hold the local database and backups. Use a strong owner password, limit access to backups, and revoke optional integration access when it is no longer needed.
+Keep Al Baik POS updated and keep its local API and kitchen-display ports off the public internet. Protect the computer and its operating-system user account because they hold the local database and backups. Use a strong owner password, limit access to backups, and revoke optional integration access when it is no longer needed.

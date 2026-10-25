@@ -1,8 +1,8 @@
 # Compliance print templates (`escpos-line-template-v1`)
 
-A signed country tax pack can ship a declarative receipt template that renders through FloCafe's
+A signed country tax pack can ship a declarative receipt template that renders through Al Baik POS's
 built-in ESC/POS line renderer, `renderEscposLineTemplateV1` in `main/printers/thermal.ts`, under
-the renderer id `flocafe-thermal-receipt-template`. The template is data: FloCafe validates it,
+the renderer id `flocafe-thermal-receipt-template`. The template is data: Al Baik POS validates it,
 selects a width profile, and renders it with its own code. Nothing in a pack is executed. See
 [data-only tax packs](../decisions/0004-data-only-tax-packs.md) for why that boundary exists.
 
@@ -114,7 +114,7 @@ sorts them ascending. `selectTemplateWidthProfile()` then picks, in order:
 2. The largest profile narrower than the printer, so a template authored at 42 columns still
    renders on 48-column hardware without being stretched.
 3. No profile match: render with the printer's own width and an empty layout, and push a
-   `bill_template_width` warning naming the requested width. FloCafe does not squeeze a wider
+   `bill_template_width` warning naming the requested width. Al Baik POS does not squeeze a wider
    authored profile into a narrower printer.
 
 ## Renderer gate

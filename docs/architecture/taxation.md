@@ -1,6 +1,6 @@
 # Taxation
 
-FloCafe has one tax calculation engine and data-only country tax packs. A pack describes a
+Al Baik POS has one tax calculation engine and data-only country tax packs. A pack describes a
 jurisdiction's categories and rules; the engine decides what a transaction owes. There is no
 per-jurisdiction code path, and the host never executes pack content. The reasoning behind that
 split is in [0004: data-only tax packs](../decisions/0004-data-only-tax-packs.md).
@@ -244,7 +244,7 @@ early with a single failed check and stops.
 | 1 | Supported manifest and schema version |
 | 2 | Valid pack identity, publisher, country, and jurisdiction scope |
 | 3 | Valid, internally consistent version and effective-date range |
-| 4 | FloCafe satisfies the pack's minimum compatible version |
+| 4 | Al Baik POS satisfies the pack's minimum compatible version |
 | 5 | Stored artifact digest matches |
 | 6 | Artifact is bundled, or local and unsigned, or has a valid trusted Ed25519 signature, or matches a pinned legacy digest |
 | 7 | Pack version is not `revoked` or `incompatible` |

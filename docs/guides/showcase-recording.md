@@ -2,7 +2,7 @@
 
 This guide describes how to capture automated browser flows and transcode
 production-ready media assets (GIFs, MP4 videos, and poster frames) used in
-FloCafe documentation and website showcases.
+Al Baik POS documentation and website showcases.
 
 ## Overview
 

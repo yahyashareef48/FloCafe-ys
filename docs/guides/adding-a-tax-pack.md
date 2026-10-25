@@ -18,7 +18,7 @@ Record the specific instrument, not the topic: the statute section, the rate sch
 date. A pack that cites "VAT in Europe" is unusable; a pack that cites the exact schedule with its
 publication reference is auditable.
 
-FloCafe is software, not certified legal or tax advice. The disclaimer in the contribution terms is
+Al Baik POS is software, not certified legal or tax advice. The disclaimer in the contribution terms is
 part of the deliverable, not a formality.
 
 ## 2. Scope the jurisdiction
@@ -126,7 +126,7 @@ The release process runs in the FloCafe-Plugins repository through
    workflow concurrency only serializes identical tags. An unrelated official pack preserves
    community entries; an official pack replaces only community entries for the same country.
 
-FloCafe discovers the release by matching that same tag pattern when it pages the Releases API, so a
+Al Baik POS discovers the release by matching that same tag pattern when it pages the Releases API, so a
 published release whose tag does not match is invisible to every store. Old released artifacts are
 immutable; publish a new version instead of changing a tagged asset.
 

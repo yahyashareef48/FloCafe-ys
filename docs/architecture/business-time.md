@@ -1,6 +1,6 @@
 # Business time
 
-FloCafe stores every timestamp in UTC and presents it in the tenant's configured timezone. The
+Al Baik POS stores every timestamp in UTC and presents it in the tenant's configured timezone. The
 stored value is the record; the timezone is a presentation and boundary concern layered on top.
 Getting the two apart is the whole discipline on this page.
 

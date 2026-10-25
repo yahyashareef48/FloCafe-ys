@@ -1,12 +1,14 @@
-# FloCafe
+# Al Baik POS
+
+<p align="center"><img src="logo/AlBaikPOS.png" alt="Al Baik POS logo" width="420"></p>
 
 **Kafeler, restoranlar ve küçük mutfaklar için ücretsiz, açık kaynaklı ve çevrimdışı çalışmaya öncelik veren satış noktası uygulaması.**
 
 [English](README.md) | [Español](README.es.md) | [Português](README.pt.md) | [Français](README.fr.md) | **Türkçe** | [Filipino](README.fil.md) | [Deutsch](README.de.md) | [简体中文](README.zh-CN.md)
 
-FloCafe doğrudan işletmenin kendi bilgisayarında çalışır. Siparişler, müşteriler, fişler ve yedekler yerel bir SQLite veritabanında saklanır. Böylece internet bağlantısı olmadan da kasa hizmeti ve mutfak ekranları çalışmaya devam eder. Temel satış noktası işlemleri için barındırılan veya bulut tabanlı bir hesap gerekmez. Google Drive yedekleme, WhatsApp ile fiş gönderme ve bulut bağlantılı raporlama gibi isteğe bağlı entegrasyonlar gerektiğinde etkinleştirilebilir.
+Al Baik POS doğrudan işletmenin kendi bilgisayarında çalışır. Siparişler, müşteriler, fişler ve yedekler yerel bir SQLite veritabanında saklanır. Böylece internet bağlantısı olmadan da kasa hizmeti ve mutfak ekranları çalışmaya devam eder. Temel satış noktası işlemleri için barındırılan veya bulut tabanlı bir hesap gerekmez. Google Drive yedekleme, WhatsApp ile fiş gönderme ve bulut bağlantılı raporlama gibi isteğe bağlı entegrasyonlar gerektiğinde etkinleştirilebilir.
 
-## FloCafe’yi edinin
+## Al Baik POS’yi edinin
 
 En yeni yükleyiciyi [GitHub Releases](https://github.com/FreeOpenSourcePOS/FloCafe/releases) sayfasından indirin veya platformunuzun uygulama mağazasından yükleyin. Ayrıca [Mac App Store](https://apps.apple.com/in/app/flo-cafe/id6763136018), [Microsoft Store](https://apps.microsoft.com/detail/9n1md6585p4q) veya [Snap Store](https://snapcraft.io/flocafe) kullanılabilir.
 
@@ -20,7 +22,7 @@ Sürümlerde Windows yükleyicileri, macOS DMG dosyaları ve Linux için AppImag
 | Bellek | 4 GB RAM |
 | Depolama | 500 MB boş alan ve yerel yedekler için ek alan |
 
-Node.js yalnızca FloCafe geliştirmek için gereklidir; paketlenmiş sürümü çalıştırmak için gerekmez.
+Node.js yalnızca Al Baik POS geliştirmek için gereklidir; paketlenmiş sürümü çalıştırmak için gerekmez.
 
 <details>
 <summary>Doğrudan indirilen yapıyı kaldırma</summary>
@@ -56,33 +58,33 @@ Her iki komut dosyası da uygulama verilerinin korunup korunmayacağını sorar.
 
 ## Proje durumu
 
-FloCafe aktif olarak geliştirilmektedir ve gerçek kurulumlarda kullanılmaktadır. Müşteri verileri ve yükseltme güvenliği açık veritabanı geçişleri ve kurtarma mekanizmalarıyla dikkatle korunur. Dahili ve genişletmeye yönelik mimarinin bazı bölümleri hâlâ gelişmektedir; bu nedenle uygulama ayrıntıları ve dahili sözleşmeler değişebilir.
+Al Baik POS aktif olarak geliştirilmektedir ve gerçek kurulumlarda kullanılmaktadır. Müşteri verileri ve yükseltme güvenliği açık veritabanı geçişleri ve kurtarma mekanizmalarıyla dikkatle korunur. Dahili ve genişletmeye yönelik mimarinin bazı bölümleri hâlâ gelişmektedir; bu nedenle uygulama ayrıntıları ve dahili sözleşmeler değişebilir.
 
 ## Çevrimdışı çalışacak şekilde tasarlandı
 
 Temel satış noktası işlemleri ve yerel veriler çevrimdışı çalışır. Sipariş girişi, faturalandırma, KDS koordinasyonu ve fiş yazdırma internet bağlantısına veya harici bulut hizmetlerine bağlı değildir.
 
 - SQLite veritabanı ve yerel yedekler, kurulu uygulama ikili dosyalarından ayrı olarak kullanıcı veri dizininde saklanır. Normal güncellemeler bunları kaldırmaz; yeniden yüklemeden, bilgisayar değiştirmeden veya dağıtım kanalını değiştirmeden önce manuel yedek oluşturmanız önerilir.
-- FloCafe şema geçişlerini çalıştırmadan önce tarih ve saat içeren otomatik bir yedek oluşturur.
+- Al Baik POS şema geçişlerini çalıştırmadan önce tarih ve saat içeren otomatik bir yedek oluşturur.
 - Google Drive yedekleme, WhatsApp ile fiş gönderme ve bulut bağlantılı raporlama gibi hizmetler yalnızca işletme sahibi tarafından açıkça yapılandırılıp etkinleştirildiğinde ağ üzerinden iletişim kurar.
 
 ## Diller ve bölgesel destek
 
-FloCafe arayüzü İngilizce, İspanyolca, Fransızca, Brezilya Portekizcesi, Filipince, Türkçe, Farsça (RTL desteğiyle), Almanca, İtalyanca, Japonca, Basitleştirilmiş Çince, Korece ve Bahasa Indonesia dillerinde kullanılabilir. Arayüz dili, mağazanın ülke ve bölgesel ayarlarından bağımsızdır. Vergi hesaplama kuralları ayrı bir konudur. Çevirilere katkıda bulunmak veya dil eklemek için [uluslararasılaştırma ve çeviri kılavuzuna](docs/architecture/internationalization.md) bakın.
+Al Baik POS arayüzü İngilizce, İspanyolca, Fransızca, Brezilya Portekizcesi, Filipince, Türkçe, Farsça (RTL desteğiyle), Almanca, İtalyanca, Japonca, Basitleştirilmiş Çince, Korece ve Bahasa Indonesia dillerinde kullanılabilir. Arayüz dili, mağazanın ülke ve bölgesel ayarlarından bağımsızdır. Vergi hesaplama kuralları ayrı bir konudur. Çevirilere katkıda bulunmak veya dil eklemek için [uluslararasılaştırma ve çeviri kılavuzuna](docs/architecture/internationalization.md) bakın.
 
-FloCafe 131 ülke ve 109 para birimi için profiller içerir. Her profil varsayılan para birimi, yerel ayar ve saat dilini belirler; işletme sahibi saat dilini kurulum sırasında veya daha sonra Ayarlar bölümünden değiştirebilir.
+Al Baik POS 131 ülke ve 109 para birimi için profiller içerir. Her profil varsayılan para birimi, yerel ayar ve saat dilini belirler; işletme sahibi saat dilini kurulum sırasında veya daha sonra Ayarlar bölümünden değiştirebilir.
 
 ## Vergi desteği
 
-FloCafe bölgesel kurallar, vergi kategorileri ve yuvarlama politikaları için genel bir hesaplama motoru ile imzalı ve sürümlenmiş bölgesel vergi paketleri içerir. Ülke kapsamı katalog aracılığıyla genişletilir ve kullanılabilirlik değişir. Manuel vergi kuralları ve oranları da yerel olarak yapılandırılabilir.
+Al Baik POS bölgesel kurallar, vergi kategorileri ve yuvarlama politikaları için genel bir hesaplama motoru ile imzalı ve sürümlenmiş bölgesel vergi paketleri içerir. Ülke kapsamı katalog aracılığıyla genişletilir ve kullanılabilirlik değişir. Manuel vergi kuralları ve oranları da yerel olarak yapılandırılabilir.
 
-> **Uyarı:** FloCafe yazılımdır; hukuki veya vergisel danışmanlık değildir. Vergi paketleri ve yapılandırma araçları tek başına yerel mevzuata uyumluluğu belgelemez; işletmeciler kendi işletmeleri için geçerli gereklilikleri doğrulamakla sorumludur.
+> **Uyarı:** Al Baik POS yazılımdır; hukuki veya vergisel danışmanlık değildir. Vergi paketleri ve yapılandırma araçları tek başına yerel mevzuata uyumluluğu belgelemez; işletmeciler kendi işletmeleri için geçerli gereklilikleri doğrulamakla sorumludur.
 
 Paketlerin yazımı, doğrulanması ve şeması hakkında ayrıntılar için [vergi paketi geliştirici kılavuzuna](docs/reference/tax-packs.md) bakın.
 
 ## Geliştirme
 
-FloCafe geliştirmek için Node.js 22 veya üzeri gerekir:
+Al Baik POS geliştirmek için Node.js 22 veya üzeri gerekir:
 
 ```sh
 git clone https://github.com/FreeOpenSourcePOS/FloCafe.git
@@ -115,7 +117,7 @@ Katkılar memnuniyetle karşılanır. Başlamadan önce [CONTRIBUTING.md](CONTRI
 - **Küçük hata düzeltmeleri, belge iyileştirmeleri ve odaklanmış testler** serbestçe başlatılabilir.
 - **Yeni özellikler, veritabanı şeması değişiklikleri ve mimari yeniden düzenlemeler** uygulanmadan önce bakım ekibiyle görüşme ve onay gerektirir.
 
-FloCafe sizin için yararlıysa depoya yıldız vermeyi düşünün.
+Al Baik POS sizin için yararlıysa depoya yıldız vermeyi düşünün.
 
 ## Yardım ve belgeler
 
@@ -130,4 +132,4 @@ FloCafe sizin için yararlıysa depoya yıldız vermeyi düşünün.
 
 ## Lisans
 
-FloCafe, [MIT lisansı](LICENSE) ile lisanslanmış açık kaynaklı bir yazılımdır.
+Al Baik POS, [MIT lisansı](LICENSE) ile lisanslanmış açık kaynaklı bir yazılımdır.

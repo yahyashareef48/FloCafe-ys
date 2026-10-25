@@ -1,6 +1,6 @@
 # System overview
 
-FloCafe is an offline-first Electron desktop point-of-sale application. One Electron main process
+Al Baik POS is an offline-first Electron desktop point-of-sale application. One Electron main process
 hosts a SQLite database, three HTTP servers, and a set of native window surfaces. There is no
 separate backend host: the API server, the kitchen display server, and the server app server all
 run inside the same process as the UI.

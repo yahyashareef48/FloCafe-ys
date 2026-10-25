@@ -25,7 +25,7 @@ A pack is a data object conforming to `schemaVersion: 1`.
 | `effectiveFrom` | `string` | A parseable date. |
 | `effectiveTo` | `string` | Optional; must be at or after `effectiveFrom`. |
 | `publishedAt` | `string` | |
-| `minFloVersion` | `string` | Minimum FloCafe version that may activate it. |
+| `minFloVersion` | `string` | Minimum Al Baik POS version that may activate it. |
 | `taxPoint` | `'order_created' \| 'finalized_at'` | Declared, but nothing reads it. |
 | `inclusivePricingDefault` | `boolean` | |
 | `registrationNumberLabel` | `string` | Merchant-facing label. |
@@ -93,7 +93,7 @@ interface CountryTaxPackPluginArtifact {
 ```
 
 Despite the name, the artifact carries no plugin code. `printTemplates` is a list of declarative
-`escpos-line-template-v1` templates rendered by FloCafe code; see
+`escpos-line-template-v1` templates rendered by Al Baik POS code; see
 [print templates compliance](print-templates-compliance.md). The templates are data, validated on
 install by `validateTemplateChargeRows()` and `validateTemplateLabelsMap()` in
 [`main/tax-packs/catalog.ts`](../../main/tax-packs/catalog.ts), and persisted to
@@ -161,7 +161,7 @@ supplies. It rounds document GST to cents using half-up rounding. See IRAS guida
 [hotel and F&B treatment](https://www.iras.gov.sg/taxes/goods-services-tax-%28gst%29/specific-business-sectors/hotel-and-food-beverage),
 and [GST registration numbers on invoices](https://www.iras.gov.sg/taxes/goods-services-tax-%28gst%29/basics-of-gst/invoicing-price-display-and-record-keeping/invoicing-customers).
 
-A JSON source file in FloCafe does not make a pack bundled or available in the public catalog. The
+A JSON source file in Al Baik POS does not make a pack bundled or available in the public catalog. The
 catalog contains only signed releases that have been published in FloCafe-Plugins.
 
 There is one trusted signing public key, in

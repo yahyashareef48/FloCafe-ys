@@ -1,6 +1,6 @@
 # Authentication and authorization
 
-FloCafe authorizes in the backend. The renderer renders, and never decides. This page describes the
+Al Baik POS authorizes in the backend. The renderer renders, and never decides. This page describes the
 authentication lifecycle, the shape of the authorization surface, the configurable permission
 layer, and the boundaries the product deliberately leaves open.
 
@@ -11,7 +11,7 @@ that constrain authorization, see
 
 ## Roles
 
-FloCafe has five fixed staff identities, declared in
+Al Baik POS has five fixed staff identities, declared in
 [`shared/role-permissions.ts`](../../shared/role-permissions.ts): `owner`, `manager`, `cashier`,
 `server`, and `chef`. The identity a request acts under is read from the `users.role` column at
 request time, not from the token, and there is no role editor — an install cannot add a sixth
@@ -318,7 +318,7 @@ depletion instead of guessing at quantities.
 ## Boundaries we do not harden
 
 These are deliberate product decisions, not gaps that were overlooked. Each one is a place where
-FloCafe relies on the deployment environment rather than on the application.
+Al Baik POS relies on the deployment environment rather than on the application.
 
 **LAN traffic is unencrypted.** The API server binds `0.0.0.0` and speaks HTTP and unencrypted
 WebSocket. The CORS origin check restricts which browser origins may call the API, and CORS is not

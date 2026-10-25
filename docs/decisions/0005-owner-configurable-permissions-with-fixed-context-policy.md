@@ -5,10 +5,10 @@ Recorded: 2026-09-26
 
 ## Context
 
-FloCafe shipped with five fixed staff identities (owner, manager, cashier, server, chef) and
+Al Baik POS shipped with five fixed staff identities (owner, manager, cashier, server, chef) and
 roughly 240 `requireRole(...ROLE_ACCESS.x)` gates scattered across the main API, KDS, and Server
 App. Stores kept asking to delegate a specific capability — a trusted cashier running reports, a
-server who should not touch refunds — without FloCafe inventing a sixth or seventh role identity
+server who should not touch refunds — without Al Baik POS inventing a sixth or seventh role identity
 for every such request, which does not scale and still would not match any one store's actual
 staffing.
 
