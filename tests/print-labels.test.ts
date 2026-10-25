@@ -269,7 +269,7 @@ function run(): void {
     assert('en test page title unchanged', text80.includes('Al Baik POS Printer Test'));
     assert('en test page reports columns', text80.includes('Columns: 48'));
     const esText = buildTestPage('80mm', 'full', 'es').toString('utf8');
-    assert('es test page title translated', esText.includes('Prueba de impresora Flo'));
+    assert('es test page title translated', esText.includes('Prueba de impresora Al Baik POS'));
     assert('es test page columns label translated', esText.includes('Columnas: 48'));
     assert('technical ruler literal stays verbatim', /[1234567890]/.test(esText));
   }
