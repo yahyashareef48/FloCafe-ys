@@ -133,8 +133,9 @@ function stagingPath(dir: string): string {
   return path.join(dir, `.flo-backup-${randomUUID()}.tmp`);
 }
 
-// Filesystems without hard links (Android shared storage, some network and FAT volumes).
-const NO_HARD_LINK_CODES = new Set(['EPERM', 'ENOTSUP', 'EOPNOTSUPP', 'ENOSYS', 'EXDEV']);
+// Filesystems without hard links: Android shared storage answers EACCES, network and FAT
+// volumes answer the others. A real permission problem still fails at the rename.
+const NO_HARD_LINK_CODES = new Set(['EACCES', 'EPERM', 'ENOTSUP', 'EOPNOTSUPP', 'ENOSYS', 'EXDEV']);
 
 /**
  * Hard-links the staged file under `target`. Where links are unsupported it renames instead, which is

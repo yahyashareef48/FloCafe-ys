@@ -104,9 +104,11 @@ async function main(): Promise<void> {
   const nodeFs = require('node:fs');
   const realLink = nodeFs.linkSync;
   let linkAttempts = 0;
+  // Android shared storage refuses link() with EACCES (seen on the emulator); other volumes use EPERM.
+  const refusals = ['EACCES', 'EPERM'];
   nodeFs.linkSync = () => {
-    linkAttempts++;
-    throw Object.assign(new Error('operation not permitted'), { code: 'EPERM' });
+    const code = refusals[linkAttempts++ % refusals.length];
+    throw Object.assign(new Error(`${code}: link refused`), { code });
   };
   try {
     const one = retainBackupLocally(manual.path);
