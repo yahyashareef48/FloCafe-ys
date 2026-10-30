@@ -8,6 +8,8 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.IBinder;
@@ -40,6 +42,10 @@ public class NodeService extends Service {
     private boolean listening;
     private PrinterHub printers;
     private RasterSurface raster;
+    private NsdManager.RegistrationListener advertisement;
+    private final ShellBridge.Listener advertiseWhenReady = (state, info, error) -> {
+        if (state == ShellBridge.State.READY && info != null) advertise(info);
+    };
 
     static void start(Context context) {
         Intent intent = new Intent(context, NodeService.class);
@@ -59,6 +65,7 @@ public class NodeService extends Service {
             printers.register(ShellBridge.get());
             raster = new RasterSurface(this);
             raster.register(ShellBridge.get());
+            ShellBridge.get().addListener(advertiseWhenReady);
         }
         try {
             ShellBridge.get().start();
@@ -126,10 +133,54 @@ public class NodeService extends Service {
             });
         }
         ShellBridge.get().removeListener(restartWhenUnattended);
+        ShellBridge.get().removeListener(advertiseWhenReady);
+        if (advertisement != null) {
+            try {
+                getSystemService(NsdManager.class).unregisterService(advertisement);
+            } catch (IllegalArgumentException ignored) {
+                // Never registered.
+            }
+        }
         if (multicastLock != null) multicastLock.release();
         if (wifiLock != null) wifiLock.release();
         if (wakeLock != null) wakeLock.release();
         super.onDestroy();
+    }
+
+    /** Advertises the POS like the Windows app does, so Screen devices find this tablet by themselves. */
+    private void advertise(org.json.JSONObject info) {
+        if (advertisement != null) return;
+        NsdServiceInfo service = new NsdServiceInfo();
+        service.setServiceName(ServerDiscovery.SERVICE_NAME);
+        service.setServiceType(ServerDiscovery.SERVICE_TYPE);
+        service.setPort(info.optInt("serverPort", 3001));
+        try {
+            service.setAttribute("version", getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+        } catch (Exception ignored) {
+            // The version is informational.
+        }
+        service.setAttribute("kds", "/kds");
+        service.setAttribute("kds_port", String.valueOf(info.optInt("kdsPort", 3002)));
+        service.setAttribute("server_app", "/server-standalone");
+        service.setAttribute("server_app_port", String.valueOf(info.optInt("serverAppPort", 3003)));
+        advertisement = new NsdManager.RegistrationListener() {
+            @Override
+            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                Log.w(TAG, "Could not advertise the POS on the network: " + errorCode);
+            }
+
+            @Override
+            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {}
+
+            @Override
+            public void onServiceRegistered(NsdServiceInfo serviceInfo) {
+                Log.i(TAG, "Advertising the POS as " + serviceInfo.getServiceName());
+            }
+
+            @Override
+            public void onServiceUnregistered(NsdServiceInfo serviceInfo) {}
+        };
+        getSystemService(NsdManager.class).registerService(service, NsdManager.PROTOCOL_DNS_SD, advertisement);
     }
 
     @Override

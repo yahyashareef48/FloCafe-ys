@@ -10,7 +10,7 @@ mkdir -p "$OUT"
 
 adb logcat -c || true
 adb install -r -g "$APK"
-adb shell am start -W -n "$PKG/.MainActivity"
+adb shell am start -W -n "$PKG/.MainActivity" --ez albaik.debug.mainMode true
 for port in 3001 3002 3003; do adb forward tcp:$port tcp:$port; done
 
 ok=0

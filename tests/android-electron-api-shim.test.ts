@@ -1,6 +1,8 @@
 /**
- * Android electronAPI shim — the Android shell injects
- * android/app/src/main/assets/electron-api-shim.js in place of main/preload.ts.
+ * Android WebView shims — the Android shell injects
+ * android/app/src/main/assets/webview-shim.js into every page it shows and, on
+ * the main tablet's own POS, electron-api-shim.js after it in place of
+ * main/preload.ts.
  *
  * Part 1 (always): it exposes every preload method except the documented
  * omissions, never exposes getStatus (which draws the desktop title bar), and
@@ -17,7 +19,11 @@ import * as vm from 'node:vm';
 const { assertOrThrow, assertEqualOrThrow } = require('./helpers/test-setup');
 
 const root = path.resolve(__dirname, '..');
-const shimSource = fs.readFileSync(path.join(root, 'android/app/src/main/assets/electron-api-shim.js'), 'utf8');
+const assets = path.join(root, 'android/app/src/main/assets');
+const webviewShimSource = fs.readFileSync(path.join(assets, 'webview-shim.js'), 'utf8');
+const electronShimSource = fs.readFileSync(path.join(assets, 'electron-api-shim.js'), 'utf8');
+/** The main tablet injects both, in this order. */
+const shimSource = `${webviewShimSource}\n${electronShimSource}`;
 const preloadSource = fs.readFileSync(path.join(root, 'main/preload.ts'), 'utf8');
 const hostRoutesSource = fs.readFileSync(path.join(root, 'main/android/host-action-routes.ts'), 'utf8');
 
@@ -86,7 +92,7 @@ async function contract(): Promise<void> {
   assertEqualOrThrow(JSON.stringify(exposed), JSON.stringify(expected), 'shim exposes every preload method except the documented omissions');
   for (const name of DELIBERATELY_OMITTED) {
     assertOrThrow(preload.includes(name), `omitted ${name} still exists in preload (omission list is current)`);
-    assertOrThrow(shimSource.includes(name), `omission of ${name} is documented in the shim header`);
+    assertOrThrow(electronShimSource.includes(name), `omission of ${name} is documented in the shim header`);
   }
   assertEqualOrThrow(api.getStatus, undefined, 'getStatus is absent, so no desktop title bar is drawn');
   assertEqualOrThrow(api.platform, 'android', 'platform is android');
@@ -119,7 +125,7 @@ async function contract(): Promise<void> {
   }
   const restoreCall = nativeCalls.find((c) => c.method === 'hostAction' && c.params.route === '/restore')!;
   assertEqualOrThrow(restoreCall.params.body.backupPath, '/x.db', 'restore forwards a preset backup path');
-  assertOrThrow(!/fetch\(|XMLHttpRequest|127\.0\.0\.1:\d/.test(shimSource.replace(/\/\*[\s\S]*?\*\//, '')), 'the shim makes no network calls of its own');
+  assertOrThrow(!/fetch\(|XMLHttpRequest|127\.0\.0\.1:\d/.test(shimSource.replace(/\/\*[\s\S]*?\*\//g, '')), 'the shims make no network calls of their own');
 
   console.log('\n--- Native hand-offs and safe no-ops ---');
   const backup = await api.backupDatabase('1234');
@@ -231,6 +237,36 @@ async function browserBehaviour(): Promise<void> {
     assertEqualOrThrow(saved.name, 'sales.csv', 'download keeps its file name');
     assertEqualOrThrow(saved.mimeType, 'text/csv', 'download keeps its type');
     assertEqualOrThrow(Buffer.from(saved.base64, 'base64').toString('utf8'), 'a,b\n1,2\n', 'download content survives an immediate revokeObjectURL');
+
+    console.log('\n--- Screen devices get the WebView shim only ---');
+    const screen = await browser.newPage();
+    await screen.addInitScript(`
+      window.__nativeCalls = [];
+      window.AlBaikNative = {
+        onmessage: null,
+        postMessage(data) {
+          const message = JSON.parse(data);
+          window.__nativeCalls.push(message);
+          setTimeout(() => this.onmessage({ data: JSON.stringify({ id: message.id, result: {} }) }), 0);
+        },
+      };
+    `);
+    await screen.addInitScript(webviewShimSource);
+    await screen.goto(`http://127.0.0.1:${port}/pos`);
+    assertEqualOrThrow(await screen.evaluate(() => typeof (window as any).electronAPI), 'undefined', 'a Screen page has no electronAPI, so it runs as a browser client');
+    await screen.evaluate(() => {
+      const w = window.open('', '_blank')!;
+      w.document.write('<p>BILL-77</p>');
+      w.print();
+    });
+    await screen.waitForFunction(() => window.__nativeCalls.some((c: any) => c.method === 'printHtml'));
+    assertEqualOrThrow(await screen.evaluate(() => window.__nativeCalls.filter((c: any) => c.method === 'printHtml').length), 1, 'a Screen page prints pop-up bills through the shell');
+    await screen.waitForFunction(() => !document.querySelector('[data-flo-android-overlay]'), null, { timeout: 5000 });
+    const sameHost = await screen.evaluate(() => {
+      window.open(`${location.origin}/kds-standalone`);
+      return !!document.querySelector('[data-flo-android-overlay] iframe');
+    });
+    assertEqualOrThrow(sameHost, true, 'links to the main device open inside the app, not externally');
   } finally {
     await browser.close().catch(() => undefined);
     server.close();
