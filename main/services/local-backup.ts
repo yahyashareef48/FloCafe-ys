@@ -1,6 +1,6 @@
 /** Daily automatic database backups kept outside the app's data folder. */
 
-import { app } from 'electron';
+import { platformApp } from '../platform';
 import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -18,9 +18,9 @@ const BACKUP_FILE_PATTERN =
 
 export function getLocalBackupDir(): string {
   try {
-    return path.join(app.getPath('documents'), 'FloCafe', 'Backups');
+    return path.join(platformApp().getPath('documents'), 'FloCafe', 'Backups');
   } catch {
-    return path.join(app.getPath('userData'), 'FloCafe', 'Backups');
+    return path.join(platformApp().getPath('userData'), 'FloCafe', 'Backups');
   }
 }
 

@@ -20,6 +20,7 @@ import {
   type PostHogEnvironment,
 } from './posthog-config';
 import { getOfflineModeAbortSignal, onOfflineModeEnabled } from './offline-mode';
+import { platformApp, type PlatformApp } from '../platform';
 import { readCountryProvenance } from './country-provenance';
 import { getInstallSource, getRunMode } from './telemetry';
 import {
@@ -99,9 +100,7 @@ onOfflineModeEnabled(() => {
 
 function appVersion(): string {
   try {
-    const version = (
-      require('electron') as { app?: { getVersion?: () => string } }
-    ).app?.getVersion?.();
+    const version = (platformApp() as Partial<PlatformApp> | undefined)?.getVersion?.();
     if (typeof version === 'string' && version) return version;
   } catch {
     // Outside Electron.

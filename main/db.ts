@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import type { Request, Response, NextFunction } from 'express';
 import * as path from 'path';
 import * as os from 'os';
-import { app } from 'electron';
+import { platformApp } from './platform';
 import log from 'electron-log';
 import * as fs from 'fs';
 import * as bcrypt from 'bcryptjs';
@@ -601,18 +601,18 @@ export function getDbPath(): string {
     path.basename(path.dirname(__dirname)) === 'dist'
       ? path.resolve(__dirname, '../..')
       : path.resolve(__dirname, '..');
-  const userDataPath = app.isPackaged ? app.getPath('userData') : projectRoot;
+  const userDataPath = platformApp().isPackaged ? platformApp().getPath('userData') : projectRoot;
   return path.join(userDataPath, 'flo.db');
 }
 
 function getBackupDir(): string {
-  const userDataPath = app.getPath('userData');
+  const userDataPath = platformApp().getPath('userData');
   return path.join(userDataPath, 'backups');
 }
 
 // Marker written on first startup to distinguish empty fresh install from missing db file.
 function getDbInitializedMarkerPath(): string {
-  const userDataPath = app.getPath('userData');
+  const userDataPath = platformApp().getPath('userData');
   return path.join(userDataPath, '.flo-db-initialized');
 }
 
@@ -1165,7 +1165,7 @@ export function retainRestoreSafetyCopy(
         .run('backup_created_at', new Date().toISOString());
       snapshotDb
         .prepare('INSERT OR REPLACE INTO _flo_meta (key, value) VALUES (?, ?)')
-        .run('app_version', app.getVersion());
+        .run('app_version', platformApp().getVersion());
     } finally {
       snapshotDb.close();
     }
@@ -1423,7 +1423,7 @@ export function initDatabase(
 
   // Startup guard: prevent silent recreation of missing database if previously initialized.
   const isProductionStartup =
-    recoverInterruptedReplacement && app.isPackaged && !process.env.FLO_E2E_DB_PATH;
+    recoverInterruptedReplacement && platformApp().isPackaged && !process.env.FLO_E2E_DB_PATH;
   if (
     isProductionStartup &&
     !fs.existsSync(dbPath) &&
@@ -1452,7 +1452,7 @@ export function initDatabase(
   autoRepairPaymentDetails();
   autoRepairDefaultPrinter();
 
-  if (app.isPackaged && !process.env.FLO_E2E_DB_PATH) {
+  if (platformApp().isPackaged && !process.env.FLO_E2E_DB_PATH) {
     const markerPath = getDbInitializedMarkerPath();
     try {
       fs.writeFileSync(markerPath, now());
@@ -1932,7 +1932,7 @@ export async function createBackupUnlocked(
         .run('backup_created_at', new Date().toISOString());
       backupDb
         .prepare(`INSERT OR REPLACE INTO _flo_meta (key, value) VALUES (?, ?)`)
-        .run('app_version', app.getVersion());
+        .run('app_version', platformApp().getVersion());
     } finally {
       backupDb?.close();
     }
@@ -7787,7 +7787,7 @@ function syncBackupBeforeMigration(fromVersion: number, toVersion: number): void
         .run('backup_created_at', new Date().toISOString());
       backupDb
         .prepare(`INSERT OR REPLACE INTO _flo_meta (key, value) VALUES (?, ?)`)
-        .run('app_version', app.getVersion());
+        .run('app_version', platformApp().getVersion());
     } finally {
       backupDb?.close();
     }

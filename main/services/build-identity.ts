@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { platformApp } from '../platform';
 
 type BuildIdentity = {
   schema_version: 1;
@@ -23,7 +24,7 @@ export function resolveBuildIdentity(metadata: unknown, packaged: boolean): stri
 
 function packagedRuntime(): boolean {
   try {
-    return (require('electron') as { app?: { isPackaged?: boolean } }).app?.isPackaged === true;
+    return platformApp()?.isPackaged === true;
   } catch {
     return false;
   }

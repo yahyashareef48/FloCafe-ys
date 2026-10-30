@@ -1,4 +1,4 @@
-import { app, safeStorage } from 'electron';
+import { platformApp, platformSafeStorage } from '../platform';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as bcrypt from 'bcryptjs';
@@ -14,12 +14,12 @@ interface MasterPinBlob {
 }
 
 function getMasterPinFilePath(): string {
-  return path.join(app.getPath('userData'), 'master-pin.enc');
+  return path.join(platformApp().getPath('userData'), 'master-pin.enc');
 }
 
 export function isMasterPinAvailable(): boolean {
   try {
-    return safeStorage.isEncryptionAvailable();
+    return platformSafeStorage().isEncryptionAvailable();
   } catch {
     return false;
   }
@@ -32,7 +32,7 @@ export function isMasterPinSet(): boolean {
 function readBlob(): MasterPinBlob | null {
   try {
     const encrypted = fs.readFileSync(getMasterPinFilePath());
-    const decrypted = safeStorage.decryptString(encrypted);
+    const decrypted = platformSafeStorage().decryptString(encrypted);
     const blob = JSON.parse(decrypted) as MasterPinBlob;
     if (!blob?.hash) return null;
     return blob;
@@ -42,7 +42,7 @@ function readBlob(): MasterPinBlob | null {
 }
 
 function writeBlob(blob: MasterPinBlob): void {
-  const encrypted = safeStorage.encryptString(JSON.stringify(blob));
+  const encrypted = platformSafeStorage().encryptString(JSON.stringify(blob));
   fs.writeFileSync(getMasterPinFilePath(), encrypted, { mode: 0o600 });
 }
 

@@ -3,7 +3,7 @@
 import * as crypto from 'crypto';
 import * as os from 'os';
 import type BetterSqlite3 from 'better-sqlite3';
-import { app } from 'electron';
+import { platformApp } from '../platform';
 import log from 'electron-log';
 import { WebSocket, type RawData } from 'ws';
 import { readCountryProvenance } from './country-provenance';
@@ -542,7 +542,7 @@ function diagnosticBuildIdentity(): string {
 
 function diagnosticAppVersion(): string {
   try {
-    const value = app.getVersion();
+    const value = platformApp().getVersion();
     return /^[A-Za-z0-9._:+-]{1,64}$/.test(value) ? value : 'unknown';
   } catch {
     return 'unknown';
@@ -1457,6 +1457,7 @@ export class CloudSyncService {
   }
 
   private isDevCloudRecoveryAllowed(): boolean {
+    const app = platformApp();
     return Boolean(app && !app.isPackaged && process.env.FLOCAFE_ALLOW_DEV_CLOUD_RECOVERY === '1');
   }
 

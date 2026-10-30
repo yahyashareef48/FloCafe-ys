@@ -1,6 +1,6 @@
 /** Anonymous usage telemetry using a randomized local UUID, independent of cloud sync. */
 
-import type { app } from 'electron';
+import { platformApp, type PlatformApp } from '../platform';
 import * as fs from 'fs';
 import { readCountryProvenance } from './country-provenance';
 import log from 'electron-log';
@@ -60,15 +60,14 @@ onOfflineModeEnabled(() => {
 });
 
 /**
- * Resolves Electron's `app` without assuming an Electron runtime. This module is
+ * Resolves the host `app` without assuming an Electron runtime. This module is
  * imported by unit tests and scripts where `electron` resolves to a path string
  * or is missing entirely, so an unguarded `app.isPackaged` would throw. Any
  * failure degrades to a dev-mode report instead of breaking the import.
  */
-function electronApp(): typeof app | undefined {
+function electronApp(): PlatformApp | undefined {
   try {
-    const electronModule = require('electron') as { app?: typeof app } | undefined;
-    return electronModule?.app;
+    return platformApp() ?? undefined;
   } catch {
     return undefined;
   }

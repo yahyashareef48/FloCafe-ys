@@ -2,6 +2,7 @@ import { randomBytes } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getDatabase, now } from '../db';
+import { platformApp, platformSafeStorage, type PlatformApp } from '../platform';
 
 /** Settings value standing in for the secret once it lives in OS-backed storage. */
 export const JWT_SECRET_SAFE_STORAGE_MARKER = 'safe-storage:v1';
@@ -13,13 +14,11 @@ interface SafeStorageLike {
   decryptString(value: Buffer): string;
 }
 
-/** Electron's safeStorage and userData path, or null outside packaged Electron or without OS encryption. */
+/** Host secret storage and userData path, or null outside a packaged host or without OS encryption. */
 function getSecureStore(): { storage: SafeStorageLike; filePath: string } | null {
   try {
-    const { app, safeStorage } = require('electron') as {
-      app?: { isPackaged?: boolean; getPath(name: string): string };
-      safeStorage?: SafeStorageLike;
-    };
+    const app = platformApp() as PlatformApp | undefined;
+    const safeStorage = platformSafeStorage() as SafeStorageLike | undefined;
     if (!app?.isPackaged || !safeStorage || !safeStorage.isEncryptionAvailable()) return null;
     return { storage: safeStorage, filePath: path.join(app.getPath('userData'), JWT_SECRET_FILE) };
   } catch {
@@ -27,13 +26,11 @@ function getSecureStore(): { storage: SafeStorageLike; filePath: string } | null
   }
 }
 
-/** Electron's safeStorage and userData path for unpackaged development recovery only. */
+/** Host secret storage and userData path for unpackaged development recovery only. */
 function getUnpackagedStore(): { storage: SafeStorageLike; filePath: string } | null {
   try {
-    const { app, safeStorage } = require('electron') as {
-      app?: { isPackaged?: boolean; getPath(name: string): string };
-      safeStorage?: SafeStorageLike;
-    };
+    const app = platformApp() as PlatformApp | undefined;
+    const safeStorage = platformSafeStorage() as SafeStorageLike | undefined;
     if (app?.isPackaged || !app || !safeStorage || !safeStorage.isEncryptionAvailable())
       return null;
     return { storage: safeStorage, filePath: path.join(app.getPath('userData'), JWT_SECRET_FILE) };

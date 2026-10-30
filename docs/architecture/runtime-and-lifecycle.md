@@ -173,6 +173,24 @@ started.
 build, not against `dev-server.js`. If a behaviour only appears under `npm run dev`, check whether
 `initialize()` does something `startStandaloneServers` does not.
 
+## Platform host
+
+Backend modules that also run outside the Electron shell (`db.ts`, `security/jwt-secret.ts`, and
+the backup, Google Drive, master PIN, WhatsApp, cloud sync, telemetry, PostHog, build identity, and
+country provenance services) do not import `electron`. They read the app version, packaged flag,
+`userData` and `documents` paths, OS locale, secret storage, and `openExternal` through
+[`main/platform`](../../main/platform/index.ts):
+
+- With no host installed, every accessor resolves `require('electron')` on each call, so the
+  packaged app behaves exactly as Electron dictates and test suites can stub `electron` per file.
+- `setPlatformHost()` replaces all of them at once. `createAndroidPlatformHost()` supplies explicit
+  directories, version, and locale, and secret storage that seals values with AES-256-GCM under a
+  32-byte key held by the native host (`main/platform/keyed-safe-storage.ts`).
+
+Window, menu, IPC, updater, and raster-surface code (`index.ts`, `ipc.ts`, `preload.ts`, and the
+window and updater helpers) is shell code and still uses Electron directly.
+`tests/platform-host.test.ts` pins both hosts.
+
 ## Uncaught failures outside the lifecycle
 
 `uncaughtException` and `unhandledRejection` are logged and reported to telemetry. They do not by

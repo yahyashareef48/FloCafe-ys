@@ -1,6 +1,6 @@
 /** Optional Google Drive integration for offline-first, off-device DB backups. */
 
-import { app, shell, safeStorage } from 'electron';
+import { platformApp, platformSafeStorage, platformShell } from '../platform';
 import * as http from 'node:http';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -417,19 +417,19 @@ function classifyDriveError(error: unknown): DriveError {
 }
 
 function getTokenFilePath(): string {
-  return path.join(app.getPath('userData'), 'google-drive-token.enc');
+  return path.join(platformApp().getPath('userData'), 'google-drive-token.enc');
 }
 function getInstallationMarkerPath(): string {
-  return path.join(app.getPath('userData'), 'google-drive-installation.marker');
+  return path.join(platformApp().getPath('userData'), 'google-drive-installation.marker');
 }
 function getStagingDir(): string {
-  return path.join(app.getPath('userData'), 'google-drive-staging');
+  return path.join(platformApp().getPath('userData'), 'google-drive-staging');
 }
 function getRestoreInvalidationIntentPath(): string {
-  return path.join(app.getPath('userData'), 'google-drive-restore.pending');
+  return path.join(platformApp().getPath('userData'), 'google-drive-restore.pending');
 }
 function getRestoreJobResultPath(): string {
-  return path.join(app.getPath('userData'), 'google-drive-restore-result.json');
+  return path.join(platformApp().getPath('userData'), 'google-drive-restore-result.json');
 }
 
 function syncRestoreIntentDirectory(directoryPath: string): boolean {
@@ -551,10 +551,11 @@ export function isGoogleDriveConfigured(): boolean {
 
 function isSecureStorageAvailable(): boolean {
   try {
-    if (!safeStorage.isEncryptionAvailable()) return false;
+    const storage = platformSafeStorage();
+    if (!storage.isEncryptionAvailable()) return false;
     const backend =
-      typeof safeStorage.getSelectedStorageBackend === 'function'
-        ? safeStorage.getSelectedStorageBackend()
+      typeof storage.getSelectedStorageBackend === 'function'
+        ? storage.getSelectedStorageBackend()
         : null;
     return !backend || !['basic_text', ''].includes(backend);
   } catch {
@@ -2649,7 +2650,7 @@ class GoogleDriveService {
         !['automatic', 'manual'].includes(properties.flo_backup_kind)
       )
         throw createDriveError('restore_validation_failed');
-      const versionComparison = compareAppVersions(remoteAppVersion, app.getVersion());
+      const versionComparison = compareAppVersions(remoteAppVersion, platformApp().getVersion());
       if (
         versionComparison === null ||
         versionComparison > 0 ||
@@ -3245,7 +3246,7 @@ class GoogleDriveService {
       !properties.flo_app_version
     )
       return null;
-    const versionComparison = compareAppVersions(properties.flo_app_version, app.getVersion());
+    const versionComparison = compareAppVersions(properties.flo_app_version, platformApp().getVersion());
     const compatible =
       file.mimeType === 'application/x-sqlite3' &&
       /^[a-f0-9]{64}$/.test(properties.flo_sha256) &&
@@ -3344,7 +3345,7 @@ class GoogleDriveService {
         return null;
       }
       const parsed = JSON.parse(
-        safeStorage.decryptString(fs.readFileSync(tokenPath)),
+        platformSafeStorage().decryptString(fs.readFileSync(tokenPath)),
       ) as StoredTokenEnvelope;
       if (!parsed || (!parsed.access_token && !parsed.refresh_token))
         throw new Error('invalid token');
@@ -3416,7 +3417,7 @@ class GoogleDriveService {
     if (rollbackBytes.length === 0) return;
     let envelope: StoredTokenEnvelope | null = null;
     try {
-      envelope = JSON.parse(safeStorage.decryptString(rollbackBytes)) as StoredTokenEnvelope;
+      envelope = JSON.parse(platformSafeStorage().decryptString(rollbackBytes)) as StoredTokenEnvelope;
     } catch {
       return;
     }
@@ -3439,7 +3440,7 @@ class GoogleDriveService {
     const tokenDirectory = path.dirname(tokenPath);
     const tempPath = `${tokenPath}.tmp-${crypto.randomBytes(4).toString('hex')}`;
     const restorePath = `${tokenPath}.restore-${crypto.randomBytes(4).toString('hex')}`;
-    const encrypted = safeStorage.encryptString(JSON.stringify(tokens));
+    const encrypted = platformSafeStorage().encryptString(JSON.stringify(tokens));
     let previousToken: Buffer | null = null;
     let hadPreviousToken = false;
     let fd: number | null = null;
@@ -3633,7 +3634,7 @@ class GoogleDriveService {
         });
         if (!isSafeGoogleAuthorizationUrl(authUrl))
           return finish(() => reject(createDriveError('reauth_required')));
-        shell.openExternal(authUrl).catch(() => finish(() => reject(createDriveError('offline'))));
+        platformShell().openExternal(authUrl).catch(() => finish(() => reject(createDriveError('offline'))));
       });
     });
   }

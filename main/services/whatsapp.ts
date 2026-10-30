@@ -1,4 +1,4 @@
-import { app } from 'electron';
+import { platformApp } from '../platform';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { WASocket as BaileysSocket, WAMessageKey } from '@whiskeysockets/baileys';
@@ -415,7 +415,7 @@ async function waitForWhatsAppWork(): Promise<void> {
 }
 
 function getAuthDir(): string {
-  return path.join(app.getPath('userData'), AUTH_DIR_NAME);
+  return path.join(platformApp().getPath('userData'), AUTH_DIR_NAME);
 }
 
 function writeSetting(key: string, value: string): void {

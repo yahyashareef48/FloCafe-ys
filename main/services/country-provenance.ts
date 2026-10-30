@@ -1,6 +1,6 @@
 /** Tracks whether store country was user-chosen or defaulted, with OS locale signals. */
 
-import { app } from 'electron';
+import { platformApp, type PlatformApp } from '../platform';
 import { getSettingValue } from '../db';
 
 export type CountrySource = 'user' | 'default';
@@ -29,6 +29,10 @@ function readOsLocale(): Pick<CountryProvenance, 'osCountry' | 'osLocale' | 'osT
   let osCountry: string | null = null;
   let osLocale: string | null = null;
   let osTimezone: string | null = null;
+  let app: Partial<PlatformApp> | undefined;
+  try {
+    app = platformApp();
+  } catch { /* signal unavailable */ }
 
   try {
     osCountry = normalizeCountry(app?.getLocaleCountryCode?.());
