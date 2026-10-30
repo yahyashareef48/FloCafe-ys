@@ -2,12 +2,44 @@
 
 // Evaluates assertions inside the app's live WebView over the DevTools protocol.
 // Usage: node cdp-check.cjs <forwarded-port>
+const { spawnSync } = require('child_process');
 const { connect } = require('./cdp.cjs');
+
+/** Sends a request on the page's AlBaikNative channel and resolves with the shell's reply. */
+function nativeCall(method, params) {
+  return `new Promise((resolve) => {
+    const id = Math.floor(Math.random() * 1e9);
+    const previous = window.AlBaikNative.onmessage;
+    window.AlBaikNative.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      if (message.id !== id) return previous(event);
+      window.AlBaikNative.onmessage = previous;
+      resolve(message);
+    };
+    window.AlBaikNative.postMessage(JSON.stringify({ id, method: ${JSON.stringify(method)}, params: ${JSON.stringify(params)} }));
+  })`;
+}
+
+function topActivity() {
+  const out = spawnSync('adb', ['shell', 'dumpsys', 'activity', 'activities'], { encoding: 'utf8' }).stdout || '';
+  const line = out.split('\n').find((l) => /topResumedActivity|mResumedActivity/.test(l)) || '';
+  return line.trim();
+}
+
+async function waitForTop(pattern, timeoutMs = 15000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    const top = topActivity();
+    if (pattern.test(top)) return top;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  return topActivity();
+}
 
 const port = Number(process.argv[2] || 9222);
 
 async function main() {
-  const { check, failures, close } = await connect(port, 'http://127.0.0.1:3001');
+  const { check, evaluate, failures, close } = await connect(port, 'http://127.0.0.1:3001');
   await check('POS loads from the on-device server', "location.origin", 'http://127.0.0.1:3001');
   await check('electronAPI shim is injected', "window.electronAPI && window.electronAPI.platform", 'android');
   await check('getStatus is absent (no desktop title bar)', "typeof window.electronAPI.getStatus", 'undefined');
@@ -30,6 +62,28 @@ async function main() {
     "new Promise((resolve) => { window.AlBaikNative.postMessage(JSON.stringify({ id: 9002, method: 'hostAction', params: { route: '/printing-self-test', body: {} } })); const previous = window.AlBaikNative.onmessage; window.AlBaikNative.onmessage = (event) => { const message = JSON.parse(event.data); if (message.id !== 9002) return previous(event); window.AlBaikNative.onmessage = previous; resolve(Array.isArray(message.result && message.result.printers)); }; })",
     true,
   );
+  const storage = (await evaluate(nativeCall('hostAction', { route: '/storage-self-test', body: {} }))).result || {};
+  console.log(`storage self-test: ${JSON.stringify(storage)}`);
+  await check('backups write to and publish on the device storage', `${storage.manualBytes > 0 && storage.publishedBytes === storage.manualBytes}`, true);
+
+  // System UI round trips: start the request, check the Android screen opened, cancel with Back.
+  await evaluate(`window.__saveReply = null; (${nativeCall('saveDownload', { name: 'sales.csv', mimeType: 'text/csv', base64: 'YSxiCjEsMgo=' })}).then((m) => { window.__saveReply = m; }); true`);
+  const saveTop = await waitForTop(/documentsui/i);
+  console.log(`save dialog: ${saveTop}`);
+  await check('downloads open the Android "save as" screen', `${/documentsui/i.test(saveTop)}`, true);
+  spawnSync('adb', ['shell', 'input', 'keyevent', 'KEYCODE_BACK']);
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await check('cancelling "save as" answers the page (saved: false)', 'window.__saveReply && window.__saveReply.result && window.__saveReply.result.saved', false);
+
+  await evaluate("(() => { const w = window.open('', '_blank'); w.document.write('<p>BILL-SMOKE</p>'); w.print(); return true; })()");
+  const printTop = await waitForTop(/printspooler/i);
+  console.log(`print dialog: ${printTop}`);
+  await check('Print opens the Android print dialog', `${/printspooler/i.test(printTop)}`, true);
+  spawnSync('adb', ['shell', 'input', 'keyevent', 'KEYCODE_BACK']);
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  await check('closing the print dialog returns to the POS (overlay closed)', "document.querySelector('[data-flo-android-overlay]') === null", true);
+  await check('the POS is still on screen after printing', 'location.origin', 'http://127.0.0.1:3001');
+
   await check('no desktop title bar is rendered', "document.querySelector('[data-testid=\"desktop-title-bar\"]') === null", true);
   close();
   process.exit(failures() === 0 ? 0 : 1);

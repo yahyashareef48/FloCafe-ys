@@ -142,6 +142,12 @@ async function run(child: ChildProcess, output: () => string): Promise<void> {
   assertEqualOrThrow(selfTest.printers[0]?.name, 'SR588 (USB 0483:5720)', 'printer discovery reaches the shell');
   assertOrThrow(nativeCalls.some((c) => c.method === 'rasterRender' && typeof c.params.pageHtml === 'string' && c.params.pageHtml.includes('__floRaster')), 'the raster page is sent to the shell');
 
+  const storage = (await hostAction('/storage-self-test')).result;
+  assertOrThrow(storage.manualBytes > 0, 'the storage self-test writes a backup');
+  assertEqualOrThrow(storage.publishedBytes, storage.manualBytes, 'the storage self-test publishes an identical copy');
+  assertEqualOrThrow(storage.documentsDir, documents, 'the storage self-test uses the Android documents folder');
+  assertEqualOrThrow(fs.readdirSync(path.join(documents, 'FloCafe', 'Manual Backups')).length, 0, 'the storage self-test cleans up after itself');
+
   console.log('\n--- Backup and restore run the shared actions ---');
   const wrongPin = await hostAction('/backup', { pin: '0000' });
   assertEqualOrThrow(wrongPin.result.success, false, 'backup refuses a wrong master PIN');

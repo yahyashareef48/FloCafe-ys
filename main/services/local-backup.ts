@@ -133,14 +133,33 @@ function stagingPath(dir: string): string {
   return path.join(dir, `.flo-backup-${randomUUID()}.tmp`);
 }
 
-/** Links a staged file in under the first free backup name; never replaces an existing file. */
+// Filesystems without hard links (Android shared storage, some network and FAT volumes).
+const NO_HARD_LINK_CODES = new Set(['EPERM', 'ENOTSUP', 'EOPNOTSUPP', 'ENOSYS', 'EXDEV']);
+
+/**
+ * Hard-links the staged file under `target`. Where links are unsupported it renames instead, which is
+ * just as atomic; the existence check keeps it from replacing a backup (writers here are serialised).
+ */
+function placeExclusively(stagedPath: string, target: string): void {
+  try {
+    fs.linkSync(stagedPath, target);
+  } catch (error) {
+    if (!NO_HARD_LINK_CODES.has(String((error as NodeJS.ErrnoException).code))) throw error;
+    if (fs.existsSync(target)) {
+      throw Object.assign(new Error(`${target} already exists`), { code: 'EEXIST' });
+    }
+    fs.renameSync(stagedPath, target);
+  }
+}
+
+/** Places a staged file under the first free backup name; never replaces an existing file. */
 function publishBackup(stagedPath: string, dir: string): string {
   const wallMs = Date.now();
   const startStamp = wallMs >= lastPublish.wallMs ? Math.max(wallMs, lastPublish.stampMs) : wallMs;
   for (let stamp = startStamp; ; stamp++) {
     const name = localBackupFileName(new Date(stamp));
     try {
-      fs.linkSync(stagedPath, path.join(dir, name));
+      placeExclusively(stagedPath, path.join(dir, name));
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'EEXIST') continue;
       throw error;
