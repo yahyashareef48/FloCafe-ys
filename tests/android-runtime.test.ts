@@ -15,6 +15,8 @@ const { assertOrThrow, assertEqualOrThrow } = require('./helpers/test-setup');
 const { createKeyedSafeStorage } = require('../main/platform/keyed-safe-storage');
 
 const root = path.resolve(__dirname, '..');
+// Lets a packaging check run this suite against the staged Android bundle.
+const runtimeRoot = process.env.FLO_ANDROID_RUNTIME_ROOT || root;
 const work = fs.mkdtempSync(path.join(os.tmpdir(), 'flo-android-runtime-'));
 const userData = path.join(work, 'data');
 const documents = path.join(work, 'documents');
@@ -170,9 +172,9 @@ async function main(): Promise<void> {
   let output = '';
   const child = spawn(
     process.execPath,
-    ['--require', path.join(__dirname, 'fixtures', 'block-electron.cjs'), path.join(root, 'dist', 'main', 'android', 'entry.js')],
+    ['--require', path.join(__dirname, 'fixtures', 'block-electron.cjs'), path.join(runtimeRoot, 'dist', 'main', 'android', 'entry.js')],
     {
-      cwd: root,
+      cwd: runtimeRoot,
       env: {
         PATH: process.env.PATH,
         HOME: work,

@@ -1,8 +1,0 @@
-.gradle/
-build/
-app/build/
-app/.cxx/
-app/libnode/
-app/src/main/assets/
-local.properties
-out/

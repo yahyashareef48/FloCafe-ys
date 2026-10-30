@@ -1,0 +1,87 @@
+import groovy.json.JsonSlurper
+
+plugins {
+    id 'com.android.application'
+}
+
+def appPackage = new JsonSlurper().parse(file('../../package.json'))
+def appVersion = appPackage.version as String
+def versionParts = appVersion.tokenize('.-')
+def computedVersionCode = (versionParts[0] as int) * 10000 + (versionParts[1] as int) * 100 + (versionParts[2] as int)
+
+android {
+    namespace 'com.albaik.pos'
+    compileSdk 36
+    def ndkDir = System.getenv('ANDROID_NDK_HOME')
+    if (ndkDir) ndkPath ndkDir
+
+    defaultConfig {
+        applicationId 'com.albaik.pos'
+        minSdk 24
+        targetSdk 36
+        versionCode((project.findProperty('versionCode') ?: computedVersionCode) as int)
+        versionName appVersion
+        externalNativeBuild {
+            cmake { arguments '-DANDROID_STL=c++_shared' }
+        }
+    }
+
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'arm64-v8a', 'x86_64'
+            universalApk false
+        }
+    }
+
+    signingConfigs {
+        release {
+            def keystorePath = System.getenv('ALBAIK_KEYSTORE_PATH')
+            if (keystorePath) {
+                storeFile file(keystorePath)
+                storePassword System.getenv('ALBAIK_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('ALBAIK_KEY_ALIAS')
+                keyPassword System.getenv('ALBAIK_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (System.getenv('ALBAIK_KEYSTORE_PATH')) signingConfig signingConfigs.release
+        }
+    }
+
+    externalNativeBuild {
+        cmake { path 'src/main/cpp/CMakeLists.txt' }
+    }
+
+    sourceSets {
+        main { jniLibs.srcDirs = ['libnode/bin'] }
+    }
+
+    packaging {
+        jniLibs { useLegacyPackaging true }
+    }
+
+    androidResources {
+        noCompress 'zip'
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.activity:activity:1.11.0'
+    implementation 'androidx.core:core:1.17.0'
+    implementation 'androidx.webkit:webkit:1.14.0'
+}

@@ -1,0 +1,11 @@
+.gradle/
+.idea/
+build/
+app/build/
+app/.cxx/
+local.properties
+*.iml
+# Produced by android/scripts/stage-node-project.sh
+app/libnode/
+app/src/main/assets/nodejs-project.zip
+app/src/main/assets/node-native/
