@@ -15,6 +15,7 @@ public class NodeService extends Service {
     private static final String CHANNEL = "server";
     private PowerManager.WakeLock wakeLock;
     private WifiManager.WifiLock wifiLock;
+    private WifiManager.MulticastLock multicastLock;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -40,6 +41,8 @@ public class NodeService extends Service {
             WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
             wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "albaik:server");
             wifiLock.acquire();
+            multicastLock = wm.createMulticastLock("albaik:mdns");
+            multicastLock.acquire();
         }
         NodeRuntime.startOnce(this);
         return START_STICKY;
