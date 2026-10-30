@@ -196,6 +196,7 @@ Kitchen tickets do not use the bill logo setting.
 | Windows | `OpenPrinterW` with `pDataType` set to `RAW`. |
 | macOS Mac App Store | IPP over loopback HTTP to CUPS on `127.0.0.1:631`, using the minimal client in `main/printers/ipp-client.ts`, because a sandboxed App Store build cannot shell out to `lp`. |
 | WebUSB | The browser WebUSB API through the frontend bridge. |
+| Android USB and Bluetooth | The platform host's `printers.send`: USB bulk transfer or Bluetooth SPP in the [Android shell](android.md#printing). |
 
 Dispatch failures are classified by `classifyPrintFailure()` into a stable, privacy-safe set:
 `not_configured`, `offline`, `queue_unavailable`, `spooler_error`, `driver_error`,
@@ -304,6 +305,10 @@ profile that declares `raster.enabled` may render text it cannot represent as bi
 that does not never takes that path. The two declared modes are `mixed`, which rasterizes only the
 rows that need it, and `whole-receipt`, which rasterizes the entire receipt and must be opted into
 explicitly by the caller.
+
+The Electron app renders raster units in a hidden window (`main/printers/raster-renderer.ts`). When
+the platform host supplies a `rasterRenderer`, as the [Android shell](android.md#printing) does, that
+renderer is used instead with the same request and result contract.
 
 ### The diagnostic probe is not reachable from the UI
 

@@ -70,6 +70,7 @@ once read.
 | --- | --- | --- |
 | Node to shell | `ready`, `failed` events | Startup result and the server ports |
 | Node to shell | `openExternal`, `pickFile`, `confirm` | Links, the restore file picker, the schema-mismatch confirmation |
+| Node to shell | `printerList`, `printerSend`, `rasterRender` | USB and Bluetooth printer discovery, raw ESC/POS jobs, raster units |
 | Shell to Node | `hostAction` | The renderer's database, settings, and diagnostics actions |
 | Shell to Node | `shutdown` | Drains the servers and closes the database |
 
@@ -105,10 +106,33 @@ Because a WebView has no pop-up windows, `window.print()`, or downloads, the shi
 
 ## Printing
 
-Receipts and KOTs sent to a network printer print from the backend over raw TCP exactly as on
-desktop. The `usb` (operating-system spooler) and `webusb` transports do not work on Android. With no
-thermal printer configured, the renderer's browser print path goes through the overlay and Android
-print service described above.
+The Android [platform host](runtime-and-lifecycle.md#platform-host) supplies `printers` and
+`rasterRenderer`, which [`main/printers/thermal.ts`](../../main/printers/thermal.ts) uses in place of
+the operating-system spooler and the Electron raster window. Everything else in the
+[print pipeline](printing.md) runs unchanged, so a job's bytes match the desktop app's for the same
+printer settings (`tests/android-printing.test.ts` compares bill, KOT, shift-close Z, and
+day-close Z output with the desktop raw TCP path).
+
+- **Network printers** print from the backend over raw TCP, as on desktop.
+- **USB and Bluetooth printers** are reached through `PrinterHub` in the foreground service, so
+  jobs print with the screen off. Printer detection in Settings > Printers lists USB devices with a
+  printer-class or vendor-specific bulk OUT endpoint as `<product> (USB <vid>:<pid>)`, and paired
+  Bluetooth devices that look like printers as `<name> (Bluetooth <address>)`. Either is saved as a
+  `usb` printer under that name, and the name is how a job finds its device. USB jobs are sent by
+  bulk transfer; Android asks once for permission, and plugging the printer in offers an "Always"
+  choice that keeps it. Bluetooth jobs are sent over SPP (RFCOMM) and need the "Nearby devices"
+  permission. A `usb` printer whose name has neither tag (for example one saved by the Windows app)
+  prints to the single attached USB printer, and fails with a message when there is not exactly one.
+- **Raster text.** Text the printer's code page cannot encode, such as the rupee sign on a generic
+  58 mm profile or Arabic-script item names, is drawn by `RasterSurface`: a hidden WebView running
+  the backend's `rasterRendererHtml()` page behind
+  [`raster-host.js`](../../android/app/src/main/assets/raster-host.js), the Android counterpart of
+  `main/raster-preload.ts`. `tests/android-raster-surface.test.ts` runs that page and script in
+  Chromium.
+- **WebUSB** printers do not work in the Android WebView.
+
+With no thermal printer configured, the renderer's browser print path goes through the overlay and
+Android print service described above.
 
 ## Building
 
