@@ -1,4 +1,12 @@
-import type { PlatformApp, PlatformHost, PlatformId, PlatformSafeStorage, PlatformShell } from './types';
+import type {
+  PlatformApp,
+  PlatformHost,
+  PlatformId,
+  PlatformPrinters,
+  PlatformRasterRenderer,
+  PlatformSafeStorage,
+  PlatformShell,
+} from './types';
 
 export type * from './types';
 
@@ -32,4 +40,14 @@ export function platformSafeStorage(): PlatformSafeStorage {
 
 export function platformShell(): PlatformShell {
   return installedHost ? installedHost.shell : (electronModule()?.shell as PlatformShell);
+}
+
+/** The host's own printer transport, or null where the OS spooler is used. */
+export function platformPrinters(): PlatformPrinters | null {
+  return installedHost?.printers ?? null;
+}
+
+/** The host's raster renderer, or null where the Electron raster surface is used. */
+export function platformRasterRenderer(): PlatformRasterRenderer | null {
+  return installedHost?.rasterRenderer ?? null;
 }

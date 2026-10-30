@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain } from 'electron';
+import type { BrowserWindow } from 'electron';
 import * as path from 'node:path';
 import {
   isRasterRenderRequest,
@@ -17,6 +17,11 @@ import {
 } from '../../shared/print/thermal-capabilities';
 
 const DEFAULT_RENDER_TIMEOUT_MS = 15_000;
+
+// Loaded on first use so non-Electron hosts can import rasterRendererHtml and the line helpers.
+function electronMain(): typeof import('electron') {
+  return require('electron') as typeof import('electron');
+}
 const MAX_RENDER_TIMEOUT_MS = 2_147_483_647;
 
 /** Self-contained page with no navigation, network access, or Node integration. */
@@ -233,10 +238,11 @@ export class ChromiumRasterRenderer {
       ? configuredTimeoutMs
       : DEFAULT_RENDER_TIMEOUT_MS;
     this.timeoutMs = options.timeoutMs ?? renderTimeoutMs;
-    this.ipc = options.ipc ?? ipcMain;
+    this.ipc = options.ipc ?? electronMain().ipcMain;
     this.onActivity = options.onActivity;
     this.ready = new Promise<void>((resolve) => { this.readyResolve = resolve; });
-    const windowFactory = options.windowFactory ?? ((windowOptions) => new BrowserWindow(windowOptions));
+    const windowFactory =
+      options.windowFactory ?? ((windowOptions) => new (electronMain().BrowserWindow)(windowOptions));
     this.surface = windowFactory({
       show: false,
       width: 1,

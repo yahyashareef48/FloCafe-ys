@@ -1,4 +1,4 @@
-import type { PlatformHost } from './types';
+import type { PlatformHost, PlatformPrinters, PlatformRasterRenderer } from './types';
 import { createKeyedSafeStorage } from './keyed-safe-storage';
 
 export interface AndroidHostOptions {
@@ -9,6 +9,8 @@ export interface AndroidHostOptions {
   countryCode: string;
   secretKey: Buffer;
   openExternal(url: string): Promise<void>;
+  printers?: PlatformPrinters;
+  rasterRenderer?: PlatformRasterRenderer;
 }
 
 export function createAndroidPlatformHost(options: AndroidHostOptions): PlatformHost {
@@ -23,5 +25,7 @@ export function createAndroidPlatformHost(options: AndroidHostOptions): Platform
     },
     safeStorage: createKeyedSafeStorage(options.secretKey),
     shell: { openExternal: options.openExternal },
+    printers: options.printers,
+    rasterRenderer: options.rasterRenderer,
   };
 }

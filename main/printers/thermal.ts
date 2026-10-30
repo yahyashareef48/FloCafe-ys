@@ -76,6 +76,7 @@ import {
   rasterCapabilityEnabled,
 } from '../../shared/print/raster';
 import type { RasterSemanticLineGroup } from '../../shared/print/raster';
+import { platformPrinters, platformRasterRenderer } from '../platform';
 import type { PrintDocument } from '../../shared/print/document';
 import {
   columnsForPaperWidth as columnsForConfiguredPaperWidth,
@@ -351,6 +352,19 @@ export async function detectConnectedPrinters(signal?: AbortSignal): Promise<Pri
 
   if (signal?.aborted) {
     return printers;
+  }
+
+  const hostPrinters = platformPrinters();
+  if (hostPrinters) {
+    const found = await hostPrinters.list(signal);
+    return found.map((printer) =>
+      annotateProfile({
+        ...printer,
+        status: 'idle',
+        isDefault: false,
+        paperWidth: guessPaperWidth(printer.name, printer.model),
+      }),
+    );
   }
 
   if (isMasBuild) {
@@ -1758,7 +1772,7 @@ async function rasterizeDocumentLines(
   try {
     const { getSharedRasterRenderer, renderUnsupportedRasterLines } =
       await import('./raster-renderer');
-    renderer = getSharedRasterRenderer();
+    renderer = platformRasterRenderer() ?? getSharedRasterRenderer();
     const raster = await renderUnsupportedRasterLines(
       renderer,
       lines,
@@ -3766,6 +3780,12 @@ export async function printViaUSB(
   signal?: AbortSignal,
 ): Promise<DispatchResult> {
   console.log('[Printer] printViaUSB called, platform:', process.platform, 'printer:', printerName);
+
+  const hostPrinters = platformPrinters();
+  if (hostPrinters) {
+    if (signal?.aborted) return { ok: false, detail: 'Print cancelled during shutdown' };
+    return await hostPrinters.send(printerName ?? '', data, signal);
+  }
 
   if (process.platform === 'darwin' || process.platform === 'linux') {
     return await printViaCups(data, printerName, signal);

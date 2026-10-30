@@ -8,6 +8,7 @@ import log from 'electron-log';
 import { setPlatformHost } from '../platform';
 import { createAndroidPlatformHost } from '../platform/android-host';
 import { callNative } from './native-bridge';
+import { androidPrinters, androidRasterRenderer } from './printing';
 
 export interface AndroidRuntimeEnv {
   userDataDir: string;
@@ -63,6 +64,8 @@ export function installAndroidRuntime(env: NodeJS.ProcessEnv = process.env): And
       openExternal: async (url: string) => {
         await callNative('openExternal', { url });
       },
+      printers: androidPrinters,
+      rasterRenderer: androidRasterRenderer,
     }),
   );
   return runtime;
