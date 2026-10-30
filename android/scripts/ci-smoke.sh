@@ -39,6 +39,34 @@ if [ "$ok" = 1 ]; then
   checks=${PIPESTATUS[0]}
 fi
 
+screen_checks=1
+if [ "$checks" = 0 ]; then
+  echo "--- Screen mode against a stand-in main device on the CI host (10.0.2.2) ---"
+  node "$SCRIPTS/fake-main-server.cjs" 3902 > "$OUT/fake-main.log" 2>&1 &
+  fake=$!
+  sleep 1
+  adb shell am start -W -n "$PKG/.LauncherActivity" --es albaik.debug.screen "KITCHEN|10.0.2.2|3902"
+  sleep 8
+  pid="$(adb shell pidof "$PKG" | tr -d '\r')"
+  adb forward tcp:9223 "localabstract:webview_devtools_remote_${pid}"
+  node "$SCRIPTS/cdp-screen-check.cjs" 9223 http://10.0.2.2:3902 | tee "$OUT/screen-checks.txt"
+  screen_checks=${PIPESTATUS[0]}
+  adb exec-out screencap -p > "$OUT/screen-mode.png" || true
+
+  echo "--- The Screen reconnects when the main device comes back ---"
+  kill "$fake"
+  sleep 50
+  adb exec-out screencap -p > "$OUT/screen-reconnecting.png" || true
+  before="$(grep -c 'GET /kds-standalone/ page' "$OUT/fake-main.log")"
+  node "$SCRIPTS/fake-main-server.cjs" 3902 >> "$OUT/fake-main.log" 2>&1 &
+  fake=$!
+  sleep 15
+  after="$(grep -c 'GET /kds-standalone/ page' "$OUT/fake-main.log")"
+  kill "$fake"
+  echo "page requests before=$before after=$after"
+  if [ "$after" -le "$before" ]; then echo "FAIL the Screen did not reload the page after the main device returned"; screen_checks=1; fi
+fi
+
 adb exec-out screencap -p > "$OUT/screen.png" || true
 adb logcat -d > "$OUT/logcat-full.txt" || true
 grep -E 'AlBaik|AndroidRuntime|FATAL' "$OUT/logcat-full.txt" > "$OUT/logcat-app.txt" || true
@@ -48,4 +76,4 @@ for port in 3001 3002 3003; do
   hex="$(printf '%04X' $port)"
   grep -q "00000000:$hex" "$OUT/summary.txt" || { echo "port $port is not listening on all interfaces"; exit 1; }
 done
-[ "$ok" = 1 ] && [ "$checks" = 0 ]
+[ "$ok" = 1 ] && [ "$checks" = 0 ] && [ "$screen_checks" = 0 ]
