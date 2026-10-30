@@ -56,7 +56,8 @@ final class AppMode {
             .putString("host", host)
             .putInt("port", port)
             .putString("serviceName", serviceName)
-            .apply();
+            // Written synchronously: becomeScreen ends the process right after.
+            .commit();
     }
 
     /**
