@@ -4,6 +4,7 @@
 set -uo pipefail
 APK="$1"
 OUT="${2:-android-smoke}"
+RELEASE_APK="${3:-}"
 PKG=com.albaik.pos
 SCRIPTS="$(cd "$(dirname "$0")" && pwd)"
 mkdir -p "$OUT"
@@ -37,6 +38,35 @@ if [ "$ok" = 1 ]; then
   adb forward tcp:9222 "localabstract:webview_devtools_remote_${pid}"
   node "$SCRIPTS/cdp-check.cjs" 9222 | tee "$OUT/webview-checks.txt"
   checks=${PIPESTATUS[0]}
+fi
+
+update_checks=0
+if [ "$checks" = 0 ] && [ -n "$RELEASE_APK" ]; then
+  echo "--- Updating to the release APK keeps the tablet's data ---"
+  update_checks=1
+  adb logcat -c || true
+  if adb install -r "$RELEASE_APK"; then
+    # The role is already saved as main tablet, so the launcher opens the POS directly.
+    adb shell am start -W -n "$PKG/.LauncherActivity"
+    for i in $(seq 1 120); do
+      if curl -fsS -m 2 http://127.0.0.1:3001/api/health > /dev/null 2>&1; then echo "release health OK after ${i}s"; break; fi
+      sleep 1
+    done
+    sleep 2
+    adb logcat -d > "$OUT/logcat-release.txt" || true
+    if grep -q 'Schema up to date' "$OUT/logcat-release.txt" && ! grep -q 'Schema: v0' "$OUT/logcat-release.txt"; then
+      echo "PASS the release update opened the existing database"
+      update_checks=0
+    else
+      echo "FAIL the release update did not reuse the existing database"
+      grep -E 'AlBaikNode.*\[DB\]' "$OUT/logcat-release.txt" | head -20
+    fi
+    curl -fsS -m 5 http://127.0.0.1:3001/api/health > /dev/null || { echo "FAIL the release build did not start the POS server"; update_checks=1; }
+    # Back to the debug build (same key) for the Screen checks, which use debug-only launch options.
+    adb install -r "$APK" || update_checks=1
+  else
+    echo "FAIL the release APK did not install over the debug APK (different signing key?)"
+  fi
 fi
 
 screen_checks=1
@@ -76,4 +106,4 @@ for port in 3001 3002 3003; do
   hex="$(printf '%04X' $port)"
   grep -q "00000000:$hex" "$OUT/summary.txt" || { echo "port $port is not listening on all interfaces"; exit 1; }
 done
-[ "$ok" = 1 ] && [ "$checks" = 0 ] && [ "$screen_checks" = 0 ]
+[ "$ok" = 1 ] && [ "$checks" = 0 ] && [ "$update_checks" = 0 ] && [ "$screen_checks" = 0 ]

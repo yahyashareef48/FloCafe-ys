@@ -187,7 +187,47 @@ cd android && ./gradlew assembleDebug
 The staging script packs `dist/`, `frontend/out/`, and production `node_modules` (without
 desktop-only native payloads, documentation, and type declarations) into the app assets, and fetches
 the pinned runtime binaries. Gradle produces one APK per ABI (`arm64-v8a`, `x86_64`) in
-`android/app/build/outputs/apk/`. The `Android` workflow
-([`.github/workflows/android.yml`](../../.github/workflows/android.yml)) builds both and runs the
-x86_64 APK in an emulator, inspecting the live WebView over the DevTools protocol
-([`android/scripts/ci-smoke.sh`](../../android/scripts/ci-smoke.sh)).
+`android/app/build/outputs/apk/`.
+
+### Signing and updates
+
+Android installs a new APK over an existing one only when both are signed with the same key and the
+new `versionCode` is not lower. Otherwise the old app has to be uninstalled first, and uninstalling
+deletes `flo-data/`, the tablet's database. When the `ALBAIK_KEYSTORE_PATH`,
+`ALBAIK_KEYSTORE_PASSWORD`, `ALBAIK_KEY_ALIAS`, and `ALBAIK_KEY_PASSWORD` environment variables are
+set, [`android/app/build.gradle`](../../android/app/build.gradle) signs both debug and release builds
+with that key, so either installs over the other.
+
+The `Android` workflow ([`.github/workflows/android.yml`](../../.github/workflows/android.yml)) reads
+the key from these repository secrets:
+
+| Secret | Value |
+| --- | --- |
+| `ALBAIK_ANDROID_KEYSTORE_BASE64` | The keystore file, base64-encoded |
+| `ALBAIK_ANDROID_KEYSTORE_PASSWORD` | The keystore password |
+| `ALBAIK_ANDROID_KEY_ALIAS` | The key alias |
+| `ALBAIK_ANDROID_KEY_PASSWORD` | The key password |
+
+To create the key once, on any computer with a JDK:
+
+```sh
+keytool -genkeypair -keystore albaik-release.jks -alias albaik -keyalg RSA -keysize 4096 -validity 10000
+base64 -w0 albaik-release.jks
+```
+
+Keep `albaik-release.jks` and its passwords outside the repository. A lost key means the next APK
+cannot install as an update.
+
+With the secrets set, the workflow uploads `Al-Baik-POS-Android-debug` and
+`Al-Baik-POS-Android-release` APKs, gives every run a higher `versionCode` (the `package.json`
+version followed by the run number), and checks that all APKs carry the same certificate. Without
+them it signs with a key made for that run, warns that its APKs cannot be updated in place, and
+publishes only the debug APKs.
+
+### CI checks
+
+The workflow runs the x86_64 debug APK in an emulator and inspects the live WebView over the
+DevTools protocol ([`android/scripts/ci-smoke.sh`](../../android/scripts/ci-smoke.sh)): the servers
+and their bind addresses, the shims, the raster surface, backups on the device's shared storage, the
+system save and print screens, an update to the release APK that must reopen the existing database,
+and Screen mode against a stand-in main device, including reconnecting after it goes away.

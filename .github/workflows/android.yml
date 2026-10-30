@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build-apk:
-    name: Build debug APKs
+    name: Build APKs
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -38,23 +38,87 @@ jobs:
           NEXT_TELEMETRY_DISABLED: 1
       - name: Stage the Node bundle
         run: bash android/scripts/stage-node-project.sh
+      - name: Prepare signing
+        id: signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ALBAIK_ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ALBAIK_ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ALBAIK_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ALBAIK_ANDROID_KEY_PASSWORD }}
+        run: |
+          keystore="$RUNNER_TEMP/albaik-release.jks"
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$keystore"
+            {
+              echo "ALBAIK_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+              echo "ALBAIK_KEY_ALIAS=$KEY_ALIAS"
+              echo "ALBAIK_KEY_PASSWORD=$KEY_PASSWORD"
+            } >> "$GITHUB_ENV"
+            echo "key=stable" >> "$GITHUB_OUTPUT"
+          else
+            # A one-run key still exercises the release build and signature checks; nothing it signs is published.
+            password="$(openssl rand -hex 16)"
+            echo "::add-mask::$password"
+            keytool -genkeypair -keystore "$keystore" -storepass "$password" -keypass "$password" \
+              -alias ephemeral -keyalg RSA -keysize 2048 -validity 1 -dname "CN=Al Baik POS CI ephemeral" >/dev/null
+            {
+              echo "ALBAIK_KEYSTORE_PASSWORD=$password"
+              echo "ALBAIK_KEY_ALIAS=ephemeral"
+              echo "ALBAIK_KEY_PASSWORD=$password"
+            } >> "$GITHUB_ENV"
+            echo "key=ephemeral" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Android signing key missing::These APKs are signed with a one-run key, so a later APK will not install over this one without uninstalling, which deletes the tablet's data. Add the ALBAIK_ANDROID_* secrets described in docs/architecture/android.md. Release APKs are not published until then."
+          fi
+          echo "ALBAIK_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
       - name: Build APKs
         working-directory: android
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
         run: |
-          ./gradlew --no-daemon assembleDebug
-          mkdir -p ../android-out
+          # Increases with every run, so each CI APK installs as an update of the previous one.
+          base_code=$(node -p "const [a, b, c] = require('../package.json').version.split(/[.-]/).map(Number); a * 10000 + b * 100 + c")
+          version_code=$(( base_code * 10000 + GITHUB_RUN_NUMBER % 10000 ))
+          ./gradlew --no-daemon assembleDebug assembleRelease -PversionCode="$version_code"
+          mkdir -p ../android-out/debug ../android-out/release
           for abi in arm64-v8a x86_64; do
-            cp "app/build/outputs/apk/debug/app-${abi}-debug.apk" "../android-out/AlBaikPOS-${abi}-debug.apk"
+            cp "app/build/outputs/apk/debug/app-${abi}-debug.apk" "../android-out/debug/AlBaikPOS-${abi}-debug.apk"
+            cp "app/build/outputs/apk/release/app-${abi}-release.apk" "../android-out/release/AlBaikPOS-${abi}-release.apk"
           done
-          ls -la ../android-out
+          echo "versionCode $version_code"
+          ls -la ../android-out/*
+      - name: Verify signatures
+        run: |
+          apksigner="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)apksigner"
+          cert() { "$apksigner" verify --print-certs "$1" | grep -m1 'SHA-256 digest'; }
+          expected="$(cert android-out/release/AlBaikPOS-arm64-v8a-release.apk)"
+          echo "release certificate: $expected"
+          for apk in android-out/release/*.apk android-out/debug/*.apk; do
+            # Debug and release carry the same certificate so either installs over the other.
+            [ "$(cert "$apk")" = "$expected" ] || { echo "::error::$apk is signed with a different certificate"; exit 1; }
+          done
+          ! unzip -l android-out/release/AlBaikPOS-arm64-v8a-release.apk | grep -q 'lib/x86_64/'
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: Al-Baik-POS-Android-debug
-          path: android-out/*.apk
+          path: android-out/debug/*.apk
           if-no-files-found: error
           retention-days: 30
+      - if: steps.signing.outputs.key == 'stable'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Al-Baik-POS-Android-release
+          path: android-out/release/*.apk
+          if-no-files-found: error
+          retention-days: 90
+      # The smoke test installs this over the debug APK to check that an update keeps the data.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ci-only-release-x86_64-do-not-install
+          path: android-out/release/AlBaikPOS-x86_64-release.apk
+          if-no-files-found: error
+          retention-days: 1
+      - if: always()
+        run: rm -f "$RUNNER_TEMP/albaik-release.jks"
 
   emulator-smoke:
     name: Emulator smoke test (x86_64)
@@ -72,6 +136,10 @@ jobs:
         with:
           name: Al-Baik-POS-Android-debug
           path: apks
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ci-only-release-x86_64-do-not-install
+          path: apks
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -85,7 +153,7 @@ jobs:
           ram-size: 4096M
           disk-size: 6000M
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
-          script: bash android/scripts/ci-smoke.sh apks/AlBaikPOS-x86_64-debug.apk android-smoke
+          script: bash android/scripts/ci-smoke.sh apks/AlBaikPOS-x86_64-debug.apk android-smoke apks/AlBaikPOS-x86_64-release.apk
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

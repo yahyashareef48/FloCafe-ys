@@ -47,7 +47,12 @@ android {
         }
     }
 
+    // One stable key for debug and release lets each new APK install over the last one. Without it,
+    // Android only accepts the new APK after an uninstall, which deletes the tablet's database.
     buildTypes {
+        debug {
+            if (System.getenv('ALBAIK_KEYSTORE_PATH')) signingConfig signingConfigs.release
+        }
         release {
             minifyEnabled false
             if (System.getenv('ALBAIK_KEYSTORE_PATH')) signingConfig signingConfigs.release
