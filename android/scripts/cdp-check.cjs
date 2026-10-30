@@ -78,6 +78,16 @@ async function main() {
     'http://127.0.0.1:3001',
   );
   await check('overlay closes back to the POS', "document.querySelector('[data-flo-android-overlay]') === null", true);
+  await check(
+    'raster surface renders the rupee sign in the shell WebView',
+    "new Promise((resolve) => { window.AlBaikNative.postMessage(JSON.stringify({ id: 9001, method: 'hostAction', params: { route: '/printing-self-test', body: {} } })); const previous = window.AlBaikNative.onmessage; window.AlBaikNative.onmessage = (event) => { const message = JSON.parse(event.data); if (message.id !== 9001) return previous(event); window.AlBaikNative.onmessage = previous; resolve(message.result && message.result.raster.ok && message.result.raster.widthDots === 384 && message.result.raster.inkPixels > 0); }; })",
+    true,
+  );
+  await check(
+    'printer discovery answers (no printers attached to the emulator)',
+    "new Promise((resolve) => { window.AlBaikNative.postMessage(JSON.stringify({ id: 9002, method: 'hostAction', params: { route: '/printing-self-test', body: {} } })); const previous = window.AlBaikNative.onmessage; window.AlBaikNative.onmessage = (event) => { const message = JSON.parse(event.data); if (message.id !== 9002) return previous(event); window.AlBaikNative.onmessage = previous; resolve(Array.isArray(message.result && message.result.printers)); }; })",
+    true,
+  );
   await check('no desktop title bar is rendered', "document.querySelector('[data-testid=\"desktop-title-bar\"]') === null", true);
   ws.close();
   process.exit(failed === 0 ? 0 : 1);

@@ -25,7 +25,7 @@ import {
   whatsAppStatus,
   type HostDialogs,
 } from '../host-actions';
-import { platformApp } from '../platform';
+import { platformApp, platformPrinters, platformRasterRenderer } from '../platform';
 import { callNative } from './native-bridge';
 
 /** Folder for manual backups; the shell then offers to copy the file anywhere the operator picks. */
@@ -72,6 +72,7 @@ export function createHostActionHandler(options: {
   dialogs: HostDialogs;
   shutdownSignal?: AbortSignal;
   appInfo: () => Record<string, unknown>;
+  extraRoutes?: Record<string, (body: HostActionBody) => unknown>;
 }): HostActionHandler {
   const str = (value: unknown) => (typeof value === 'string' ? value : undefined);
   const routes: Record<string, (body: HostActionBody) => unknown> = {
@@ -103,6 +104,7 @@ export function createHostActionHandler(options: {
     '/report-renderer-error': () => reportRendererError(),
     '/posthog-bootstrap': () => postHogBootstrap(),
     '/printers': () => listPrinters(),
+    ...options.extraRoutes,
   };
   return async (route, body) => {
     const action = Object.prototype.hasOwnProperty.call(routes, route) ? routes[route] : undefined;
@@ -112,10 +114,40 @@ export function createHostActionHandler(options: {
   };
 }
 
+/** Exercises the shell's raster surface and printer discovery once, for diagnostics and CI. */
+export async function androidPrintingSelfTest() {
+  const renderer = platformRasterRenderer();
+  const raster = renderer
+    ? await renderer.render({
+        version: 1,
+        requestId: `self-test-${Date.now()}`,
+        text: 'Total ₹1,250.00',
+        widthDots: 384,
+        maxBandHeight: 24,
+        direction: 'ltr',
+        style: 'bold',
+        financial: true,
+        maxLines: 2,
+      })
+    : null;
+  const printers = await platformPrinters()?.list();
+  return {
+    raster: raster?.ok
+      ? {
+          ok: true,
+          widthDots: raster.unit.bands[0]?.widthDots ?? 0,
+          inkPixels: raster.unit.bands.reduce((sum, band) => sum + band.pixels.filter((p) => p !== 0).length, 0),
+        }
+      : { ok: false, detail: raster?.detail ?? 'No raster renderer' },
+    printers: printers ?? [],
+  };
+}
+
 export function createAndroidHostActionHandler(shutdownSignal?: AbortSignal): HostActionHandler {
   return createHostActionHandler({
     dialogs: androidHostDialogs(),
     shutdownSignal,
+    extraRoutes: { '/printing-self-test': () => androidPrintingSelfTest() },
     appInfo: () => ({
       version: platformApp().getVersion(),
       name: 'Al Baik POS',

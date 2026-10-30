@@ -54,6 +54,21 @@ const server = net.createServer((socket) => {
       else if (typeof message.method === 'string') {
         nativeCalls.push(message);
         if (message.method === 'pickFile') sendToNode({ id: message.id, result: { path: pickedRestorePath } });
+        else if (message.method === 'rasterRender') {
+          const request = message.params.request;
+          const pixels = Buffer.alloc(request.widthDots * 24, 1).toString('base64');
+          sendToNode({
+            id: message.id,
+            result: {
+              version: 1,
+              requestId: request.requestId,
+              ok: true,
+              unit: { unitId: request.requestId, financial: request.financial, complete: true, bands: [{ widthDots: request.widthDots, heightDots: 24, pixelsBase64: pixels }] },
+            },
+          });
+        } else if (message.method === 'printerList') {
+          sendToNode({ id: message.id, result: [{ name: 'SR588 (USB 0483:5720)', make: 'SR588', model: 'Posiflow', connectionType: 'usb', deviceUri: 'usb://0483/5720' }] });
+        }
         else if (message.method === 'confirm') sendToNode({ id: message.id, result: { confirmed: true } });
         else sendToNode({ id: message.id, result: null });
       } else if (typeof message.id === 'number') responses.set(message.id, message);
@@ -118,6 +133,14 @@ async function run(child: ChildProcess, output: () => string): Promise<void> {
     settings.result.jwt_secret === undefined || String(settings.result.jwt_secret).startsWith('****'),
     'the JWT secret is masked',
   );
+
+  console.log('\n--- Printing self-test reaches the shell raster surface and printers ---');
+  const selfTest = (await hostAction('/printing-self-test')).result;
+  assertEqualOrThrow(selfTest.raster.ok, true, 'the shell raster surface renders a unit');
+  assertEqualOrThrow(selfTest.raster.widthDots, 384, 'raster bands decode with their width');
+  assertEqualOrThrow(selfTest.raster.inkPixels, 384 * 24, 'raster pixels decode from base64');
+  assertEqualOrThrow(selfTest.printers[0]?.name, 'SR588 (USB 0483:5720)', 'printer discovery reaches the shell');
+  assertOrThrow(nativeCalls.some((c) => c.method === 'rasterRender' && typeof c.params.pageHtml === 'string' && c.params.pageHtml.includes('__floRaster')), 'the raster page is sent to the shell');
 
   console.log('\n--- Backup and restore run the shared actions ---');
   const wrongPin = await hostAction('/backup', { pin: '0000' });
