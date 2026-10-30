@@ -18,21 +18,17 @@ import {
 } from '../services/whatsapp';
 import { initPrinter } from '../printers/thermal';
 import { createShutdownCoordinator, waitForHttpShutdownWork } from '../shutdown';
-import { startActionServer, type ActionServer } from './action-server';
+import { createAndroidHostActionHandler, type HostActionHandler } from './host-action-routes';
 
 export interface AndroidRuntimeInfo {
   serverPort: number;
   kdsPort: number;
   serverAppPort: number;
-  actionPort: number;
-  actionToken: string;
 }
 
 const shutdownController = new AbortController();
-let actionServer: ActionServer | null = null;
 
 const cleanup = createShutdownCoordinator(() => [
-  { name: 'action server', run: () => actionServer?.close() },
   { name: 'Server App', run: () => stopServerApp(), blocksDatabase: true },
   { name: 'Main server', run: () => stopServer(), blocksDatabase: true },
   { name: 'KDS server', run: () => stopKdsServer(), blocksDatabase: true },
@@ -72,17 +68,15 @@ export async function startAndroidServices(): Promise<AndroidRuntimeInfo> {
   await startServerApp();
   throwIfShutdownRequested();
   await initPrinter();
-  actionServer = await startActionServer({
-    serverPort: getServerPort(),
-    shutdownSignal: shutdownController.signal,
-  });
   return {
     serverPort: getServerPort(),
     kdsPort: getKdsPort(),
     serverAppPort: getServerAppPort(),
-    actionPort: actionServer.port,
-    actionToken: actionServer.token,
   };
+}
+
+export function androidHostActions(): HostActionHandler {
+  return createAndroidHostActionHandler(shutdownController.signal);
 }
 
 export async function stopAndroidServices(): Promise<void> {

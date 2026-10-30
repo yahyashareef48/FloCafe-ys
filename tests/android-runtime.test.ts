@@ -1,7 +1,7 @@
 /**
  * Android runtime — runs the compiled Android entry in plain Node with
  * `electron` unresolvable, against a fake shell speaking the native bridge
- * protocol, and drives the loopback action server the `electronAPI` shim uses.
+ * protocol, and drives the host actions the `electronAPI` shim reaches over it.
  */
 import * as fs from 'node:fs';
 import * as net from 'node:net';
@@ -71,17 +71,12 @@ async function waitFor<T>(label: string, probe: () => T | undefined | null | fal
   }
 }
 
-async function action(port: number, token: string | null, route: string, body: unknown = {}, origin?: string) {
-  const headers: Record<string, string> = { 'content-type': 'application/json' };
-  if (token) headers['x-flo-host-token'] = token;
-  if (origin) headers.origin = origin;
-  const response = await fetch(`http://127.0.0.1:${port}${route}`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-  });
-  const text = await response.text();
-  return { status: response.status, headers: response.headers, body: text ? JSON.parse(text) : null };
+let nextRequestId = 1;
+
+async function hostAction(route: string, body: unknown = {}): Promise<Message> {
+  const id = nextRequestId++;
+  sendToNode({ id, method: 'hostAction', params: { route, body } });
+  return waitFor(`host action ${route}`, () => responses.get(id), 60_000);
 }
 
 async function run(child: ChildProcess, output: () => string): Promise<void> {
@@ -98,7 +93,6 @@ async function run(child: ChildProcess, output: () => string): Promise<void> {
   assertEqualOrThrow(info.serverPort, ports.api, 'reports the POS API port');
   assertEqualOrThrow(info.kdsPort, ports.kds, 'reports the KDS port');
   assertEqualOrThrow(info.serverAppPort, ports.serverApp, 'reports the Server App port');
-  assertOrThrow(typeof info.actionToken === 'string' && info.actionToken.length >= 32, 'issues an action token');
   assertOrThrow(!/blocked: the Android runtime must not load Electron/.test(output()), 'no code path tried to load Electron');
 
   const health = await fetch(`http://127.0.0.1:${ports.api}/api/health`);
@@ -106,50 +100,49 @@ async function run(child: ChildProcess, output: () => string): Promise<void> {
   assertOrThrow(fs.existsSync(path.join(userData, 'flo.db')), 'database lives under the Android userData');
   assertOrThrow(fs.existsSync(path.join(userData, 'logs', 'main.log')), 'log file lives under the Android userData');
 
-  console.log('\n--- Action server is loopback, token and origin gated ---');
-  const posOrigin = `http://127.0.0.1:${ports.api}`;
-  assertEqualOrThrow((await action(info.actionPort, null, '/app-info')).status, 401, 'missing token is rejected');
-  assertEqualOrThrow((await action(info.actionPort, 'wrong', '/app-info')).status, 401, 'wrong token is rejected');
-  const appInfo = await action(info.actionPort, info.actionToken, '/app-info', {}, posOrigin);
-  assertEqualOrThrow(appInfo.body.platform, 'android', 'app info reports android');
-  assertEqualOrThrow(appInfo.headers.get('access-control-allow-origin'), posOrigin, 'CORS allows the POS origin');
-  const foreign = await action(info.actionPort, info.actionToken, '/app-info', {}, 'http://evil.example');
-  assertEqualOrThrow(foreign.headers.get('access-control-allow-origin'), null, 'CORS does not allow other origins');
+  console.log('\n--- Host actions run over the native bridge only ---');
+  const appInfo = await hostAction('/app-info');
+  assertEqualOrThrow(appInfo.result?.platform, 'android', 'app info reports android');
+  const unknown = await hostAction('/no-such-action');
+  assertOrThrow(typeof unknown.error === 'string' && unknown.error.includes('Unknown host action'), 'unknown actions are rejected');
+  const prototypeKey = await hostAction('constructor');
+  assertOrThrow(typeof prototypeKey.error === 'string', 'object prototype keys are not routes');
 
-  const pinStatus = await action(info.actionPort, info.actionToken, '/master-pin-status');
-  assertEqualOrThrow(pinStatus.body.available, true, 'master PIN is available through keyed storage');
-  assertEqualOrThrow(pinStatus.body.isSet, true, 'master PIN sealed by the shell key is readable');
+  const pinStatus = await hostAction('/master-pin-status');
+  assertEqualOrThrow(pinStatus.result.available, true, 'master PIN is available through keyed storage');
+  assertEqualOrThrow(pinStatus.result.isSet, true, 'master PIN sealed by the shell key is readable');
 
-  const settings = await action(info.actionPort, info.actionToken, '/settings');
-  assertEqualOrThrow(typeof settings.body, 'object', 'settings are returned');
+  const settings = await hostAction('/settings');
+  assertEqualOrThrow(typeof settings.result, 'object', 'settings are returned');
   assertOrThrow(
-    settings.body.jwt_secret === undefined || String(settings.body.jwt_secret).startsWith('****'),
+    settings.result.jwt_secret === undefined || String(settings.result.jwt_secret).startsWith('****'),
     'the JWT secret is masked',
   );
 
   console.log('\n--- Backup and restore run the shared actions ---');
-  const wrongPin = await action(info.actionPort, info.actionToken, '/backup', { pin: '0000' });
-  assertEqualOrThrow(wrongPin.body.success, false, 'backup refuses a wrong master PIN');
-  const backup = await action(info.actionPort, info.actionToken, '/backup', { pin: '2468' });
-  assertEqualOrThrow(backup.body.success, true, `backup succeeds (${JSON.stringify(backup.body)})`);
+  const wrongPin = await hostAction('/backup', { pin: '0000' });
+  assertEqualOrThrow(wrongPin.result.success, false, 'backup refuses a wrong master PIN');
+  const backup = (await hostAction('/backup', { pin: '2468' })).result;
+  assertEqualOrThrow(backup.success, true, `backup succeeds (${JSON.stringify(backup)})`);
   assertOrThrow(
-    backup.body.path.startsWith(path.join(documents, 'FloCafe', 'Manual Backups')),
+    backup.path.startsWith(path.join(documents, 'FloCafe', 'Manual Backups')),
     'manual backup lands in the Android documents folder',
   );
-  assertOrThrow(fs.existsSync(backup.body.path), 'backup file exists');
+  assertOrThrow(fs.existsSync(backup.path), 'backup file exists');
 
-  pickedRestorePath = backup.body.path;
-  const restore = await action(info.actionPort, info.actionToken, '/restore', { pin: '2468' });
-  assertEqualOrThrow(restore.body.success, true, `restore succeeds (${JSON.stringify(restore.body)})`);
+  pickedRestorePath = backup.path;
+  const restore = (await hostAction('/restore', { pin: '2468' })).result;
+  assertEqualOrThrow(restore.success, true, `restore succeeds (${JSON.stringify(restore)})`);
   assertOrThrow(nativeCalls.some((c) => c.method === 'pickFile'), 'restore asks the shell for the file');
 
-  const picked = await action(info.actionPort, info.actionToken, '/pick-restore-file');
-  assertEqualOrThrow(picked.body.canceled, false, 'pick-restore-file returns the shell pick');
-  assertOrThrow(typeof picked.body.token === 'string' && picked.body.token.length > 0, 'pick-restore-file issues a selection token');
+  const picked = (await hostAction('/pick-restore-file')).result;
+  assertEqualOrThrow(picked.canceled, false, 'pick-restore-file returns the shell pick');
+  assertOrThrow(typeof picked.token === 'string' && picked.token.length > 0, 'pick-restore-file issues a selection token');
 
   console.log('\n--- Shell-initiated shutdown drains the runtime ---');
-  sendToNode({ id: 1, method: 'shutdown', params: null });
-  const stopped = await waitFor('shutdown response', () => responses.get(1), 60_000);
+  const shutdownId = nextRequestId++;
+  sendToNode({ id: shutdownId, method: 'shutdown', params: null });
+  const stopped = await waitFor('shutdown response', () => responses.get(shutdownId), 60_000);
   assertEqualOrThrow(stopped.result?.stopped, true, 'shutdown completes');
   let apiClosed = false;
   try {

@@ -262,11 +262,7 @@ public class MainActivity extends ComponentActivity implements ShellBridge.Liste
 
     private String shimScript() {
         try (InputStream in = getAssets().open("electron-api-shim.js")) {
-            String source = new String(IoUtil.readFully(in), StandardCharsets.UTF_8);
-            JSONObject config = new JSONObject()
-                .put("actionPort", port("actionPort", 0))
-                .put("token", runtimeInfo == null ? "" : runtimeInfo.optString("actionToken"));
-            return source.replace("__FLO_HOST_CONFIG__", config.toString());
+            return new String(IoUtil.readFully(in), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new IllegalStateException("Cannot load the electronAPI shim", e);
         }
@@ -282,7 +278,8 @@ public class MainActivity extends ComponentActivity implements ShellBridge.Liste
             id = request.opt("id");
             Object requestId = id;
             JSONObject params = request.optJSONObject("params");
-            handle(request.optString("method"), params == null ? new JSONObject() : params, new ShellBridge.Reply() {
+            String method = request.optString("method");
+            ShellBridge.Reply reply = new ShellBridge.Reply() {
                 @Override
                 public void success(Object result) {
                     replyToPage(replyProxy, requestId, result, null);
@@ -292,7 +289,11 @@ public class MainActivity extends ComponentActivity implements ShellBridge.Liste
                 public void error(String error) {
                     replyToPage(replyProxy, requestId, null, error);
                 }
-            });
+            };
+            JSONObject safeParams = params == null ? new JSONObject() : params;
+            // Database and settings actions run in the backend; everything else is native.
+            if ("hostAction".equals(method)) ShellBridge.get().callNode("hostAction", safeParams, reply);
+            else handle(method, safeParams, reply);
         } catch (Exception e) {
             replyToPage(replyProxy, id, null, String.valueOf(e.getMessage()));
         }

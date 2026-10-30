@@ -4,7 +4,7 @@
  *
  * Part 1 (always): it exposes every preload method except the documented
  * omissions, never exposes getStatus (which draws the desktop title bar), and
- * routes each call to an action-server endpoint that exists.
+ * routes each action over the shell channel to a backend route that exists.
  * Part 2 (Chromium): window.open() bills show in an in-page overlay whose
  * print goes to the shell and then closes back to the POS, and <a download>
  * blobs go to the shell's save dialog. Required when REQUIRE_VISUAL_EVIDENCE=1.
@@ -19,7 +19,7 @@ const { assertOrThrow, assertEqualOrThrow } = require('./helpers/test-setup');
 const root = path.resolve(__dirname, '..');
 const shimSource = fs.readFileSync(path.join(root, 'android/app/src/main/assets/electron-api-shim.js'), 'utf8');
 const preloadSource = fs.readFileSync(path.join(root, 'main/preload.ts'), 'utf8');
-const actionServerSource = fs.readFileSync(path.join(root, 'main/android/action-server.ts'), 'utf8');
+const hostRoutesSource = fs.readFileSync(path.join(root, 'main/android/host-action-routes.ts'), 'utf8');
 
 const DELIBERATELY_OMITTED = [
   'getStatus',
@@ -32,30 +32,27 @@ const DELIBERATELY_OMITTED = [
   'setAutoUpdateCheck',
 ];
 
-function configuredShim(actionPort: number): string {
-  return shimSource.replaceAll('__FLO_HOST_CONFIG__', JSON.stringify({ actionPort, token: 'tok-123' }));
-}
-
 function preloadMethods(): string[] {
   const body = preloadSource.slice(preloadSource.indexOf("exposeInMainWorld('electronAPI', {"));
   return [...body.matchAll(/^ {2}([A-Za-z]+):/gm)].map((match) => match[1]);
 }
 
-type Call = { url: string; init: { headers: Record<string, string>; body: string } };
+type NativeCall = { id: number; method: string; params: any };
 
 function loadShimInVm() {
-  const fetchCalls: Call[] = [];
-  const nativeCalls: Array<{ id: number; method: string; params: unknown }> = [];
+  const nativeCalls: NativeCall[] = [];
+  const hostResults: Record<string, unknown> = {
+    '/backup': { success: true, path: '/data/docs/FloCafe/Manual Backups/flo-backup-x.db' },
+  };
   const channel: { onmessage: ((event: { data: string }) => void) | null; postMessage: (data: string) => void } = {
     onmessage: null,
     postMessage(data: string) {
-      const message = JSON.parse(data);
+      const message = JSON.parse(data) as NativeCall;
       nativeCalls.push(message);
-      setImmediate(() => channel.onmessage!({ data: JSON.stringify({ id: message.id, result: { ok: true } }) }));
+      const result =
+        message.method === 'hostAction' ? (hostResults[message.params.route] ?? { success: true }) : { ok: true };
+      setImmediate(() => channel.onmessage!({ data: JSON.stringify({ id: message.id, result }) }));
     },
-  };
-  const fetchResponses: Record<string, unknown> = {
-    '/backup': { success: true, path: '/data/docs/FloCafe/Manual Backups/flo-backup-x.db' },
   };
   function HTMLAnchorElement() {}
   const window: Record<string, unknown> = { AlBaikNative: channel };
@@ -73,18 +70,13 @@ function loadShimInVm() {
     HTMLAnchorElement,
     location: { href: 'http://127.0.0.1:3001/pos' },
     document: { addEventListener() {} },
-    fetch: async (url: string, init: Call['init']) => {
-      fetchCalls.push({ url, init });
-      const route = new URL(url).pathname;
-      return { ok: true, json: async () => fetchResponses[route] ?? { success: true } };
-    },
   });
-  vm.runInContext(configuredShim(45678), context);
-  return { api: window.electronAPI as Record<string, any>, fetchCalls, nativeCalls };
+  vm.runInContext(shimSource, context);
+  return { api: window.electronAPI as Record<string, any>, nativeCalls };
 }
 
 async function contract(): Promise<void> {
-  const { api, fetchCalls, nativeCalls } = loadShimInVm();
+  const { api, nativeCalls } = loadShimInVm();
   const preload = preloadMethods();
   assertOrThrow(preload.length >= 30, `read the preload method list (${preload.length} methods)`);
 
@@ -100,8 +92,8 @@ async function contract(): Promise<void> {
   assertEqualOrThrow(api.platform, 'android', 'platform is android');
   assertOrThrow(Object.isFrozen(api), 'the bridge object is frozen');
 
-  console.log('\n--- HTTP actions carry the token to existing routes ---');
-  const httpCalls: Array<[string, () => Promise<unknown>, string]> = [
+  console.log('\n--- Actions go over the shell channel to existing backend routes ---');
+  const actionCalls: Array<[string, () => Promise<unknown>, string]> = [
     ['restoreBackup', () => api.restoreBackup('1234', '/x.db'), '/restore'],
     ['pickRestoreFile', () => api.pickRestoreFile(), '/pick-restore-file'],
     ['dbHealthCheck', () => api.dbHealthCheck(), '/health-check'],
@@ -117,19 +109,17 @@ async function contract(): Promise<void> {
     ['openWhatsAppShare', () => api.openWhatsAppShare('https://wa.me/1'), '/whatsapp-share'],
     ['getPrinters', () => api.getPrinters(), '/printers'],
   ];
-  for (const [name, invoke, route] of httpCalls) {
-    const before = fetchCalls.length;
+  for (const [name, invoke, route] of actionCalls) {
+    const before = nativeCalls.length;
     await invoke();
-    const call = fetchCalls[before];
-    assertEqualOrThrow(call?.url, `http://127.0.0.1:45678${route}`, `${name} posts to ${route}`);
-    assertEqualOrThrow(call.init.headers['x-flo-host-token'], 'tok-123', `${name} sends the host token`);
-    assertOrThrow(
-      new RegExp(`app\\.post\\(\\s*'${route}'`).test(actionServerSource),
-      `${route} is served by the action server`,
-    );
+    const call = nativeCalls[before];
+    assertEqualOrThrow(call?.method, 'hostAction', `${name} goes over the shell channel`);
+    assertEqualOrThrow(call.params.route, route, `${name} calls ${route}`);
+    assertOrThrow(hostRoutesSource.includes(`'${route}':`), `${route} is a backend host action`);
   }
-  const restoreBody = JSON.parse(fetchCalls.find((c) => c.url.endsWith('/restore'))!.init.body);
-  assertEqualOrThrow(restoreBody.backupPath, '/x.db', 'restore forwards a preset backup path');
+  const restoreCall = nativeCalls.find((c) => c.method === 'hostAction' && c.params.route === '/restore')!;
+  assertEqualOrThrow(restoreCall.params.body.backupPath, '/x.db', 'restore forwards a preset backup path');
+  assertOrThrow(!/fetch\(|XMLHttpRequest|127\.0\.0\.1:\d/.test(shimSource.replace(/\/\*[\s\S]*?\*\//, '')), 'the shim makes no network calls of its own');
 
   console.log('\n--- Native hand-offs and safe no-ops ---');
   const backup = await api.backupDatabase('1234');
@@ -180,7 +170,7 @@ async function browserBehaviour(): Promise<void> {
         },
       };
     `);
-    await page.addInitScript(configuredShim(1));
+    await page.addInitScript(shimSource);
     await page.goto(`http://127.0.0.1:${port}/pos`);
     const overlayCount = () => page.locator('[data-flo-android-overlay]').count();
     const calls = (method: string) =>

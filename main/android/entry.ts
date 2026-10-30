@@ -19,6 +19,11 @@ async function main(): Promise<void> {
 
   // Backend modules read the platform host at import time, so they load only after it is installed.
   const services = await import('./services');
+  const hostActions = services.androidHostActions();
+  onNativeRequest('hostAction', (params) => {
+    const { route, body } = (params ?? {}) as { route?: unknown; body?: unknown };
+    return hostActions(String(route), body);
+  });
   onNativeRequest('shutdown', async () => {
     await services.stopAndroidServices();
     return { stopped: true };
@@ -26,7 +31,7 @@ async function main(): Promise<void> {
 
   try {
     const info = await services.startAndroidServices();
-    log.info('[Android] Runtime is ready', { ...info, actionToken: undefined });
+    log.info('[Android] Runtime is ready', info);
     notifyNative('ready', info);
   } catch (error) {
     log.error('[Android] Runtime failed to start:', error);

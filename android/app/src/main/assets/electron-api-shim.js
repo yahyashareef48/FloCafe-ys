@@ -1,7 +1,8 @@
 /*
  * Android stand-in for the Electron preload bridge (main/preload.ts). The shell
- * injects it at document start into the local POS origin only, replacing the
- * host-config placeholder on the last line with { actionPort, token }.
+ * injects it at document start into the local POS origin only. Database and
+ * settings actions travel over the shell's message channel to the backend
+ * (main/android/host-action-routes.ts), never over the network.
  *
  * Methods are left out on purpose where absence makes the renderer take a path
  * that already works on Android:
@@ -15,12 +16,11 @@
  * shows window.open() documents in an in-page overlay printed through Android,
  * and hands <a download> files to the system save dialog.
  */
-(function (config) {
+(function () {
   'use strict';
 
   if (window.electronAPI) return;
 
-  var actionBase = 'http://127.0.0.1:' + config.actionPort;
   var nativeChannel = window.AlBaikNative;
   var nextNativeId = 1;
   var pendingNative = {};
@@ -54,15 +54,8 @@
   }
 
   function action(route, body) {
-    return fetch(actionBase + route, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-flo-host-token': config.token },
-      body: JSON.stringify(body || {}),
-    }).then(function (response) {
-      return response.json().then(function (data) {
-        if (!response.ok) return { success: false, error: (data && data.error) || 'Request failed' };
-        return data;
-      });
+    return callNative('hostAction', { route: route, body: body || {} }).catch(function (error) {
+      return { success: false, error: (error && error.message) || 'Request failed' };
     });
   }
 
@@ -337,4 +330,4 @@
 
     platform: 'android',
   });
-})(__FLO_HOST_CONFIG__);
+})();
