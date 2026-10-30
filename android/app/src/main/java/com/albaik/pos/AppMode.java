@@ -1,6 +1,8 @@
 package com.albaik.pos;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 
 import java.io.File;
@@ -55,6 +57,18 @@ final class AppMode {
             .putInt("port", port)
             .putString("serviceName", serviceName)
             .apply();
+    }
+
+    /**
+     * Switches this device to a Screen. Node cannot be stopped and restarted inside one process, so
+     * the app restarts into the Screen in a fresh process that never starts the servers.
+     */
+    static void becomeScreen(Activity activity, Role role, String host, int port, String serviceName) {
+        setScreen(activity, role, host, port, serviceName);
+        activity.stopService(new Intent(activity, NodeService.class));
+        activity.startActivity(new Intent(activity, ScreenActivity.class)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
+        android.os.Process.killProcess(android.os.Process.myPid());
     }
 
     static void updateScreenHost(Context context, String host, int port) {

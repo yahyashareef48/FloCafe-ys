@@ -56,6 +56,11 @@ public class NodeService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         startForegroundWithNotification();
+        // Screen devices run no server, even if Android restarts this service after the role changed.
+        if (AppMode.mode(this) != AppMode.Mode.MAIN) {
+            stopSelf();
+            return START_NOT_STICKY;
+        }
         acquireLocks();
         if (!listening) {
             listening = true;

@@ -69,7 +69,7 @@ fi
 
 adb exec-out screencap -p > "$OUT/screen.png" || true
 adb logcat -d > "$OUT/logcat-full.txt" || true
-grep -E 'AlBaik|AndroidRuntime|FATAL' "$OUT/logcat-full.txt" > "$OUT/logcat-app.txt" || true
+grep -E 'AlBaik|AndroidRuntime|FATAL|Fatal signal|DEBUG +:|ActivityManager.*com\.albaik\.pos|libc +:.*com\.albaik' "$OUT/logcat-full.txt" | grep -v s_glBindAttribLocation > "$OUT/logcat-app.txt" || true
 tail -n 120 "$OUT/logcat-app.txt"
 
 for port in 3001 3002 3003; do

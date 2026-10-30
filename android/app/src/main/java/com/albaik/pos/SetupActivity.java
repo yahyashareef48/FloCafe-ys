@@ -155,10 +155,7 @@ public class SetupActivity extends ComponentActivity {
                 }
                 if (discovery != null) discovery.stop();
                 // A device switching from Main to Screen stops its own servers; its data stays on the device.
-                stopService(new Intent(this, NodeService.class));
-                AppMode.setScreen(this, role, host, port, serviceName);
-                startActivity(new Intent(this, ScreenActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK));
-                finish();
+                AppMode.becomeScreen(this, role, host, port, serviceName);
             });
         }).start();
     }
