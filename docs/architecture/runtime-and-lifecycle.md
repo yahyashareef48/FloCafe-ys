@@ -185,7 +185,8 @@ country provenance services) do not import `electron`. They read the app version
   packaged app behaves exactly as Electron dictates and test suites can stub `electron` per file.
 - `setPlatformHost()` replaces all of them at once. `createAndroidPlatformHost()` supplies explicit
   directories, version, and locale, and secret storage that seals values with AES-256-GCM under a
-  32-byte key held by the native host (`main/platform/keyed-safe-storage.ts`).
+  32-byte key held by the native host (`main/platform/keyed-safe-storage.ts`). The
+  [Android app](android.md) installs it before any backend module loads.
 
 Window, menu, IPC, updater, and raster-surface code (`index.ts`, `ipc.ts`, `preload.ts`, and the
 window and updater helpers) is shell code and still uses Electron directly.

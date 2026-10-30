@@ -79,6 +79,12 @@ Every IPC handler validates the sender. Both general handlers in [`main/ipc.ts`]
 enforce strict sender validation via `isTrustedMainWindowSender`, requiring the caller to be the
 active main `BrowserWindow`, current top-level frame, and matching loopback server port.
 
+The backup, restore, reset, health-check, settings, diagnostics, and printer-list handlers only
+check the sender and then call [`main/host-actions.ts`](../../main/host-actions.ts), passing
+Electron's file and confirmation dialogs as a `HostDialogs` object. The
+[Android shell](android.md) calls the same functions with its own dialogs, so those actions behave
+the same on both.
+
 ## The native title bar
 
 The main window defaults to 1400x900 with a minimum of 1024x768, persists its window state between
