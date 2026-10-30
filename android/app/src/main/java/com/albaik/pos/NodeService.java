@@ -38,6 +38,8 @@ public class NodeService extends Service {
         }
     };
     private boolean listening;
+    private PrinterHub printers;
+    private RasterSurface raster;
 
     static void start(Context context) {
         Intent intent = new Intent(context, NodeService.class);
@@ -52,6 +54,11 @@ public class NodeService extends Service {
         if (!listening) {
             listening = true;
             ShellBridge.get().addListener(restartWhenUnattended);
+            // Printing runs here, not in the activity, so KOTs print with the screen off.
+            printers = new PrinterHub(this);
+            printers.register(ShellBridge.get());
+            raster = new RasterSurface(this);
+            raster.register(ShellBridge.get());
         }
         try {
             ShellBridge.get().start();

@@ -61,6 +61,7 @@ final class ShellBridge {
     private final AtomicInteger nextId = new AtomicInteger(1);
     private final ExecutorService writer = Executors.newSingleThreadExecutor();
     private volatile RequestHandler requestHandler;
+    private final Map<String, RequestHandler> serviceHandlers = new ConcurrentHashMap<>();
     private volatile OutputStream nodeOut;
     private volatile State state = State.STARTING;
     private volatile JSONObject readyInfo;
@@ -105,6 +106,11 @@ final class ShellBridge {
 
     void setRequestHandler(RequestHandler handler) {
         requestHandler = handler;
+    }
+
+    /** Handlers that must work with no screen open (printing, raster); they take precedence over the UI handler. */
+    void registerServiceHandler(String method, RequestHandler handler) {
+        serviceHandlers.put(method, handler);
     }
 
     void clearRequestHandler(RequestHandler handler) {
@@ -209,7 +215,8 @@ final class ShellBridge {
             String method = message.optString("method");
             JSONObject params = message.optJSONObject("params");
             main.post(() -> {
-                RequestHandler handler = requestHandler;
+                RequestHandler service = serviceHandlers.get(method);
+                RequestHandler handler = service != null ? service : requestHandler;
                 Reply reply = new Reply() {
                     @Override
                     public void success(Object result) {

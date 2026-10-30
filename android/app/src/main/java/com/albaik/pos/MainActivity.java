@@ -99,10 +99,7 @@ public class MainActivity extends ComponentActivity implements ShellBridge.Liste
             }
         });
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-            && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[] {Manifest.permission.POST_NOTIFICATIONS}, 1);
-        }
+        requestRuntimePermissions();
         NodeService.start(this);
         ShellBridge.get().setRequestHandler(this);
         ShellBridge.get().addListener(this);
@@ -136,6 +133,20 @@ public class MainActivity extends ComponentActivity implements ShellBridge.Liste
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) enterImmersiveMode();
+    }
+
+    /** Notifications for the server status, and nearby devices for Bluetooth printers. */
+    private void requestRuntimePermissions() {
+        java.util.List<String> missing = new java.util.ArrayList<>();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+            && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            missing.add(Manifest.permission.POST_NOTIFICATIONS);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+            && checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            missing.add(Manifest.permission.BLUETOOTH_CONNECT);
+        }
+        if (!missing.isEmpty()) requestPermissions(missing.toArray(new String[0]), 1);
     }
 
     private void enterImmersiveMode() {
