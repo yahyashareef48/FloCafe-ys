@@ -45,7 +45,7 @@ if [ "$checks" = 0 ]; then
   node "$SCRIPTS/fake-main-server.cjs" 3902 > "$OUT/fake-main.log" 2>&1 &
   fake=$!
   sleep 1
-  adb shell am start -W -n "$PKG/.LauncherActivity" --es albaik.debug.screen "KITCHEN|10.0.2.2|3902"
+  adb shell am start -W -n "$PKG/.LauncherActivity" --es albaik.debug.screen "KITCHEN,10.0.2.2,3902"
   sleep 8
   pid="$(adb shell pidof "$PKG" | tr -d '\r')"
   adb forward tcp:9223 "localabstract:webview_devtools_remote_${pid}"

@@ -9,10 +9,10 @@ public class LauncherActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Lets automated tests configure a Screen ("ROLE|host|port"); release builds ignore it.
+        // Lets automated tests configure a Screen ("ROLE,host,port"); release builds ignore it.
         String debugScreen = BuildConfig.DEBUG ? getIntent().getStringExtra("albaik.debug.screen") : null;
-        if (debugScreen != null) {
-            String[] parts = debugScreen.split("\\|");
+        String[] parts = debugScreen == null ? new String[0] : debugScreen.split(",");
+        if (parts.length == 3) {
             stopService(new Intent(this, NodeService.class));
             AppMode.setScreen(this, AppMode.Role.valueOf(parts[0]), parts[1], Integer.parseInt(parts[2]), "");
         }
