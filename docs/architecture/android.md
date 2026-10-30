@@ -1,9 +1,46 @@
-# Android main tablet
+# Android app
 
-The Android app (`android/`) runs the same backend as the desktop app on a tablet: the POS API on
-`:3001`, the KDS server on `:3002`, and the Server App on `:3003`, all on `0.0.0.0`, so other devices
-on the Wi-Fi connect to the tablet as they would to the Windows PC. The tablet itself shows the POS
-in a full-screen WebView.
+The Android app (`android/`) has two device roles, chosen on first launch:
+
+- **Main tablet** runs the same backend as the desktop app: the POS API on `:3001`, the KDS server
+  on `:3002`, and the Server App on `:3003`, all on `0.0.0.0`, so other devices on the Wi-Fi connect
+  to the tablet as they would to the Windows PC. The tablet itself shows the POS in a full-screen
+  WebView.
+- **Screen** runs no server. It shows one page of a main device (the Android main tablet or the
+  desktop app) full screen: the waiter app, the kitchen display, or the POS.
+
+## Device roles
+
+`LauncherActivity` (the app icon) opens `SetupActivity` until a role is saved, then `MainActivity`
+for a main tablet or `ScreenActivity` for a Screen. An install whose `flo-data/flo.db` already
+exists counts as a main tablet. The role is kept in the `albaik-pos-mode` shared preferences
+(`AppMode`), and the app icon's "Change device role" shortcut reopens the setup. Choosing Screen
+stops `NodeService`; the main-tablet data stays on the device.
+
+A Screen picks what it shows, which fixes the page and the main device's port for it:
+
+| Role | Page | Port |
+| --- | --- | --- |
+| Waiter app | `/server-standalone/` | Server App (`3003`) |
+| Kitchen display | `/kds-standalone/` | KDS server (`3002`) |
+| POS | `/` | POS API (`3001`) |
+
+It finds the main device in one of three ways:
+
+- **Wi-Fi discovery.** The Android main tablet registers an `_http._tcp` service named `Flo` with
+  `NsdManager` once the servers are up, with the same TXT keys as the desktop app's Bonjour record
+  (`version`, `kds`, `kds_port`, `server_app`, `server_app_port`). `ServerDiscovery` lists every
+  `Flo` service on the network, so a Screen finds a desktop main device the same way.
+- **QR code.** Any of the POS's own QR links (`http://<ip>:<port>`, shown in Settings) gives the
+  host; the port comes from the role.
+- **Typed address.**
+
+The setup saves the device only after the role's page answers. `ScreenActivity` then shows that
+page with [`webview-shim.js`](../../android/app/src/main/assets/webview-shim.js) only, so the page
+runs as a browser client. It checks the main device every 20 seconds; after two misses, a failed
+page load, or a lost network, it shows "Reconnecting", retries every 3 seconds, reloads the page
+when the main device answers, and after five failed retries looks for the saved `Flo` service again
+in case the main device's address changed.
 
 ## Process model
 
@@ -27,9 +64,10 @@ nodejs-mobile release and the `better-sqlite3` Android prebuild, which must equa
 
 ## Startup
 
-1. `MainActivity` starts `NodeService`, a `specialUse` foreground service with a persistent
-   notification. It holds a partial wake lock, a low-latency Wi-Fi lock, and a multicast lock.
-   `BootReceiver` also starts it after a reboot and after an app update.
+1. On a main tablet, `MainActivity` starts `NodeService`, a `specialUse` foreground service with a
+   persistent notification. It holds a partial wake lock, a low-latency Wi-Fi lock, and a multicast
+   lock. `BootReceiver` also starts it after a reboot and after an app update; on a Screen it does
+   nothing.
 2. `NodeRuntime` unpacks `assets/nodejs-project.zip` into the app's files directory when the
    installed APK changed, copies the `better-sqlite3` binary for the device ABI into place, and
    starts Node with the environment `main/android/bootstrap.ts` reads.
@@ -37,10 +75,11 @@ nodejs-mobile release and the `better-sqlite3` Android prebuild, which must equa
    to the shell's bridge, and starts the same services as the desktop `initialize()`: database,
    POS API, cloud sync, Google Drive, local backup, KDS server, Server App, and printer
    initialisation. Telemetry and PostHog are never started on Android.
-4. Node sends `ready` with the three ports. The shell then loads `http://127.0.0.1:3001/`.
+4. Node sends `ready` with the three ports. The shell then loads `http://127.0.0.1:3001/` and
+   advertises the POS on the network.
 
-`MainActivity` keeps the screen on while it is visible, hides the system bars, and asks once to be
-exempted from battery optimisation.
+`MainActivity` and `ScreenActivity` share `WebShellActivity`: both keep the screen on while visible
+and hide the system bars. `MainActivity` also asks once to be exempted from battery optimisation.
 
 ## Where data lives
 
@@ -76,11 +115,11 @@ once read.
 
 ## The `electronAPI` shim
 
-The shell injects
-[`android/app/src/main/assets/electron-api-shim.js`](../../android/app/src/main/assets/electron-api-shim.js)
-at document start, into the POS origin only, as the Android stand-in for `main/preload.ts`. It posts
-to the shell through an `AlBaikNative` WebView message channel limited to that origin and the main
-frame. It makes no network calls of its own.
+On a main tablet the shell injects, at document start and into the POS origin only,
+[`webview-shim.js`](../../android/app/src/main/assets/webview-shim.js) and then
+[`electron-api-shim.js`](../../android/app/src/main/assets/electron-api-shim.js), the Android
+stand-in for `main/preload.ts`. Both post to the shell through an `AlBaikNative` WebView message
+channel limited to the trusted origin and the main frame. They make no network calls of their own.
 
 | Methods | Android behaviour |
 | --- | --- |
@@ -96,12 +135,14 @@ frame. It makes no network calls of its own.
 
 `tests/android-electron-api-shim.test.ts` pins this coverage against `main/preload.ts`.
 
-Because a WebView has no pop-up windows, `window.print()`, or downloads, the shim also:
+Because a WebView has no pop-up windows, `window.print()`, or downloads, `webview-shim.js`, which
+both roles inject:
 
 - shows `window.open('')` documents (browser-mode bills, slips, menus) in an in-page overlay with
   Print and Close. Print sends the document to `HtmlPrinter`, which opens the Android print dialog;
   the overlay closes when that dialog closes, returning to the POS.
-- opens `window.open()` links to other origins outside the app.
+- opens `window.open()` links to other hosts outside the app, and links to the shown server inside
+  the overlay.
 - hands `<a download>` blobs (exports) to the system "save as" dialog.
 
 ## Printing
