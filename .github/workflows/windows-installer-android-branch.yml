@@ -1,8 +1,6 @@
 name: Windows Installer (android branch)
 
 on:
-  push:
-    branches: [claude/android-native-port-dt6xng]
   workflow_dispatch:
 
 permissions:
