@@ -81,7 +81,8 @@ if [ "$checks" = 0 ]; then
   adb shell rm -rf "$logs"
   adb shell am start -W -n "$PKG/.LauncherActivity" > /dev/null
   wait_health
-  adb shell am crash "$PKG"
+  # By pid: the package name also matches the WebView renderer, which the app survives.
+  adb shell am crash "$(adb shell pidof "$PKG" | tr -d '\r')"
   sleep 3
   adb shell am start -W -n "$PKG/.LauncherActivity" > /dev/null
   wait_health
@@ -96,6 +97,7 @@ if [ "$checks" = 0 ]; then
     echo "FAIL no crash report was saved"
   fi
   curl -fsS -m 5 http://127.0.0.1:3001/api/health > /dev/null || { echo "FAIL the POS server did not come back after the crash"; crash_checks=1; }
+  adb shell am force-stop "$PKG"
 fi
 
 screen_checks=1
