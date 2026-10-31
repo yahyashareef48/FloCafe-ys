@@ -141,6 +141,7 @@ final class PrinterHub {
     private void send(JSONObject params, ShellBridge.Reply reply) {
         String name = params.optString("name");
         byte[] data = Base64.decode(params.optString("data"), Base64.DEFAULT);
+        Breadcrumbs.note(context, "print: " + data.length + " bytes to " + name);
         String failure;
         try {
             Matcher bluetooth = BLUETOOTH_NAME.matcher(name);
@@ -160,6 +161,7 @@ final class PrinterHub {
             Log.e(TAG, "Print to " + name + " failed", e);
             failure = String.valueOf(e.getMessage());
         }
+        Breadcrumbs.note(context, "print: " + (failure == null ? "done" : "failed: " + failure));
         try {
             JSONObject result = new JSONObject().put("ok", failure == null);
             if (failure != null) result.put("detail", failure);
@@ -245,7 +247,9 @@ final class PrinterHub {
             if (!adapter.isEnabled()) return "Bluetooth is off. Turn it on and print again.";
             stopDiscovery(adapter);
             BluetoothDevice device = adapter.getRemoteDevice(address);
+            Breadcrumbs.note(context, "bluetooth: connecting to " + address);
             BluetoothSocket socket = connectSpp(device);
+            Breadcrumbs.note(context, "bluetooth: connected, sending");
             try (OutputStream out = socket.getOutputStream()) {
                 for (int offset = 0; offset < data.length; offset += BLUETOOTH_CHUNK_BYTES) {
                     out.write(data, offset, Math.min(BLUETOOTH_CHUNK_BYTES, data.length - offset));
@@ -286,6 +290,7 @@ final class PrinterHub {
             socket.connect();
             return socket;
         } catch (IOException secureFailed) {
+            Breadcrumbs.note(context, "bluetooth: secure connect failed (" + secureFailed.getMessage() + "), trying insecure");
             socket.close();
             BluetoothSocket insecure = device.createInsecureRfcommSocketToServiceRecord(SPP);
             insecure.connect();

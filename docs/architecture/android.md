@@ -87,7 +87,7 @@ and hide the system bars. `MainActivity` also asks once to be exempted from batt
 | --- | --- |
 | `flo.db`, pre-migration backups, `logs/main.log`, `master-pin.enc`, the WhatsApp auth directory | `flo-data/` in the app's no-backup files directory (`FLO_ANDROID_USER_DATA`) |
 | Daily local backups (`FloCafe/Backups`) and manual backups (`FloCafe/Manual Backups`) | `Documents/AlBaikPOS` in shared storage when it is writable, otherwise the app's own documents folder (`FLO_ANDROID_DOCUMENTS`) |
-| Crash reports: `crash-*.txt` (Java stack, written as the app dies) and `exit-*.txt` (Android's reason for an abnormal end, including native and WebView renderer crashes, plus the tail of `main.log`, written on the next start, Android 11+) | `logs/` in the documents folder above and in `flo-data/`, by `PosApplication` |
+| Crash reports: `crash-*.txt` (Java stack, written as the app dies) and `exit-*.txt` (Android's reason for an abnormal end, including native and WebView renderer crashes, plus the last printing steps from `logs/native.log` and the tail of `main.log`, which on Android also receives console output, written on the next start, Android 11+) | `logs/` in the documents folder above and in `flo-data/`, by `PosApplication` |
 | The 32-byte secret-storage key | `secret-key.bin` in the no-backup files directory, wrapped by a non-exportable Android Keystore AES key |
 
 `android:allowBackup` is `false`, so Android cloud backup never copies the database. Uninstalling

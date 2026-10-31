@@ -55,6 +55,7 @@ final class RasterSurface {
             return;
         }
         inflight.put(requestId, reply);
+        Breadcrumbs.note(context, "raster: request " + requestId + " (" + request.optInt("widthDots") + " dots)");
         main.postDelayed(() -> {
             ShellBridge.Reply pending = inflight.remove(requestId);
             if (pending != null) pending.error("Raster rendering timed out");
@@ -66,6 +67,7 @@ final class RasterSurface {
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     private void load(String page) {
+        Breadcrumbs.note(context, "raster: creating the drawing page (" + page.length() + " chars)");
         if (view != null) view.destroy();
         ready = false;
         loadedPage = page;
@@ -81,6 +83,7 @@ final class RasterSurface {
             public boolean onRenderProcessGone(WebView gone, RenderProcessGoneDetail detail) {
                 // Unhandled, a lost renderer ends the whole app, servers included.
                 Log.e(TAG, "Raster renderer stopped (crashed: " + detail.didCrash() + ")");
+                Breadcrumbs.note(context, "raster: renderer stopped (crashed: " + detail.didCrash() + ")");
                 discard(gone);
                 return true;
             }
@@ -130,6 +133,7 @@ final class RasterSurface {
         @JavascriptInterface
         public void ready() {
             main.post(() -> {
+                Breadcrumbs.note(context, "raster: drawing page ready");
                 ready = true;
                 for (JSONObject request : queued) deliver(request);
                 queued.clear();
@@ -141,6 +145,7 @@ final class RasterSurface {
             main.post(() -> {
                 try {
                     JSONObject result = new JSONObject(json);
+                    Breadcrumbs.note(context, "raster: result " + result.optString("requestId") + " ok=" + result.optBoolean("ok"));
                     ShellBridge.Reply pending = inflight.remove(result.optString("requestId"));
                     if (pending != null) pending.success(result);
                 } catch (Exception e) {

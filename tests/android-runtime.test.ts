@@ -150,6 +150,8 @@ async function run(child: ChildProcess, output: () => string): Promise<void> {
   assertOrThrow(Buffer.from(String(job?.params.data), 'base64').toString('latin1').includes('Al Baik POS self-test'), 'the self-test job carries ESC/POS text');
   assertEqualOrThrow(printed.sent.ok, false, 'a refused job is reported');
   assertEqualOrThrow(printed.sent.detail, 'no printer called SR588 (Bluetooth C8:47:8C:E6:B0:DF)', 'the shell reason reaches the caller');
+  const mainLog = fs.readFileSync(path.join(userData, 'logs', 'main.log'), 'utf8');
+  assertOrThrow(mainLog.includes('printViaUSB called') && mainLog.includes('SR588 (Bluetooth C8:47:8C:E6:B0:DF)'), 'printer console output reaches main.log for crash reports');
 
   const storage = (await hostAction('/storage-self-test')).result;
   assertOrThrow(storage.manualBytes > 0, 'the storage self-test writes a backup');

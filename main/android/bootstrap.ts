@@ -44,6 +44,24 @@ export function readAndroidRuntimeEnv(env: NodeJS.ProcessEnv = process.env): And
   };
 }
 
+/**
+ * The printer and most backend modules report through console, which on Android reaches only
+ * logcat; copy it into main.log so the crash report on the tablet shows what ran last.
+ */
+function mirrorConsoleToLogFile(logFile: string): void {
+  const fileLog = log.create({ logId: 'android-console' });
+  fileLog.transports.console.level = false;
+  fileLog.transports.file.resolvePathFn = () => logFile;
+  const methods = { log: fileLog.info, info: fileLog.info, warn: fileLog.warn, error: fileLog.error };
+  for (const [name, write] of Object.entries(methods) as [keyof typeof methods, (...args: unknown[]) => void][]) {
+    const original = console[name].bind(console);
+    console[name] = (...args: unknown[]) => {
+      original(...args);
+      write(...args);
+    };
+  }
+}
+
 export function installAndroidRuntime(env: NodeJS.ProcessEnv = process.env): AndroidRuntimeEnv {
   const runtime = readAndroidRuntimeEnv(env);
   for (const key of SECRET_ENV_KEYS) delete env[key];
@@ -52,6 +70,7 @@ export function installAndroidRuntime(env: NodeJS.ProcessEnv = process.env): And
   fs.mkdirSync(runtime.documentsDir, { recursive: true });
   const logFile = path.join(runtime.userDataDir, 'logs', 'main.log');
   log.transports.file.resolvePathFn = () => logFile;
+  mirrorConsoleToLogFile(logFile);
 
   setPlatformHost(
     createAndroidPlatformHost({

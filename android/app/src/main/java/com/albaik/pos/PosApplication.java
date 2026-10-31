@@ -10,7 +10,6 @@ import android.util.Log;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
-import java.io.RandomAccessFile;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -61,6 +60,7 @@ public class PosApplication extends Application {
             if (report.length() == 0) return;
             String stamp = new SimpleDateFormat("yyyy-MM-dd'T'HH-mm-ss", Locale.ROOT).format(new Date());
             String text = "Al Baik POS: how Android ended earlier runs\n" + device() + "\n\n" + report
+                + "\n--- Last printing steps before this start ---\n" + Breadcrumbs.tail(Breadcrumbs.file(this), 16 * 1024)
                 + "\n--- End of the POS server log before this start ---\n" + serverLogTail();
             Log.w(TAG, text);
             save("exit-" + stamp + ".txt", text);
@@ -84,17 +84,7 @@ public class PosApplication extends Application {
     }
 
     private String serverLogTail() {
-        File log = new File(new File(NodeRuntime.userDataDir(this), "logs"), "main.log");
-        if (!log.isFile()) return "(no server log)\n";
-        try (RandomAccessFile file = new RandomAccessFile(log, "r")) {
-            long start = Math.max(0, file.length() - 64 * 1024);
-            byte[] tail = new byte[(int) (file.length() - start)];
-            file.seek(start);
-            file.readFully(tail);
-            return new String(tail, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            return "(could not read the server log: " + e + ")\n";
-        }
+        return Breadcrumbs.tail(new File(new File(NodeRuntime.userDataDir(this), "logs"), "main.log"), 64 * 1024);
     }
 
     private static String device() {

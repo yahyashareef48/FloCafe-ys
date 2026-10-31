@@ -90,8 +90,9 @@ if [ "$checks" = 0 ]; then
   adb shell ls "$logs" | tee "$OUT/crash-logs.txt"
   adb shell 'cat '"$logs"'/exit-*.txt' > "$OUT/exit-report.txt" 2>/dev/null || true
   head -n 8 "$OUT/exit-report.txt"
-  if grep -q '^crash-' "$OUT/crash-logs.txt" && grep -q '^exit-' "$OUT/crash-logs.txt" && grep -q 'End of the POS server log' "$OUT/exit-report.txt"; then
-    echo "PASS a crash is saved, and the next start records how the app ended with the server log"
+  if grep -q '^crash-' "$OUT/crash-logs.txt" && grep -q '^exit-' "$OUT/crash-logs.txt" && grep -q 'End of the POS server log' "$OUT/exit-report.txt" \
+    && grep -q 'bluetooth: connecting to 00:11:22:AA:BB:CC' "$OUT/exit-report.txt" && grep -q 'printViaUSB called' "$OUT/exit-report.txt"; then
+    echo "PASS a crash is saved, and the next start records how the app ended with the printing steps and server log"
     crash_checks=0
   else
     echo "FAIL no crash report was saved"

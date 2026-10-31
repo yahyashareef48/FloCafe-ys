@@ -21,6 +21,7 @@ final class HtmlPrinter {
     private HtmlPrinter() {}
 
     static void print(Activity activity, String html, String baseUrl, String jobName, Runnable onFinished) {
+        Breadcrumbs.note(activity, "html print: " + jobName);
         WebView renderer = new WebView(activity);
         renderer.getSettings().setJavaScriptEnabled(false);
         renderer.setWebViewClient(new WebViewClient() {
@@ -30,6 +31,7 @@ final class HtmlPrinter {
             public void onPageFinished(WebView view, String url) {
                 if (started) return;
                 started = true;
+                Breadcrumbs.note(activity, "html print: opening the print dialog");
                 PrintManager printManager = (PrintManager) activity.getSystemService(Activity.PRINT_SERVICE);
                 PrintDocumentAdapter adapter = new FinishNotifyingAdapter(view.createPrintDocumentAdapter(jobName), () -> {
                     view.destroy();
