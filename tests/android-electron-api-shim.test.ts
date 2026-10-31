@@ -25,7 +25,10 @@ const electronShimSource = fs.readFileSync(path.join(assets, 'electron-api-shim.
 /** The main tablet injects both, in this order. */
 const shimSource = `${webviewShimSource}\n${electronShimSource}`;
 const preloadSource = fs.readFileSync(path.join(root, 'main/preload.ts'), 'utf8');
-const hostRoutesSource = fs.readFileSync(path.join(root, 'main/android/host-action-routes.ts'), 'utf8');
+const hostRoutesSource = fs.readFileSync(
+  path.join(root, 'main/android/host-action-routes.ts'),
+  'utf8',
+);
 
 const DELIBERATELY_OMITTED = [
   'getStatus',
@@ -50,13 +53,18 @@ function loadShimInVm() {
   const hostResults: Record<string, unknown> = {
     '/backup': { success: true, path: '/data/docs/FloCafe/Manual Backups/flo-backup-x.db' },
   };
-  const channel: { onmessage: ((event: { data: string }) => void) | null; postMessage: (data: string) => void } = {
+  const channel: {
+    onmessage: ((event: { data: string }) => void) | null;
+    postMessage: (data: string) => void;
+  } = {
     onmessage: null,
     postMessage(data: string) {
       const message = JSON.parse(data) as NativeCall;
       nativeCalls.push(message);
       const result =
-        message.method === 'hostAction' ? (hostResults[message.params.route] ?? { success: true }) : { ok: true };
+        message.method === 'hostAction'
+          ? (hostResults[message.params.route] ?? { success: true })
+          : { ok: true };
       setImmediate(() => channel.onmessage!({ data: JSON.stringify({ id: message.id, result }) }));
     },
   };
@@ -89,12 +97,26 @@ async function contract(): Promise<void> {
   console.log('\n--- Method coverage ---');
   const exposed = Object.keys(api).sort();
   const expected = preload.filter((name) => !DELIBERATELY_OMITTED.includes(name)).sort();
-  assertEqualOrThrow(JSON.stringify(exposed), JSON.stringify(expected), 'shim exposes every preload method except the documented omissions');
+  assertEqualOrThrow(
+    JSON.stringify(exposed),
+    JSON.stringify(expected),
+    'shim exposes every preload method except the documented omissions',
+  );
   for (const name of DELIBERATELY_OMITTED) {
-    assertOrThrow(preload.includes(name), `omitted ${name} still exists in preload (omission list is current)`);
-    assertOrThrow(electronShimSource.includes(name), `omission of ${name} is documented in the shim header`);
+    assertOrThrow(
+      preload.includes(name),
+      `omitted ${name} still exists in preload (omission list is current)`,
+    );
+    assertOrThrow(
+      electronShimSource.includes(name),
+      `omission of ${name} is documented in the shim header`,
+    );
   }
-  assertEqualOrThrow(api.getStatus, undefined, 'getStatus is absent, so no desktop title bar is drawn');
+  assertEqualOrThrow(
+    api.getStatus,
+    undefined,
+    'getStatus is absent, so no desktop title bar is drawn',
+  );
   assertEqualOrThrow(api.platform, 'android', 'platform is android');
   assertOrThrow(Object.isFrozen(api), 'the bridge object is frozen');
 
@@ -123,28 +145,64 @@ async function contract(): Promise<void> {
     assertEqualOrThrow(call.params.route, route, `${name} calls ${route}`);
     assertOrThrow(hostRoutesSource.includes(`'${route}':`), `${route} is a backend host action`);
   }
-  const restoreCall = nativeCalls.find((c) => c.method === 'hostAction' && c.params.route === '/restore')!;
-  assertEqualOrThrow(restoreCall.params.body.backupPath, '/x.db', 'restore forwards a preset backup path');
-  assertOrThrow(!/fetch\(|XMLHttpRequest|127\.0\.0\.1:\d/.test(shimSource.replace(/\/\*[\s\S]*?\*\//g, '')), 'the shims make no network calls of their own');
+  const restoreCall = nativeCalls.find(
+    (c) => c.method === 'hostAction' && c.params.route === '/restore',
+  )!;
+  assertEqualOrThrow(
+    restoreCall.params.body.backupPath,
+    '/x.db',
+    'restore forwards a preset backup path',
+  );
+  assertOrThrow(
+    !/fetch\(|XMLHttpRequest|127\.0\.0\.1:\d/.test(shimSource.replace(/\/\*[\s\S]*?\*\//g, '')),
+    'the shims make no network calls of their own',
+  );
 
   console.log('\n--- Native hand-offs and safe no-ops ---');
   const backup = await api.backupDatabase('1234');
   assertEqualOrThrow(backup.success, true, 'backup returns the action result');
   const saveCall = nativeCalls.find((c) => c.method === 'saveFileCopy');
   assertOrThrow(Boolean(saveCall), 'a successful backup offers to save a copy through the shell');
-  assertEqualOrThrow((saveCall!.params as { suggestedName: string }).suggestedName, 'flo-backup-x.db', 'save copy suggests the backup file name');
-  assertEqualOrThrow((await api.getUpdateStatus()).status, 'store-managed', 'updates report store-managed');
-  assertEqualOrThrow((await api.getWindowState()).isFullScreen, true, 'window state reports full screen');
+  assertEqualOrThrow(
+    (saveCall!.params as { suggestedName: string }).suggestedName,
+    'flo-backup-x.db',
+    'save copy suggests the backup file name',
+  );
+  assertEqualOrThrow(
+    (await api.getUpdateStatus()).status,
+    'store-managed',
+    'updates report store-managed',
+  );
+  assertEqualOrThrow(
+    (await api.getWindowState()).isFullScreen,
+    true,
+    'window state reports full screen',
+  );
   assertEqualOrThrow((await api.getPostHogBootstrap()).enabled, false, 'PostHog stays disabled');
-  assertEqualOrThrow(typeof api.onMenuAction(() => {}), 'function', 'onMenuAction returns an unsubscribe');
-  assertEqualOrThrow(typeof api.onUpdateStatus(() => {}), 'function', 'onUpdateStatus returns an unsubscribe');
-  assertEqualOrThrow(typeof api.onWindowStateChanged(() => {}), 'function', 'onWindowStateChanged returns an unsubscribe');
+  assertEqualOrThrow(
+    typeof api.onMenuAction(() => {}),
+    'function',
+    'onMenuAction returns an unsubscribe',
+  );
+  assertEqualOrThrow(
+    typeof api.onUpdateStatus(() => {}),
+    'function',
+    'onUpdateStatus returns an unsubscribe',
+  );
+  assertEqualOrThrow(
+    typeof api.onWindowStateChanged(() => {}),
+    'function',
+    'onWindowStateChanged returns an unsubscribe',
+  );
 }
 
 function launchChromium(): Promise<any> {
   const playwright = require(path.resolve(root, 'frontend/node_modules/@playwright/test'));
   const executablePath = process.env.FLO_TEST_CHROMIUM_PATH || undefined;
-  return playwright.chromium.launch({ headless: true, ...(executablePath ? { executablePath } : {}) });
+  return playwright.chromium.launch({
+    headless: true,
+    ...(executablePath ? { executablePath } : {}),
+  });
 }
 
 async function browserBehaviour(): Promise<void> {
@@ -153,7 +211,9 @@ async function browserBehaviour(): Promise<void> {
     browser = await launchChromium();
   } catch (error: any) {
     if (process.env.REQUIRE_VISUAL_EVIDENCE === '1') throw error;
-    console.warn(`  ! Chromium not available; overlay and download checks skipped: ${error?.message || error}`);
+    console.warn(
+      `  ! Chromium not available; overlay and download checks skipped: ${error?.message || error}`,
+    );
     return;
   }
   const server = http.createServer((req, res) => {
@@ -192,25 +252,49 @@ async function browserBehaviour(): Promise<void> {
       w.print();
     });
     assertEqualOrThrow(await overlayCount(), 1, 'window.open shows the bill in an in-page overlay');
-    assertEqualOrThrow(page.url(), `http://127.0.0.1:${port}/pos`, 'the POS page is not navigated away');
+    assertEqualOrThrow(
+      page.url(),
+      `http://127.0.0.1:${port}/pos`,
+      'the POS page is not navigated away',
+    );
     const prints = await calls('printHtml');
     assertEqualOrThrow(prints.length, 1, 'print() goes to the shell once');
     assertIncludes(prints[0].params.html, 'BILL-42', 'the shell receives the bill document');
-    await page.waitForFunction(() => !document.querySelector('[data-flo-android-overlay]'), null, { timeout: 5000 });
-    assertEqualOrThrow(await page.evaluate(() => (window as any).__bill.closed), true, 'the bill window reports closed after printing');
-    assertEqualOrThrow(await page.locator('#pos').isVisible(), true, 'the POS order screen is back');
+    await page.waitForFunction(() => !document.querySelector('[data-flo-android-overlay]'), null, {
+      timeout: 5000,
+    });
+    assertEqualOrThrow(
+      await page.evaluate(() => (window as any).__bill.closed),
+      true,
+      'the bill window reports closed after printing',
+    );
+    assertEqualOrThrow(
+      await page.locator('#pos').isVisible(),
+      true,
+      'the POS order screen is back',
+    );
 
     console.log('\n--- The bill page own Print button and the toolbar both work ---');
     await page.evaluate(() => {
       const w = window.open('', '_blank')!;
       w.document.open();
-      w.document.write('<html><body><button id="own" onclick="window.print()">Print Bill</button></body></html>');
+      w.document.write(
+        '<html><body><button id="own" onclick="window.print()">Print Bill</button></body></html>',
+      );
       w.document.close();
     });
     await page.frameLocator('[data-flo-android-overlay] iframe').locator('#own').click();
-    await page.waitForFunction(() => window.__nativeCalls.filter((c: any) => c.method === 'printHtml').length === 2);
-    assertEqualOrThrow((await calls('printHtml')).length, 2, "the bill's own Print Bill button prints through the shell");
-    await page.waitForFunction(() => !document.querySelector('[data-flo-android-overlay]'), null, { timeout: 5000 });
+    await page.waitForFunction(
+      () => window.__nativeCalls.filter((c: any) => c.method === 'printHtml').length === 2,
+    );
+    assertEqualOrThrow(
+      (await calls('printHtml')).length,
+      2,
+      "the bill's own Print Bill button prints through the shell",
+    );
+    await page.waitForFunction(() => !document.querySelector('[data-flo-android-overlay]'), null, {
+      timeout: 5000,
+    });
 
     await page.evaluate(() => {
       window.open('', '_blank')!.document.write('<p>preview</p>');
@@ -222,7 +306,11 @@ async function browserBehaviour(): Promise<void> {
     console.log('\n--- External links and downloads ---');
     const external = await page.evaluate(() => window.open('https://wa.me/911234567890'));
     assertEqualOrThrow(external, null, 'external links do not open in the WebView');
-    assertEqualOrThrow((await calls('openExternal'))[0]?.params.url, 'https://wa.me/911234567890', 'external links go to the shell');
+    assertEqualOrThrow(
+      (await calls('openExternal'))[0]?.params.url,
+      'https://wa.me/911234567890',
+      'external links go to the shell',
+    );
 
     await page.evaluate(() => {
       const url = URL.createObjectURL(new Blob(['a,b\n1,2\n'], { type: 'text/csv' }));
@@ -232,11 +320,17 @@ async function browserBehaviour(): Promise<void> {
       link.click();
       URL.revokeObjectURL(url);
     });
-    await page.waitForFunction(() => window.__nativeCalls.some((c: any) => c.method === 'saveDownload'));
+    await page.waitForFunction(() =>
+      window.__nativeCalls.some((c: any) => c.method === 'saveDownload'),
+    );
     const saved = (await calls('saveDownload'))[0].params;
     assertEqualOrThrow(saved.name, 'sales.csv', 'download keeps its file name');
     assertEqualOrThrow(saved.mimeType, 'text/csv', 'download keeps its type');
-    assertEqualOrThrow(Buffer.from(saved.base64, 'base64').toString('utf8'), 'a,b\n1,2\n', 'download content survives an immediate revokeObjectURL');
+    assertEqualOrThrow(
+      Buffer.from(saved.base64, 'base64').toString('utf8'),
+      'a,b\n1,2\n',
+      'download content survives an immediate revokeObjectURL',
+    );
 
     console.log('\n--- Screen devices get the WebView shim only ---');
     const screen = await browser.newPage();
@@ -253,20 +347,40 @@ async function browserBehaviour(): Promise<void> {
     `);
     await screen.addInitScript(webviewShimSource);
     await screen.goto(`http://127.0.0.1:${port}/pos`);
-    assertEqualOrThrow(await screen.evaluate(() => typeof (window as any).electronAPI), 'undefined', 'a Screen page has no electronAPI, so it runs as a browser client');
+    assertEqualOrThrow(
+      await screen.evaluate(() => typeof (window as any).electronAPI),
+      'undefined',
+      'a Screen page has no electronAPI, so it runs as a browser client',
+    );
     await screen.evaluate(() => {
       const w = window.open('', '_blank')!;
       w.document.write('<p>BILL-77</p>');
       w.print();
     });
-    await screen.waitForFunction(() => window.__nativeCalls.some((c: any) => c.method === 'printHtml'));
-    assertEqualOrThrow(await screen.evaluate(() => window.__nativeCalls.filter((c: any) => c.method === 'printHtml').length), 1, 'a Screen page prints pop-up bills through the shell');
-    await screen.waitForFunction(() => !document.querySelector('[data-flo-android-overlay]'), null, { timeout: 5000 });
+    await screen.waitForFunction(() =>
+      window.__nativeCalls.some((c: any) => c.method === 'printHtml'),
+    );
+    assertEqualOrThrow(
+      await screen.evaluate(
+        () => window.__nativeCalls.filter((c: any) => c.method === 'printHtml').length,
+      ),
+      1,
+      'a Screen page prints pop-up bills through the shell',
+    );
+    await screen.waitForFunction(
+      () => !document.querySelector('[data-flo-android-overlay]'),
+      null,
+      { timeout: 5000 },
+    );
     const sameHost = await screen.evaluate(() => {
       window.open(`${location.origin}/kds-standalone`);
       return !!document.querySelector('[data-flo-android-overlay] iframe');
     });
-    assertEqualOrThrow(sameHost, true, 'links to the main device open inside the app, not externally');
+    assertEqualOrThrow(
+      sameHost,
+      true,
+      'links to the main device open inside the app, not externally',
+    );
   } finally {
     await browser.close().catch(() => undefined);
     server.close();

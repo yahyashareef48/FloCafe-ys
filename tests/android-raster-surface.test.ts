@@ -24,7 +24,13 @@ Module._load = function (request: string, parent: unknown, isMain: boolean) {
 };
 
 const root = path.resolve(__dirname, '..');
-const { assertOrThrow, assertEqualOrThrow, initTestDb, closeDatabase, getDatabase } = require('./helpers/test-setup');
+const {
+  assertOrThrow,
+  assertEqualOrThrow,
+  initTestDb,
+  closeDatabase,
+  getDatabase,
+} = require('./helpers/test-setup');
 const platform = require('../main/platform');
 const { createAndroidPlatformHost } = require('../main/platform/android-host');
 const { rasterRendererHtml } = require('../main/printers/raster-renderer');
@@ -48,7 +54,10 @@ function surfaceHtml(): string {
 async function launchChromium(): Promise<any> {
   const playwright = require(path.resolve(root, 'frontend/node_modules/@playwright/test'));
   const executablePath = process.env.FLO_TEST_CHROMIUM_PATH || undefined;
-  return playwright.chromium.launch({ headless: true, ...(executablePath ? { executablePath } : {}) });
+  return playwright.chromium.launch({
+    headless: true,
+    ...(executablePath ? { executablePath } : {}),
+  });
 }
 
 async function main(): Promise<void> {
@@ -57,20 +66,30 @@ async function main(): Promise<void> {
     browser = await launchChromium();
   } catch (error: any) {
     if (process.env.REQUIRE_VISUAL_EVIDENCE === '1') throw error;
-    console.warn(`  ! Chromium not available; Android raster surface checks skipped: ${error?.message || error}`);
+    console.warn(
+      `  ! Chromium not available; Android raster surface checks skipped: ${error?.message || error}`,
+    );
     return;
   }
   const page = await browser.newPage();
   try {
     await page.setContent(surfaceHtml());
     await page.waitForFunction(() => (window as any).__ready === true, null, { timeout: 10_000 });
-    assertEqualOrThrow(await page.evaluate(() => (window as any).__ready), true, 'the page reports ready through AlBaikRasterHost');
+    assertEqualOrThrow(
+      await page.evaluate(() => (window as any).__ready),
+      true,
+      'the page reports ready through AlBaikRasterHost',
+    );
 
     const surfaceRenderer = {
       async render(request: { requestId: string }) {
-        await page.evaluate((req: unknown) => (window as any).__floRasterDeliver({ version: 1, request: req }), request);
+        await page.evaluate(
+          (req: unknown) => (window as any).__floRasterDeliver({ version: 1, request: req }),
+          request,
+        );
         const handle = await page.waitForFunction(
-          (id: string) => (window as any).__results.find((json: string) => JSON.parse(json).requestId === id),
+          (id: string) =>
+            (window as any).__results.find((json: string) => JSON.parse(json).requestId === id),
           request.requestId,
           { timeout: 15_000 },
         );
@@ -90,17 +109,29 @@ async function main(): Promise<void> {
       financial: true,
       maxLines: 2,
     } as any);
-    assertEqualOrThrow(single.ok, true, `the rupee line renders (${single.ok ? '' : single.detail})`);
+    assertEqualOrThrow(
+      single.ok,
+      true,
+      `the rupee line renders (${single.ok ? '' : single.detail})`,
+    );
     if (single.ok) {
       const band = single.unit.bands[0];
       assertEqualOrThrow(band.widthDots, 384, 'bands span the 58 mm print width (384 dots)');
-      assertOrThrow(band.pixels instanceof Uint8Array && band.pixels.some((p: number) => p !== 0), 'the band has printed (black) pixels');
-      assertOrThrow(band.pixels.every((p: number) => p === 0 || p === 1), 'pixels survive base64 as 0/1 values');
+      assertOrThrow(
+        band.pixels instanceof Uint8Array && band.pixels.some((p: number) => p !== 0),
+        'the band has printed (black) pixels',
+      );
+      assertOrThrow(
+        band.pixels.every((p: number) => p === 0 || p === 1),
+        'pixels survive base64 as 0/1 values',
+      );
     }
 
     console.log('\n--- A full bill with ₹ and Persian text prints through it ---');
     initTestDb();
-    getDatabase().exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('country', 'IN'), ('currency', 'INR'), ('currency_symbol', '₹')");
+    getDatabase().exec(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('country', 'IN'), ('currency', 'INR'), ('currency_symbol', '₹')",
+    );
     getDatabase()
       .prepare(
         `INSERT INTO printers (id, name, connection_type, port, paper_width, is_default, created_at, updated_at)
@@ -129,11 +160,22 @@ async function main(): Promise<void> {
     );
     try {
       const { order, bill, business } = buildParityFixtures();
-      const result = await thermal.printReceipt(order, bill, { ...business, highlight_token: true }, 'classic');
+      const result = await thermal.printReceipt(
+        order,
+        bill,
+        { ...business, highlight_token: true },
+        'classic',
+      );
       assertEqualOrThrow(result.ok, true, `the bill prints (${result.detail ?? ''})`);
       assertEqualOrThrow(jobs.length, 1, 'one job reaches the USB printer');
-      assertOrThrow(jobs[0].includes(Buffer.from([0x1d, 0x76, 0x30])), 'the job carries raster image commands (GS v 0) for the text the printer cannot encode');
-      assertOrThrow(thermal.escPosToText(jobs[0]).includes('Flo Parity Cafe'), 'rows the printer can encode (the business name) stay plain ESC/POS text');
+      assertOrThrow(
+        jobs[0].includes(Buffer.from([0x1d, 0x76, 0x30])),
+        'the job carries raster image commands (GS v 0) for the text the printer cannot encode',
+      );
+      assertOrThrow(
+        thermal.escPosToText(jobs[0]).includes('Flo Parity Cafe'),
+        'rows the printer can encode (the business name) stay plain ESC/POS text',
+      );
     } finally {
       platform.resetPlatformHost();
     }

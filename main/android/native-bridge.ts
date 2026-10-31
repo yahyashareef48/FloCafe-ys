@@ -31,7 +31,13 @@ async function handleRequest(id: unknown, method: string, params: unknown): Prom
 
 function onLine(line: string): void {
   if (!line.trim()) return;
-  let message: { id?: unknown; method?: unknown; params?: unknown; result?: unknown; error?: unknown };
+  let message: {
+    id?: unknown;
+    method?: unknown;
+    params?: unknown;
+    result?: unknown;
+    error?: unknown;
+  };
   try {
     message = JSON.parse(line);
   } catch {
@@ -44,7 +50,8 @@ function onLine(line: string): void {
   const entry = typeof message.id === 'number' ? pending.get(message.id) : undefined;
   if (!entry) return;
   pending.delete(message.id as number);
-  if (message.error !== undefined && message.error !== null) entry.reject(new Error(String(message.error)));
+  if (message.error !== undefined && message.error !== null)
+    entry.reject(new Error(String(message.error)));
   else entry.resolve(message.result);
 }
 
