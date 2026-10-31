@@ -68,8 +68,18 @@ final class PrinterHub {
     }
 
     void register(ShellBridge bridge) {
-        bridge.registerServiceHandler("printerList", (method, params, reply) -> io.execute(() -> list(reply)));
-        bridge.registerServiceHandler("printerSend", (method, params, reply) -> io.execute(() -> send(params, reply)));
+        bridge.registerServiceHandler("printerList", (method, params, reply) -> io.execute(() -> guarded(reply, () -> list(reply))));
+        bridge.registerServiceHandler("printerSend", (method, params, reply) -> io.execute(() -> guarded(reply, () -> send(params, reply))));
+    }
+
+    /** An exception on the print thread would end the whole app; report it to the caller instead. */
+    private static void guarded(ShellBridge.Reply reply, Runnable job) {
+        try {
+            job.run();
+        } catch (Throwable e) {
+            Log.e(TAG, "Printer job failed", e);
+            reply.error("Printer error: " + e);
+        }
     }
 
     // ---- Discovery -------------------------------------------------------------

@@ -228,8 +228,17 @@ final class ShellBridge {
                         respond(id, null, error);
                     }
                 };
-                if (handler == null) reply.error("No handler for " + method);
-                else handler.handle(method, params == null ? new JSONObject() : params, reply);
+                if (handler == null) {
+                    reply.error("No handler for " + method);
+                    return;
+                }
+                try {
+                    handler.handle(method, params == null ? new JSONObject() : params, reply);
+                } catch (RuntimeException e) {
+                    // Handlers run on the main thread, where an exception would end the app.
+                    Log.e(TAG, method + " failed", e);
+                    reply.error(method + " failed: " + e);
+                }
             });
             return;
         }

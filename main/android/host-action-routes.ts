@@ -28,6 +28,7 @@ import {
 import { platformApp, platformPrinters, platformRasterRenderer } from '../platform';
 import { createBackup } from '../db';
 import { retainBackupLocally } from '../services/local-backup';
+import { printViaUSB } from '../printers/thermal';
 import { callNative } from './native-bridge';
 
 /** Folder for manual backups; the shell then offers to copy the file anywhere the operator picks. */
@@ -116,8 +117,11 @@ export function createHostActionHandler(options: {
   };
 }
 
-/** Exercises the shell's raster surface and printer discovery once, for diagnostics and CI. */
-export async function androidPrintingSelfTest() {
+/**
+ * Exercises the shell's raster surface and printer discovery once, for diagnostics and CI. With
+ * `printTo`, also sends a short job to that printer through the same path as a real print.
+ */
+export async function androidPrintingSelfTest(body: HostActionBody = {}) {
   const renderer = platformRasterRenderer();
   const raster = renderer
     ? await renderer.render({
@@ -133,6 +137,8 @@ export async function androidPrintingSelfTest() {
       })
     : null;
   const printers = await platformPrinters()?.list();
+  const printTo = typeof body.printTo === 'string' ? body.printTo : '';
+  const sent = printTo ? await printViaUSB(Buffer.from('\x1b@Al Baik POS self-test\n\n\n', 'latin1'), printTo) : null;
   return {
     raster: raster?.ok
       ? {
@@ -142,6 +148,7 @@ export async function androidPrintingSelfTest() {
         }
       : { ok: false, detail: raster?.detail ?? 'No raster renderer' },
     printers: printers ?? [],
+    sent,
   };
 }
 
@@ -185,7 +192,7 @@ export function createAndroidHostActionHandler(shutdownSignal?: AbortSignal): Ho
     dialogs: androidHostDialogs(),
     shutdownSignal,
     extraRoutes: {
-      '/printing-self-test': () => androidPrintingSelfTest(),
+      '/printing-self-test': (b) => androidPrintingSelfTest(b),
       '/storage-self-test': () => androidStorageSelfTest(),
     },
     appInfo: () => ({

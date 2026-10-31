@@ -33,6 +33,10 @@ done
 
 checks=1
 if [ "$ok" = 1 ]; then
+  # The Bluetooth print check needs the radio on; the emulator has a virtual adapter.
+  adb shell cmd bluetooth_manager enable >/dev/null 2>&1 || adb shell svc bluetooth enable >/dev/null 2>&1 || true
+  for i in $(seq 1 15); do [ "$(adb shell settings get global bluetooth_on | tr -d '\r')" = 1 ] && break; sleep 1; done
+  echo "bluetooth_on=$(adb shell settings get global bluetooth_on | tr -d '\r')"
   sleep 10
   pid="$(adb shell pidof "$PKG" | tr -d '\r')"
   adb forward tcp:9222 "localabstract:webview_devtools_remote_${pid}"

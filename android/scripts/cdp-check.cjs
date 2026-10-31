@@ -26,6 +26,10 @@ function topActivity() {
   return line.trim();
 }
 
+function pidOf() {
+  return (spawnSync('adb', ['shell', 'pidof', 'com.albaik.pos'], { encoding: 'utf8' }).stdout || '').trim();
+}
+
 async function waitForTop(pattern, timeoutMs = 15000) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
@@ -65,6 +69,16 @@ async function main() {
   const storage = (await evaluate(nativeCall('hostAction', { route: '/storage-self-test', body: {} }))).result || {};
   console.log(`storage self-test: ${JSON.stringify(storage)}`);
   await check('backups write to and publish on the device storage', `${storage.manualBytes > 0 && storage.publishedBytes === storage.manualBytes}`, true);
+
+  // No printer answers at this address, so a working path ends in "Could not reach", not a crash.
+  const pidBefore = pidOf();
+  const bluetooth = (await evaluate(nativeCall('hostAction', { route: '/printing-self-test', body: { printTo: 'CI Printer (Bluetooth 00:11:22:AA:BB:CC)' } }))).result || {};
+  const sent = bluetooth.sent || {};
+  console.log(`bluetooth print: ${JSON.stringify(sent)}`);
+  if (/Bluetooth is off/.test(String(sent.detail))) console.log('WARN the emulator Bluetooth is off, so the connect path was not reached');
+  await check('a Bluetooth print reaches the connect step', `${sent.ok === false && /Could not reach the Bluetooth printer|Bluetooth is off/.test(String(sent.detail))}`, true);
+  await check('a Bluetooth print does not ask for permissions the app already has', `${!/nearby devices/.test(String(sent.detail))}`, true);
+  await check('the app is still running after the Bluetooth print', `${pidOf() === pidBefore && pidBefore !== ''}`, true);
 
   // System UI round trips: start the request, check the Android screen opened, cancel with Back.
   await evaluate(`window.__saveReply = null; (${nativeCall('saveDownload', { name: 'sales.csv', mimeType: 'text/csv', base64: 'YSxiCjEsMgo=' })}).then((m) => { window.__saveReply = m; }); true`);

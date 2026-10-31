@@ -66,6 +66,8 @@ const server = net.createServer((socket) => {
               unit: { unitId: request.requestId, financial: request.financial, complete: true, bands: [{ widthDots: request.widthDots, heightDots: 24, pixelsBase64: pixels }] },
             },
           });
+        } else if (message.method === 'printerSend') {
+          sendToNode({ id: message.id, result: { ok: false, detail: `no printer called ${message.params.name}` } });
         } else if (message.method === 'printerList') {
           sendToNode({ id: message.id, result: [{ name: 'SR588 (USB 0483:5720)', make: 'SR588', model: 'Posiflow', connectionType: 'usb', deviceUri: 'usb://0483/5720' }] });
         }
@@ -141,6 +143,13 @@ async function run(child: ChildProcess, output: () => string): Promise<void> {
   assertEqualOrThrow(selfTest.raster.inkPixels, 384 * 24, 'raster pixels decode from base64');
   assertEqualOrThrow(selfTest.printers[0]?.name, 'SR588 (USB 0483:5720)', 'printer discovery reaches the shell');
   assertOrThrow(nativeCalls.some((c) => c.method === 'rasterRender' && typeof c.params.pageHtml === 'string' && c.params.pageHtml.includes('__floRaster')), 'the raster page is sent to the shell');
+  assertEqualOrThrow(selfTest.sent, null, 'the self-test prints nothing unless asked');
+  const printed = (await hostAction('/printing-self-test', { printTo: 'SR588 (Bluetooth C8:47:8C:E6:B0:DF)' })).result;
+  const job = nativeCalls.filter((c) => c.method === 'printerSend').pop();
+  assertEqualOrThrow(job?.params.name, 'SR588 (Bluetooth C8:47:8C:E6:B0:DF)', 'the self-test job goes to the named printer');
+  assertOrThrow(Buffer.from(String(job?.params.data), 'base64').toString('latin1').includes('Al Baik POS self-test'), 'the self-test job carries ESC/POS text');
+  assertEqualOrThrow(printed.sent.ok, false, 'a refused job is reported');
+  assertEqualOrThrow(printed.sent.detail, 'no printer called SR588 (Bluetooth C8:47:8C:E6:B0:DF)', 'the shell reason reaches the caller');
 
   const storage = (await hostAction('/storage-self-test')).result;
   assertOrThrow(storage.manualBytes > 0, 'the storage self-test writes a backup');
