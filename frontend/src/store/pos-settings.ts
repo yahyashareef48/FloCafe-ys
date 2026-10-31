@@ -10,6 +10,8 @@ export type CoreBillTemplate = 'classic' | 'compact';
 export type BillTemplate = CoreBillTemplate | (string & {});
 
 export type PosCardShape = 'square' | 'rectangle' | 'tall' | 'rows';
+// `store` follows the POS sort in Settings; the others are this device's own order.
+export type PosCardOrder = 'store' | 'popular' | 'custom';
 
 export const POS_CARD_TEXT_SCALE_MIN = 0.8;
 export const POS_CARD_TEXT_SCALE_MAX = 1.6;
@@ -20,6 +22,14 @@ export interface PosSettingsState {
   posGridColumns: number | null;
   posCardTextScale: number;
   posCardShape: PosCardShape;
+  posCardOrder: PosCardOrder;
+  posGroupByCategory: boolean;
+  // Product ids in the order the cards were dragged into; ids missing from it follow, in catalog order.
+  posCustomOrder: string[];
+  // Times each product was added from this device's POS; sales wipes do not reset it.
+  posProductUses: Record<string, number>;
+  // Drag-to-arrange mode; not persisted.
+  posArrangingCards: boolean;
   customerMandatory: boolean;
   // Auto-advances phone to name when typed digits form a valid number.
   enforcePhoneLength: boolean;
@@ -75,6 +85,11 @@ export interface PosSettingsState {
   setPosGridColumns: (columns: number | null) => void;
   setPosCardTextScale: (scale: number) => void;
   setPosCardShape: (shape: PosCardShape) => void;
+  setPosCardOrder: (order: PosCardOrder) => void;
+  setPosGroupByCategory: (group: boolean) => void;
+  setPosCustomOrder: (ids: string[]) => void;
+  recordPosProductUse: (productId: string) => void;
+  setPosArrangingCards: (arranging: boolean) => void;
   setCustomerMandatory: (mandatory: boolean) => void;
   setEnforcePhoneLength: (enabled: boolean) => void;
   setLanguage: (lang: Language) => void;
@@ -164,6 +179,11 @@ export const usePosSettingsStore = create<PosSettingsState>()(
       posGridColumns: null,
       posCardTextScale: 1,
       posCardShape: 'square',
+      posCardOrder: 'store',
+      posGroupByCategory: false,
+      posCustomOrder: [],
+      posProductUses: {},
+      posArrangingCards: false,
       customerMandatory: false,
       enforcePhoneLength: false,
       billingType: 'postpaid',
@@ -214,6 +234,17 @@ export const usePosSettingsStore = create<PosSettingsState>()(
       setShowProductImages: (show) => set({ showProductImages: show }),
       setPosGridColumns: (columns) => set({ posGridColumns: columns }),
       setPosCardShape: (shape) => set({ posCardShape: shape }),
+      setPosCardOrder: (order) => set({ posCardOrder: order }),
+      setPosGroupByCategory: (group) => set({ posGroupByCategory: group }),
+      setPosCustomOrder: (ids) => set({ posCustomOrder: ids }),
+      recordPosProductUse: (productId) =>
+        set((state) => ({
+          posProductUses: {
+            ...state.posProductUses,
+            [productId]: (state.posProductUses[productId] ?? 0) + 1,
+          },
+        })),
+      setPosArrangingCards: (arranging) => set({ posArrangingCards: arranging }),
       setPosCardTextScale: (scale) =>
         set({
           posCardTextScale:
@@ -374,7 +405,10 @@ export const usePosSettingsStore = create<PosSettingsState>()(
         Object.fromEntries(
           Object.entries(s).filter(
             ([k]) =>
-              k !== 'whatsappEnabled' && k !== 'billLanguagePolicy' && k !== 'kotLanguagePolicy',
+              k !== 'whatsappEnabled' &&
+              k !== 'billLanguagePolicy' &&
+              k !== 'kotLanguagePolicy' &&
+              k !== 'posArrangingCards',
           ),
         ) as PosSettingsState,
       // Migrates legacy store keys (GSTIN rename, removed A4/A5 paper sizes).

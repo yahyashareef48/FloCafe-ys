@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  GripVertical,
   LayoutGrid,
   Minus,
   Plus,
@@ -13,6 +14,7 @@ import { useTranslations } from 'use-intl';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Toggle } from '@/components/settings/Toggle';
@@ -20,6 +22,7 @@ import {
   POS_CARD_TEXT_SCALE_MAX,
   POS_CARD_TEXT_SCALE_MIN,
   usePosSettingsStore,
+  type PosCardOrder,
   type PosCardShape,
 } from '@/store/pos-settings';
 
@@ -30,8 +33,16 @@ const SHAPE_CHOICES = [
   { shape: 'tall', label: 'cardShapeTall', Icon: RectangleVertical },
   { shape: 'rows', label: 'cardShapeRows', Icon: Rows3 },
 ] as const satisfies readonly { shape: PosCardShape; label: string; Icon: typeof Square }[];
+const ORDER_CHOICES = [
+  { order: 'store', label: 'cardOrderStore' },
+  { order: 'popular', label: 'cardOrderPopular' },
+  { order: 'custom', label: 'cardOrderCustom' },
+] as const satisfies readonly { order: PosCardOrder; label: string }[];
 
-/** Per-device product card layout: cards per row, text size, and pictures on or off. */
+/**
+ * Per-device product card layout: cards per row, shape, text size, pictures, card order (catalog,
+ * most used, or dragged), category sections, and the drag-to-arrange mode.
+ */
 export default function ProductCardLayoutMenu() {
   const t = useTranslations('pos');
   const {
@@ -43,6 +54,11 @@ export default function ProductCardLayoutMenu() {
     setShowProductImages,
     posCardShape,
     setPosCardShape,
+    posCardOrder,
+    setPosCardOrder,
+    posGroupByCategory,
+    setPosGroupByCategory,
+    setPosArrangingCards,
   } = usePosSettingsStore();
   const choiceClass = (active: boolean) =>
     `h-8 min-w-8 px-2 rounded-md border text-sm font-medium transition-colors ${
@@ -148,6 +164,39 @@ export default function ProductCardLayoutMenu() {
             label={t('cardShowPictures')}
           />
         </div>
+        <div>
+          <p className="text-sm font-semibold text-foreground mb-2">{t('cardOrder')}</p>
+          <div className="grid grid-cols-3 gap-1.5">
+            {ORDER_CHOICES.map(({ order, label }) => (
+              <button
+                key={order}
+                type="button"
+                data-testid={`pos-card-order-${order}`}
+                className={`${choiceClass(posCardOrder === order)} h-auto py-1.5 text-xs`}
+                aria-pressed={posCardOrder === order}
+                onClick={() => setPosCardOrder(order)}
+              >
+                {t(label)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-semibold text-foreground">{t('cardGroupByCategory')}</p>
+          <Toggle
+            value={posGroupByCategory}
+            onChange={setPosGroupByCategory}
+            label={t('cardGroupByCategory')}
+          />
+        </div>
+        <DropdownMenuItem
+          data-testid="pos-arrange-cards"
+          onSelect={() => setPosArrangingCards(true)}
+          className="justify-center gap-2 rounded-md border border-border py-2 text-sm font-medium"
+        >
+          <GripVertical size={16} />
+          {t('arrangeCards')}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

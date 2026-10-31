@@ -1,7 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { useEffect, useMemo, useRef, type ComponentProps, type ReactNode } from 'react';
+import { GripVertical, Search, SlidersHorizontal } from 'lucide-react';
+import { PointerActivationConstraints, PointerSensor } from '@dnd-kit/dom';
+import { DragDropProvider, type DragEndEvent } from '@dnd-kit/react';
+import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 import toast from 'react-hot-toast';
 import type { Category, Product, ProductVariant } from '@/lib/types';
 import { useCartStore } from '@/store/cart';
@@ -17,6 +20,10 @@ import { resolveScannedProduct } from '@/lib/scale-barcode';
 import { subscribeToQuickSearch } from '@/lib/quick-search';
 import { parseQuantitySearch } from '@/lib/quantity-search';
 import {
+  groupByCategory,
+  moveWithinOrder,
+  sortByCustomOrder,
+  sortByUses,
   sortCategories,
   sortProducts,
   type PosCategorySort,
@@ -24,6 +31,44 @@ import {
 } from '@/lib/pos-sort';
 import CollapsiblePosChoices from './CollapsiblePosChoices';
 import ProductCardLayoutMenu from './ProductCardLayoutMenu';
+
+// A card is a button, which the default sensor refuses to drag from. A touch needs a short hold so
+// a swipe across the cards is not taken as a drag.
+const arrangeSensors: ComponentProps<typeof DragDropProvider>['sensors'] = (defaults) => [
+  ...defaults.filter((sensor) => sensor !== PointerSensor),
+  PointerSensor.configure({
+    activationConstraints: (event) =>
+      event.pointerType === 'touch'
+        ? [new PointerActivationConstraints.Delay({ value: 250, tolerance: 8 })]
+        : [new PointerActivationConstraints.Distance({ value: 6 })],
+    preventActivation: () => false,
+  }),
+];
+
+/** A card that can be dragged to a new place while the POS arranges its cards. */
+function SortableCard({
+  id,
+  index,
+  group,
+  children,
+}: {
+  id: string;
+  index: number;
+  group: string;
+  children: ReactNode;
+}) {
+  const { ref, isDragging } = useSortable({ id, index, group });
+  return (
+    <div
+      ref={ref}
+      data-testid="pos-arrange-card"
+      data-product-id={id}
+      className={`min-w-0 grid cursor-grab touch-none select-none rounded-xl *:pointer-events-none outline-2 outline-dashed outline-offset-2 outline-brand/50 ${isDragging ? 'opacity-60' : ''}`}
+    >
+      {children}
+    </div>
+  );
+}
 
 /** The category chip shared by both category row modes. */
 function CategoryChip({
@@ -339,7 +384,19 @@ export default function ProductGrid({
     posGridColumns,
     posCardTextScale,
     posCardShape,
+    posCardOrder,
+    posGroupByCategory,
+    posCustomOrder,
+    posProductUses,
+    posArrangingCards,
+    setPosCardOrder,
+    setPosCustomOrder,
+    recordPosProductUse,
+    setPosArrangingCards,
   } = usePosSettingsStore();
+  const cardOrder = editableLayout ? posCardOrder : 'store';
+  const groupSections = editableLayout && posGroupByCategory;
+  const arranging = editableLayout && posArrangingCards;
   const showProductImages = showImages ?? showProductImagesSetting;
   const gridColumns = editableLayout ? posGridColumns : null;
   const textScale = editableLayout ? posCardTextScale : 1;
@@ -386,12 +443,273 @@ export default function ProductGrid({
     () => sortCategories(categories, categorySort),
     [categories, categorySort],
   );
-  const sortedProducts = useMemo(() => sortProducts(products, itemSort), [products, itemSort]);
+  const sortedProducts = useMemo(() => {
+    if (cardOrder === 'popular') return sortByUses(products, posProductUses);
+    if (cardOrder === 'custom') {
+      return sortByCustomOrder(sortProducts(products, itemSort), posCustomOrder);
+    }
+    return sortProducts(products, itemSort);
+  }, [products, itemSort, cardOrder, posProductUses, posCustomOrder]);
+
+  // Arranging starts from the order on screen, then keeps whatever is dragged.
+  useEffect(() => {
+    if (!arranging || cardOrder === 'custom') return;
+    setPosCustomOrder(sortedProducts.map((product) => String(product.id)));
+    setPosCardOrder('custom');
+  }, [arranging, cardOrder, sortedProducts, setPosCustomOrder, setPosCardOrder]);
+
+  const noteUse = (product: Product) => {
+    if (editableLayout) recordPosProductUse(String(product.id));
+  };
 
   const filtered = sortedProducts.filter((p) => {
     const matchCat = !selectedCategory || p.category_id === selectedCategory;
     const matchSearch = !activeQuery || p.name.toLowerCase().includes(activeQuery.toLowerCase());
     return matchCat && matchSearch;
+  });
+
+  const gridClass = `grid ${rows ? 'gap-2' : 'gap-3'} ${gridColumns ? '' : rows ? 'grid-cols-1' : (gridClassName ?? (sidebarOpen ? 'grid-cols-4' : 'grid-cols-5'))}`;
+  const gridStyle = gridColumns
+    ? { gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))` }
+    : undefined;
+  const showSectionHeaders = groupSections && !selectedCategory;
+  const sections = showSectionHeaders
+    ? groupByCategory(filtered, sortedCategories)
+    : [{ category: null, products: filtered }];
+  const sectionKey = (category: Category | null) => (category ? String(category.id) : 'other');
+
+  const handleArrangeEnd = (event: DragEndEvent) => {
+    const source = event.operation.source;
+    if (event.canceled || !isSortable(source)) return;
+    // Cards keep to their own category section; a drop into another one is ignored.
+    if (source.group !== source.initialGroup) return;
+    const section = sections.find((entry) => sectionKey(entry.category) === source.initialGroup);
+    if (!section) return;
+    const fullOrder = sortByCustomOrder(sortProducts(products, itemSort), posCustomOrder).map(
+      (product) => String(product.id),
+    );
+    const visible = section.products.map((product) => String(product.id));
+    setPosCustomOrder(moveWithinOrder(fullOrder, visible, source.initialIndex, source.index));
+  };
+
+  const renderCard = (product: Product) => {
+    const inCartQty = cartQuantities.get(product.id) || 0;
+    const stockBadge = !product.track_inventory
+      ? null
+      : product.stock_quantity <= 0
+        ? {
+            label: t('outOfStock'),
+            className:
+              'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/40',
+          }
+        : product.stock_quantity <= (product.low_stock_threshold || 0)
+          ? {
+              label: t('lowStock'),
+              className:
+                'bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800/40',
+            }
+          : null;
+    const selectProduct = () => {
+      if (disabled || arranging) return;
+      const quantity = parsedSearch?.quantity ?? 1;
+      if (!validateSelectionQuantity(product, quantity)) return;
+      noteUse(product);
+      onProductClick(product, quantity);
+    };
+
+    if (rows) {
+      return (
+        <button
+          key={product.id}
+          data-testid="pos-product-card"
+          data-shape="rows"
+          type="button"
+          disabled={disabled}
+          onClick={selectProduct}
+          className="bg-card rounded-xl px-3 py-2.5 border border-border hover:border-brand/40 active:border-brand active:bg-muted/40 transition-all text-start cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 min-w-0"
+        >
+          {showProductImages && (
+            <span
+              className="relative shrink-0 w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center text-xs font-bold text-white/80"
+              style={{ backgroundColor: nameToColor(product.name) }}
+            >
+              {product.name.substring(0, 2).toUpperCase()}
+              {product.has_image && (
+                <img
+                  src={`${api.defaults.baseURL}/products/${product.id}/image?t=${product.updated_at ? parseDbTimestamp(product.updated_at).getTime() : 0}`}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              )}
+            </span>
+          )}
+          <span className="flex-1 min-w-0">
+            <span className="block font-medium text-foreground truncate" style={scaledFont(0.9375)}>
+              {product.name}
+            </span>
+            {stockBadge && (
+              <span
+                className={`inline-block mt-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full border ${stockBadge.className}`}
+              >
+                {stockBadge.label}
+              </span>
+            )}
+          </span>
+          {product.tags && product.tags.length > 0 && <TagBadge tag={product.tags[0]} />}
+          {productNeedsCustomizer(product) && (
+            <SlidersHorizontal
+              size={16}
+              className="shrink-0 text-muted-foreground"
+              aria-label={t('customisable')}
+            />
+          )}
+          {inCartQty > 0 && (
+            <span className="shrink-0 bg-brand text-white text-xs min-w-6 h-6 px-1.5 rounded-full flex items-center justify-center font-bold">
+              {inCartQty}
+            </span>
+          )}
+          <span className="shrink-0 text-brand font-bold" style={scaledFont(1)}>
+            {fmt(Number(product.price))}
+          </span>
+        </button>
+      );
+    }
+
+    return (
+      <button
+        key={product.id}
+        data-testid="pos-product-card"
+        data-shape={cardShape}
+        style={editableLayout ? { containerType: 'inline-size' } : undefined}
+        type="button"
+        disabled={disabled}
+        onClick={selectProduct}
+        className="min-h-36 bg-card rounded-xl p-2.5 border border-border hover:border-brand/40 active:border-brand active:bg-muted/40 hover:shadow-md transition-all text-start relative cursor-pointer overflow-hidden touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {stockBadge && (
+          <span
+            className={`absolute top-2 start-2 text-[10px] font-bold px-2 py-0.5 rounded-full z-10 shadow-sm border pointer-events-none ${stockBadge.className}`}
+          >
+            {stockBadge.label}
+          </span>
+        )}
+        {inCartQty > 0 && (
+          <span className="absolute top-0 end-0 bg-brand text-white text-xs w-6 h-6 rounded-es-lg flex items-center justify-center font-bold z-10">
+            {inCartQty}
+          </span>
+        )}
+
+        {showProductImages && (
+          <div className={`w-full ${aspectClass} rounded-lg mb-3 relative overflow-hidden`}>
+            {/* Always-visible background tile — no flash when image loads */}
+            <div
+              className="absolute inset-0 flex items-center justify-center"
+              style={{ backgroundColor: nameToColor(product.name) }}
+            >
+              <span className="text-2xl font-bold text-white/80">
+                {product.name.substring(0, 2).toUpperCase()}
+              </span>
+            </div>
+
+            {/* Image overlays the tile when available */}
+            {product.has_image && (
+              <img
+                src={`${api.defaults.baseURL}/products/${product.id}/image?t=${product.updated_at ? parseDbTimestamp(product.updated_at).getTime() : 0}`}
+                alt={product.name}
+                className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            )}
+
+            {product.tags && product.tags.length > 0 && (
+              <span className="absolute bottom-1.5 end-1.5 z-10">
+                <TagBadge tag={product.tags[0]} />
+              </span>
+            )}
+          </div>
+        )}
+
+        {showProductImages || !editableLayout ? (
+          <h3
+            className="font-medium text-foreground text-sm line-clamp-2 leading-snug"
+            style={editableLayout ? scaledFont(0.875, 11) : undefined}
+          >
+            {product.name}
+          </h3>
+        ) : (
+          <div
+            data-testid="pos-product-text-tile"
+            className={`w-full ${aspectClass} rounded-lg mb-2 flex items-center justify-center px-1 py-2 text-center`}
+            style={{ backgroundColor: nameToColor(product.name) }}
+          >
+            <h3
+              className="font-bold text-white line-clamp-4 leading-tight break-words hyphens-auto"
+              style={scaledFont(1, 13)}
+            >
+              {product.name}
+            </h3>
+          </div>
+        )}
+        <div className="flex items-center justify-between mt-1">
+          <p
+            className="text-brand font-bold"
+            style={editableLayout ? scaledFont(1, 10) : undefined}
+          >
+            {fmt(Number(product.price))}
+          </p>
+          <div className="flex items-center gap-1 shrink-0">
+            {!showProductImages && product.tags && product.tags.length > 0 && (
+              <TagBadge tag={product.tags[0]} />
+            )}
+            {productNeedsCustomizer(product) && (
+              <span
+                className="touch-target -me-2 -my-2 rounded-lg text-muted-foreground"
+                title={t('customisable')}
+                aria-label={t('customisable')}
+              >
+                <SlidersHorizontal size={16} />
+              </span>
+            )}
+          </div>
+        </div>
+      </button>
+    );
+  };
+
+  const sectionViews = sections.map((section) => {
+    const key = sectionKey(section.category);
+    return (
+      <section
+        key={key}
+        data-testid="pos-category-section"
+        className={showSectionHeaders ? 'mb-5' : undefined}
+      >
+        {showSectionHeaders && (
+          <h2
+            data-testid="pos-category-section-title"
+            className="mb-2 px-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+          >
+            {section.category?.name ?? t('otherCategory')}
+          </h2>
+        )}
+        <div className={gridClass} style={gridStyle}>
+          {section.products.map((product, index) =>
+            arranging ? (
+              <SortableCard key={product.id} id={String(product.id)} index={index} group={key}>
+                {renderCard(product)}
+              </SortableCard>
+            ) : (
+              renderCard(product)
+            ),
+          )}
+        </div>
+      </section>
+    );
   });
 
   return (
@@ -433,12 +751,15 @@ export default function ProductGrid({
                   if (match.scaleBarcode) {
                     const matchedQuantity = match.quantity * quantityToAdd;
                     if (!validateSelectionQuantity(match.product, matchedQuantity)) return;
+                    noteUse(match.product);
                     onScaledProduct(match.product, matchedQuantity);
                   } else if (match.variant) {
                     if (!validateSelectionQuantity(match.product, quantityToAdd)) return;
+                    noteUse(match.product);
                     onScannedVariant(match.product, match.variant, quantityToAdd);
                   } else {
                     if (!validateSelectionQuantity(match.product, quantityToAdd)) return;
+                    noteUse(match.product);
                     onProductClick(match.product, quantityToAdd);
                   }
                   setSearch('');
@@ -451,6 +772,7 @@ export default function ProductGrid({
 
                 if (matchedProduct) {
                   if (!validateSelectionQuantity(matchedProduct, quantityToAdd)) return;
+                  noteUse(matchedProduct);
                   onProductClick(matchedProduct, quantityToAdd);
                   setSearch('');
                 }
@@ -484,213 +806,37 @@ export default function ProductGrid({
         />
       </div>
 
+      {arranging && (
+        <div
+          data-testid="pos-arrange-banner"
+          className="shrink-0 mb-2 flex items-center gap-2 rounded-xl border border-brand/40 bg-brand/10 px-3 py-2 text-sm text-foreground"
+        >
+          <GripVertical size={16} className="shrink-0 text-brand" />
+          <span className="flex-1 min-w-0">{t('arrangeCardsHint')}</span>
+          <button
+            type="button"
+            data-testid="pos-arrange-done"
+            onClick={() => setPosArrangingCards(false)}
+            className="shrink-0 rounded-lg bg-brand px-3 py-1.5 text-sm font-semibold text-white"
+          >
+            {t('arrangeCardsDone')}
+          </button>
+        </div>
+      )}
+
       {/* min-h-0 overrides the content-based automatic minimum size, so a long
           catalog scrolls inside the grid instead of growing past the viewport. */}
       <div
         data-testid="pos-catalog-scroll"
         className="flex-1 min-h-0 overflow-y-auto pb-20 md:pb-0"
       >
-        <div
-          className={`grid ${rows ? 'gap-2' : 'gap-3'} ${gridColumns ? '' : rows ? 'grid-cols-1' : (gridClassName ?? (sidebarOpen ? 'grid-cols-4' : 'grid-cols-5'))}`}
-          style={
-            gridColumns
-              ? {
-                  gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`,
-                }
-              : undefined
-          }
-        >
-          {filtered.map((product) => {
-            const inCartQty = cartQuantities.get(product.id) || 0;
-            const stockBadge = !product.track_inventory
-              ? null
-              : product.stock_quantity <= 0
-                ? {
-                    label: t('outOfStock'),
-                    className:
-                      'bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/40',
-                  }
-                : product.stock_quantity <= (product.low_stock_threshold || 0)
-                  ? {
-                      label: t('lowStock'),
-                      className:
-                        'bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800/40',
-                    }
-                  : null;
-            const selectProduct = () => {
-              if (disabled) return;
-              const quantity = parsedSearch?.quantity ?? 1;
-              if (!validateSelectionQuantity(product, quantity)) return;
-              onProductClick(product, quantity);
-            };
-
-            if (rows) {
-              return (
-                <button
-                  key={product.id}
-                  data-testid="pos-product-card"
-                  data-shape="rows"
-                  type="button"
-                  disabled={disabled}
-                  onClick={selectProduct}
-                  className="bg-card rounded-xl px-3 py-2.5 border border-border hover:border-brand/40 active:border-brand active:bg-muted/40 transition-all text-start cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 min-w-0"
-                >
-                  {showProductImages && (
-                    <span
-                      className="relative shrink-0 w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center text-xs font-bold text-white/80"
-                      style={{ backgroundColor: nameToColor(product.name) }}
-                    >
-                      {product.name.substring(0, 2).toUpperCase()}
-                      {product.has_image && (
-                        <img
-                          src={`${api.defaults.baseURL}/products/${product.id}/image?t=${product.updated_at ? parseDbTimestamp(product.updated_at).getTime() : 0}`}
-                          alt=""
-                          className="absolute inset-0 w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
-                      )}
-                    </span>
-                  )}
-                  <span className="flex-1 min-w-0">
-                    <span
-                      className="block font-medium text-foreground truncate"
-                      style={scaledFont(0.9375)}
-                    >
-                      {product.name}
-                    </span>
-                    {stockBadge && (
-                      <span
-                        className={`inline-block mt-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full border ${stockBadge.className}`}
-                      >
-                        {stockBadge.label}
-                      </span>
-                    )}
-                  </span>
-                  {product.tags && product.tags.length > 0 && <TagBadge tag={product.tags[0]} />}
-                  {productNeedsCustomizer(product) && (
-                    <SlidersHorizontal
-                      size={16}
-                      className="shrink-0 text-muted-foreground"
-                      aria-label={t('customisable')}
-                    />
-                  )}
-                  {inCartQty > 0 && (
-                    <span className="shrink-0 bg-brand text-white text-xs min-w-6 h-6 px-1.5 rounded-full flex items-center justify-center font-bold">
-                      {inCartQty}
-                    </span>
-                  )}
-                  <span className="shrink-0 text-brand font-bold" style={scaledFont(1)}>
-                    {fmt(Number(product.price))}
-                  </span>
-                </button>
-              );
-            }
-
-            return (
-              <button
-                key={product.id}
-                data-testid="pos-product-card"
-                data-shape={cardShape}
-                style={editableLayout ? { containerType: 'inline-size' } : undefined}
-                type="button"
-                disabled={disabled}
-                onClick={selectProduct}
-                className="min-h-36 bg-card rounded-xl p-2.5 border border-border hover:border-brand/40 active:border-brand active:bg-muted/40 hover:shadow-md transition-all text-start relative cursor-pointer overflow-hidden touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {stockBadge && (
-                  <span
-                    className={`absolute top-2 start-2 text-[10px] font-bold px-2 py-0.5 rounded-full z-10 shadow-sm border pointer-events-none ${stockBadge.className}`}
-                  >
-                    {stockBadge.label}
-                  </span>
-                )}
-                {inCartQty > 0 && (
-                  <span className="absolute top-0 end-0 bg-brand text-white text-xs w-6 h-6 rounded-es-lg flex items-center justify-center font-bold z-10">
-                    {inCartQty}
-                  </span>
-                )}
-
-                {showProductImages && (
-                  <div className={`w-full ${aspectClass} rounded-lg mb-3 relative overflow-hidden`}>
-                    {/* Always-visible background tile — no flash when image loads */}
-                    <div
-                      className="absolute inset-0 flex items-center justify-center"
-                      style={{ backgroundColor: nameToColor(product.name) }}
-                    >
-                      <span className="text-2xl font-bold text-white/80">
-                        {product.name.substring(0, 2).toUpperCase()}
-                      </span>
-                    </div>
-
-                    {/* Image overlays the tile when available */}
-                    {product.has_image && (
-                      <img
-                        src={`${api.defaults.baseURL}/products/${product.id}/image?t=${product.updated_at ? parseDbTimestamp(product.updated_at).getTime() : 0}`}
-                        alt={product.name}
-                        className="absolute inset-0 w-full h-full object-cover rounded-lg"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    )}
-
-                    {product.tags && product.tags.length > 0 && (
-                      <span className="absolute bottom-1.5 end-1.5 z-10">
-                        <TagBadge tag={product.tags[0]} />
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {showProductImages || !editableLayout ? (
-                  <h3
-                    className="font-medium text-foreground text-sm line-clamp-2 leading-snug"
-                    style={editableLayout ? scaledFont(0.875, 11) : undefined}
-                  >
-                    {product.name}
-                  </h3>
-                ) : (
-                  <div
-                    data-testid="pos-product-text-tile"
-                    className={`w-full ${aspectClass} rounded-lg mb-2 flex items-center justify-center px-1 py-2 text-center`}
-                    style={{ backgroundColor: nameToColor(product.name) }}
-                  >
-                    <h3
-                      className="font-bold text-white line-clamp-4 leading-tight break-words hyphens-auto"
-                      style={scaledFont(1, 13)}
-                    >
-                      {product.name}
-                    </h3>
-                  </div>
-                )}
-                <div className="flex items-center justify-between mt-1">
-                  <p
-                    className="text-brand font-bold"
-                    style={editableLayout ? scaledFont(1, 10) : undefined}
-                  >
-                    {fmt(Number(product.price))}
-                  </p>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {!showProductImages && product.tags && product.tags.length > 0 && (
-                      <TagBadge tag={product.tags[0]} />
-                    )}
-                    {productNeedsCustomizer(product) && (
-                      <span
-                        className="touch-target -me-2 -my-2 rounded-lg text-muted-foreground"
-                        title={t('customisable')}
-                        aria-label={t('customisable')}
-                      >
-                        <SlidersHorizontal size={16} />
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        {arranging ? (
+          <DragDropProvider sensors={arrangeSensors} onDragEnd={handleArrangeEnd}>
+            {sectionViews}
+          </DragDropProvider>
+        ) : (
+          sectionViews
+        )}
       </div>
     </div>
   );
