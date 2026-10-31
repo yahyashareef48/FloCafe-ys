@@ -53,7 +53,7 @@ public class PosApplication extends Application {
             for (ApplicationExitInfo exit : exits) {
                 if (exit.getTimestamp() <= seen) continue;
                 newest = Math.max(newest, exit.getTimestamp());
-                if (!isAbnormal(exit.getReason())) continue;
+                if (!isAbnormal(exit)) continue;
                 report.append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT).format(new Date(exit.getTimestamp())))
                     .append("  ").append(exit).append('\n');
             }
@@ -69,7 +69,10 @@ public class PosApplication extends Application {
         }
     }
 
-    private static boolean isAbnormal(int reason) {
+    private static boolean isAbnormal(ApplicationExitInfo exit) {
+        int reason = exit.getReason();
+        // SIGKILL is the app's own restart into a Screen, or a force stop.
+        if (reason == ApplicationExitInfo.REASON_SIGNALED && exit.getStatus() == 9) return false;
         return reason == ApplicationExitInfo.REASON_CRASH
             || reason == ApplicationExitInfo.REASON_CRASH_NATIVE
             || reason == ApplicationExitInfo.REASON_ANR

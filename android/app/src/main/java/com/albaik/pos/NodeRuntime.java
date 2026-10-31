@@ -80,7 +80,8 @@ final class NodeRuntime {
     private static boolean isWritable(File dir) {
         try {
             if (!dir.isDirectory() && !dir.mkdirs()) return false;
-            File probe = new File(dir, ".write-probe");
+            // Unique per call: the crash log and the server start can probe the same folder at once.
+            File probe = new File(dir, ".write-probe-" + android.os.Process.myPid() + "-" + System.nanoTime());
             try (OutputStream out = new FileOutputStream(probe)) {
                 out.write(1);
             }
