@@ -137,6 +137,7 @@ public class NodeService extends Service {
                 }
             });
         }
+        if (printers != null) printers.shutdown();
         ShellBridge.get().removeListener(restartWhenUnattended);
         ShellBridge.get().removeListener(advertiseWhenReady);
         if (advertisement != null) {

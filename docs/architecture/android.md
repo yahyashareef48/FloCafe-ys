@@ -180,7 +180,12 @@ day-close Z output with the desktop raw TCP path).
   `usb` printer under that name, and the name is how a job finds its device. USB jobs are sent by
   bulk transfer; Android asks once for permission, and plugging the printer in offers an "Always"
   choice that keeps it. Bluetooth jobs are sent over SPP (RFCOMM) and need the "Nearby devices"
-  permission. A `usb` printer whose name has neither tag (for example one saved by the Windows app)
+  permission. They go out in 256-byte chunks 20 ms apart, because small mobile printers drop what
+  overflows their buffer and print the rest of an image command as text, followed by 512 NUL bytes
+  that push out the job's last bytes, which such printers otherwise hold until the next job. The
+  connection stays open for 60 s after a job so the next one skips connecting, is reopened once if
+  the printer dropped it, and uses the insecure RFCOMM channel straight away for a printer that
+  refused the secure one before. A `usb` printer whose name has neither tag (for example one saved by the Windows app)
   prints to the single attached USB printer, and fails with a message when there is not exactly one.
 - **No `Intl.Segmenter` in Node.** The nodejs-mobile ICU data has no break-iterator rules, and
   `Intl.Segmenter#segment` crashes the whole app instead of throwing, so the shared print width
