@@ -183,9 +183,14 @@ day-close Z output with the desktop raw TCP path).
   permission. They go out in 256-byte chunks 20 ms apart, because small mobile printers drop what
   overflows their buffer and print the rest of an image command as text, followed by 512 NUL bytes
   that push out the job's last bytes, which such printers otherwise hold until the next job. The
-  connection stays open for 60 s after a job so the next one skips connecting, is reopened once if
-  the printer dropped it, and uses the insecure RFCOMM channel straight away for a printer that
-  refused the secure one before. A `usb` printer whose name has neither tag (for example one saved by the Windows app)
+  connection ([`BluetoothLink`](../../android/app/src/main/java/com/albaik/pos/BluetoothLink.java))
+  stays open between jobs so a bill skips connecting, and closes after two hours without a job.
+  While open it sends one NUL byte every 30 s, so a printer that went away is noticed and the
+  connection closed before the next bill; Android's ACL disconnect broadcast for the printer closes
+  it too. A kept connection that fails on a job is reopened once; a printer that refused the secure
+  RFCOMM channel before gets the insecure one straight away. Android only reports some silent drops
+  (printer out of range or unplugged without a disconnect) after the link supervision timeout, so a
+  bill sent in those seconds can be lost without an error. A `usb` printer whose name has neither tag (for example one saved by the Windows app)
   prints to the single attached USB printer, and fails with a message when there is not exactly one.
 - **No `Intl.Segmenter` in Node.** The nodejs-mobile ICU data has no break-iterator rules, and
   `Intl.Segmenter#segment` crashes the whole app instead of throwing, so the shared print width
@@ -253,6 +258,10 @@ them it signs with a key made for that run, warns that its APKs cannot be update
 publishes only the debug APKs.
 
 ### CI checks
+
+Before building, [`android/scripts/test-bluetooth-link.sh`](../../android/scripts/test-bluetooth-link.sh)
+runs `BluetoothLink` on a plain JVM against a simulated printer and clock: reuse, keep-alive, idle
+close, printers that switch off or drop the link, and 300 random shifts of 16 hours.
 
 The workflow runs the x86_64 debug APK in an emulator and inspects the live WebView over the
 DevTools protocol ([`android/scripts/ci-smoke.sh`](../../android/scripts/ci-smoke.sh)): the servers

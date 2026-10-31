@@ -239,6 +239,7 @@
     "test:android-runtime": "npm run build && ts-node --transpile-only -P tests/tsconfig.json tests/android-runtime.test.ts",
     "test:android-printing": "ts-node --transpile-only -P tests/tsconfig.json tests/android-printing.test.ts",
     "test:android-backups": "ts-node --transpile-only -P tests/tsconfig.json tests/android-backups.test.ts",
+    "test:android-bluetooth-link": "bash android/scripts/test-bluetooth-link.sh",
     "test:android-print-width": "ts-node --transpile-only -P tests/tsconfig.json tests/android-print-width.test.ts",
     "test:android-raster-surface": "ts-node --transpile-only -P tests/tsconfig.json tests/android-raster-surface.test.ts",
     "test:android-electron-api-shim": "ts-node --transpile-only -P tests/tsconfig.json tests/android-electron-api-shim.test.ts",

@@ -20,6 +20,7 @@ import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.os.ParcelUuid;
+import android.os.SystemClock;
 import android.util.Base64;
 import android.util.Log;
 
@@ -34,14 +35,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
@@ -70,28 +70,73 @@ final class PrinterHub {
     // Some mobile printers hold the last bytes of a job until more data arrives, so the end of a
     // bill and its paper feed only print with the next job. NUL is ignored by ESC/POS printers.
     private static final int BLUETOOTH_TAIL_PADDING_BYTES = 512;
-    // The connection stays open between jobs (connecting takes seconds); closing it discards
-    // bytes not yet sent, so it is only closed once the printer has long finished.
-    private static final long BLUETOOTH_IDLE_CLOSE_MS = 60_000;
+    // The connection stays open between jobs (connecting takes seconds) and through quiet hours of
+    // a shift, then closes so a printer left on overnight is free again.
+    private static final long BLUETOOTH_IDLE_CLOSE_MS = 2 * 60 * 60_000;
+    private static final long BLUETOOTH_KEEP_ALIVE_MS = 30_000;
+    private static final long BLUETOOTH_TICK_MS = 5_000;
 
     private final Context context;
     // One job at a time: printers do not interleave two jobs, and USB claims are exclusive.
     private final ExecutorService io = Executors.newSingleThreadExecutor();
-    private final ScheduledExecutorService idleTimer = Executors.newSingleThreadScheduledExecutor();
-    private final Set<String> insecureFirst = new HashSet<>();
+    private final ScheduledExecutorService ticker = Executors.newSingleThreadScheduledExecutor();
     // Touched only on the io thread.
-    private BluetoothSocket btSocket;
-    private OutputStream btOut;
-    private String btAddress;
-    private ScheduledFuture<?> btIdleClose;
+    private final Set<String> insecureFirst = new HashSet<>();
+    private final BluetoothLink bluetooth;
+    private final BroadcastReceiver bluetoothDropped = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context c, Intent intent) {
+            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            if (device == null) return;
+            String address = device.getAddress();
+            runOnIo(() -> bluetooth.dropped(address));
+        }
+    };
 
     PrinterHub(Context context) {
         this.context = context.getApplicationContext();
+        bluetooth = new BluetoothLink(
+            this::connectBluetooth,
+            new BluetoothLink.Clock() {
+                @Override
+                public long nowMs() {
+                    return SystemClock.elapsedRealtime();
+                }
+
+                @Override
+                public void sleep(long ms) throws InterruptedException {
+                    Thread.sleep(ms);
+                }
+            },
+            step -> Breadcrumbs.note(this.context, step),
+            BLUETOOTH_CHUNK_BYTES,
+            BLUETOOTH_CHUNK_PAUSE_MS,
+            BLUETOOTH_TAIL_PADDING_BYTES,
+            BLUETOOTH_IDLE_CLOSE_MS,
+            BLUETOOTH_KEEP_ALIVE_MS);
     }
 
     void register(ShellBridge bridge) {
         bridge.registerServiceHandler("printerList", (method, params, reply) -> io.execute(() -> guarded(reply, () -> list(reply))));
         bridge.registerServiceHandler("printerSend", (method, params, reply) -> io.execute(() -> guarded(reply, () -> send(params, reply))));
+        // Sent by the Bluetooth app rather than the system, so only an exported receiver gets it.
+        ContextCompat.registerReceiver(context, bluetoothDropped, new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED), ContextCompat.RECEIVER_EXPORTED);
+        ticker.scheduleWithFixedDelay(() -> runOnIo(bluetooth::tick), BLUETOOTH_TICK_MS, BLUETOOTH_TICK_MS, TimeUnit.MILLISECONDS);
+    }
+
+    /** Runs housekeeping on the print thread; a failure there must not end the app. */
+    private void runOnIo(Runnable task) {
+        try {
+            io.execute(() -> {
+                try {
+                    task.run();
+                } catch (Throwable e) {
+                    Log.e(TAG, "Bluetooth housekeeping failed", e);
+                }
+            });
+        } catch (RejectedExecutionException stopped) {
+            // The service is stopping.
+        }
     }
 
     /** An exception on the print thread would end the whole app; report it to the caller instead. */
@@ -266,73 +311,63 @@ final class PrinterHub {
         if (adapter == null) return "This tablet has no Bluetooth.";
         if (!hasBluetoothPermission()) return "Allow Al Baik POS to use nearby devices (Bluetooth) in Android settings.";
         try {
-            if (!adapter.isEnabled()) return "Bluetooth is off. Turn it on and print again.";
-            byte[] job = Arrays.copyOf(data, data.length + BLUETOOTH_TAIL_PADDING_BYTES);
-            boolean reused = address.equals(btAddress) && btOut != null;
-            try {
-                writePaced(openBluetooth(adapter, address), job);
-            } catch (IOException staleConnection) {
-                closeBluetooth();
-                // A kept connection the printer dropped (switched off, out of range) fails on first
-                // write; connect again once. A fresh connection that fails is a real failure.
-                if (!reused) throw staleConnection;
-                Breadcrumbs.note(context, "bluetooth: kept connection failed (" + staleConnection.getMessage() + "), reconnecting");
-                writePaced(openBluetooth(adapter, address), job);
+            if (!adapter.isEnabled()) {
+                bluetooth.close("Bluetooth is off");
+                return "Bluetooth is off. Turn it on and print again.";
             }
+            bluetooth.send(address, data);
             Breadcrumbs.note(context, "bluetooth: sent " + data.length + " bytes");
-            scheduleIdleClose();
             return null;
         } catch (IOException e) {
-            closeBluetooth();
             return "Could not reach the Bluetooth printer " + address + ". Check that it is on and paired. (" + e.getMessage() + ")";
         } catch (SecurityException e) {
-            closeBluetooth();
             return "Allow Al Baik POS to use nearby devices (Bluetooth) in Android settings.";
         }
     }
 
-    private OutputStream openBluetooth(BluetoothAdapter adapter, String address) throws IOException {
-        if (btIdleClose != null) btIdleClose.cancel(false);
-        if (address.equals(btAddress) && btOut != null) return btOut;
-        closeBluetooth();
+    private BluetoothLink.Connection connectBluetooth(String address) throws IOException {
+        BluetoothAdapter adapter = bluetoothAdapter();
+        if (adapter == null) throw new IOException("no Bluetooth adapter");
         stopDiscovery(adapter);
-        Breadcrumbs.note(context, "bluetooth: connecting to " + address);
-        btSocket = connectSpp(adapter.getRemoteDevice(address));
-        btOut = btSocket.getOutputStream();
-        btAddress = address;
-        Breadcrumbs.note(context, "bluetooth: connected");
-        return btOut;
-    }
-
-    private static void writePaced(OutputStream out, byte[] job) throws IOException, InterruptedException {
-        for (int offset = 0; offset < job.length; offset += BLUETOOTH_CHUNK_BYTES) {
-            out.write(job, offset, Math.min(BLUETOOTH_CHUNK_BYTES, job.length - offset));
-            out.flush();
-            Thread.sleep(BLUETOOTH_CHUNK_PAUSE_MS);
+        BluetoothSocket socket = connectSpp(adapter.getRemoteDevice(address));
+        OutputStream out;
+        try {
+            out = socket.getOutputStream();
+        } catch (IOException e) {
+            closeQuietly(socket);
+            throw e;
         }
-    }
-
-    private void scheduleIdleClose() {
-        btIdleClose = idleTimer.schedule(() -> io.execute(this::closeBluetooth), BLUETOOTH_IDLE_CLOSE_MS, TimeUnit.MILLISECONDS);
-    }
-
-    private void closeBluetooth() {
-        if (btSocket != null) {
-            try {
-                btSocket.close();
-            } catch (IOException e) {
-                Log.w(TAG, "Closing the Bluetooth printer connection failed", e);
+        return new BluetoothLink.Connection() {
+            @Override
+            public void write(byte[] data, int offset, int length) throws IOException {
+                out.write(data, offset, length);
+                out.flush();
             }
+
+            @Override
+            public void close() {
+                closeQuietly(socket);
+            }
+        };
+    }
+
+    private static void closeQuietly(BluetoothSocket socket) {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            Log.w(TAG, "Closing the Bluetooth printer connection failed", e);
         }
-        btSocket = null;
-        btOut = null;
-        btAddress = null;
     }
 
     /** Closes a kept printer connection; called when the service stops. */
     void shutdown() {
-        idleTimer.shutdownNow();
-        io.execute(this::closeBluetooth);
+        ticker.shutdownNow();
+        try {
+            context.unregisterReceiver(bluetoothDropped);
+        } catch (IllegalArgumentException notRegistered) {
+            // register() never ran.
+        }
+        runOnIo(() -> bluetooth.close("app stopping"));
         io.shutdown();
     }
 
