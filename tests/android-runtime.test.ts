@@ -269,6 +269,11 @@ async function run(child: ChildProcess, output: () => string): Promise<void> {
     0,
     'the temporary printer is removed',
   );
+  const probe = (await hostAction('/format-probe')).result;
+  assertOrThrow(
+    Number(probe['formatReceipt SR588 profile']) > 0,
+    `the format probe runs every receipt formatting step (${JSON.stringify(probe)})`,
+  );
   const mainLog = fs.readFileSync(path.join(userData, 'logs', 'main.log'), 'utf8');
   assertOrThrow(
     mainLog.includes('printViaUSB called') &&

@@ -80,6 +80,10 @@ async function main() {
   await check('a Bluetooth print does not ask for permissions the app already has', `${!/nearby devices/.test(String(sent.detail))}`, true);
   await check('the app is still running after the Bluetooth print', `${pidOf() === pidBefore && pidBefore !== ''}`, true);
 
+  // Each formatting step on its own; logs/format-probe.log names the one that crashes, if any.
+  const probe = (await evaluate(nativeCall('hostAction', { route: '/format-probe', body: {} }))).result || {};
+  console.log(`format probe: ${JSON.stringify(probe)}`);
+  await check('every receipt formatting step runs on the device', `${Number(probe['formatReceipt SR588 profile']) > 0}`, true);
   // A tablet closed while building a real bill, before any printer step; run the same path here.
   const receiptRun = (await evaluate(nativeCall('hostAction', { route: '/printing-self-test', body: { receipt: true, printTo: 'SR588 (Bluetooth 00:11:22:AA:BB:CC)' } }))).result || {};
   console.log(`receipt print: ${JSON.stringify(receiptRun.receipt)}`);

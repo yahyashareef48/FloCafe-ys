@@ -44,6 +44,9 @@ if [ "$ok" = 1 ]; then
   checks=${PIPESTATUS[0]}
 fi
 
+echo "--- Receipt formatting steps reached on the device ---"
+adb shell run-as "$PKG" cat no_backup/flo-data/logs/format-probe.log 2>&1 | tee "$OUT/format-probe.log" || true
+
 update_checks=0
 if [ "$checks" = 0 ] && [ -n "$RELEASE_APK" ]; then
   echo "--- Updating to the release APK keeps the tablet's data ---"

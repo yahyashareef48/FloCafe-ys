@@ -28,7 +28,13 @@ import {
 import { platformApp, platformPrinters, platformRasterRenderer } from '../platform';
 import { createBackup, getDatabase } from '../db';
 import { retainBackupLocally } from '../services/local-backup';
-import { printReceipt, printViaUSB } from '../printers/thermal';
+import {
+  formatReceipt,
+  printReceipt,
+  printViaUSB,
+  resolvePrinterContext,
+} from '../printers/thermal';
+import { getCurrencySymbol } from '../countries';
 import { callNative } from './native-bridge';
 
 /** Folder for manual backups; the shell then offers to copy the file anywhere the operator picks. */
@@ -226,6 +232,102 @@ async function printSelfTestReceipt(printTo: string) {
 }
 
 /**
+ * Runs the steps a bill's formatting takes, one at a time, writing each step's name to
+ * logs/format-probe.log and syncing it before the step runs, so after a native crash the last
+ * line names the step that crashed.
+ */
+export function androidFormatProbe() {
+  const file = path.join(platformApp().getPath('userData'), 'logs', 'format-probe.log');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, '');
+  const order = {
+    order_number: 'ORD-PROBE-0001',
+    created_at: '2026-10-31 14:51:43',
+    items: [
+      {
+        product_name: 'Paneer Tikka',
+        quantity: 1,
+        unit_price: 250,
+        total: 250,
+        tax_amount: 0,
+        addons: [],
+      },
+    ],
+  };
+  const bill = { bill_number: 'INV-PROBE-0001', subtotal: 250, tax_amount: 0, total: 250, order };
+  const business = { name: 'Al Baik', currency: 'INR', country: 'IN', timezone: 'Asia/Kolkata' };
+  const date = new Date('2026-10-31T09:21:43Z');
+  const steps: [string, () => unknown][] = [
+    [
+      'icu versions',
+      () => `${process.versions.icu} ${process.versions.unicode} ${process.versions.tz}`,
+    ],
+    ['currency symbol INR en-IN', () => getCurrencySymbol('INR', 'en-IN')],
+    [
+      'Intl.NumberFormat en-IN INR',
+      () => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(550),
+    ],
+    ['regex Script=Latin', () => /\p{Script=Latin}/u.test('Paneer')],
+    ['regex Letter', () => /\p{Letter}/u.test('Paneer')],
+    ['toLocaleDateString en-IN', () => date.toLocaleDateString('en-IN-u-nu-latn')],
+    ['toLocaleTimeString en-IN', () => date.toLocaleTimeString('en-IN-u-nu-latn')],
+    [
+      'toLocaleDateString Asia/Kolkata',
+      () => date.toLocaleDateString('en-IN-u-nu-latn', { timeZone: 'Asia/Kolkata' }),
+    ],
+    [
+      'toLocaleTimeString Asia/Kolkata',
+      () => date.toLocaleTimeString('en-IN-u-nu-latn', { timeZone: 'Asia/Kolkata' }),
+    ],
+    ['toLocaleString en-US', () => date.toLocaleString('en-US-u-nu-latn')],
+    ['String.normalize NFD', () => 'café'.normalize('NFD').length],
+    [
+      'Intl.Segmenter grapheme',
+      () => [...new Intl.Segmenter('en', { granularity: 'grapheme' }).segment('₹250')].length,
+    ],
+    ['formatReceipt generic', () => formatReceipt(order, bill, business, 'classic', 32).length],
+    [
+      'formatReceipt SR588 profile',
+      () => {
+        const { capabilities } = resolvePrinterContext({
+          name: 'SR588 (Bluetooth 00:11:22:AA:BB:CC)',
+          paper_width: 'cols-32',
+        });
+        return formatReceipt(
+          order,
+          bill,
+          business,
+          'classic',
+          32,
+          false,
+          false,
+          'full',
+          [],
+          false,
+          'en',
+          undefined,
+          capabilities,
+        ).length;
+      },
+    ],
+  ];
+  const results: Record<string, unknown> = {};
+  for (const [name, run] of steps) {
+    const fd = fs.openSync(file, 'a');
+    fs.writeSync(fd, `${name}\n`);
+    fs.fsyncSync(fd);
+    fs.closeSync(fd);
+    try {
+      results[name] = run();
+    } catch (error) {
+      results[name] = `threw: ${(error as Error).message}`;
+    }
+    fs.appendFileSync(file, `  -> ${JSON.stringify(results[name])}\n`);
+  }
+  return results;
+}
+
+/**
  * Writes a manual backup and publishes a copy into the daily-backup folder on the device's real
  * storage, then removes both, for diagnostics and CI. Reports whether that storage has hard links.
  */
@@ -267,6 +369,7 @@ export function createAndroidHostActionHandler(shutdownSignal?: AbortSignal): Ho
     extraRoutes: {
       '/printing-self-test': (b) => androidPrintingSelfTest(b),
       '/storage-self-test': () => androidStorageSelfTest(),
+      '/format-probe': () => androidFormatProbe(),
     },
     appInfo: () => ({
       version: platformApp().getVersion(),
