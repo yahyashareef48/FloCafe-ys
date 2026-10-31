@@ -488,11 +488,16 @@ Router: `main/routes/payment-methods.ts`. Full path: `/api/payment-methods`.
 | Method   | Path             | Authorization              | Parameters                                          | Response                                                |
 | -------- | ---------------- | -------------------------- | --------------------------------------------------- | ------------------------------------------------------- |
 | `GET`    | `/merge-history` | `ROLE_ACCESS.ownerManager` | none                                                | Record of method merges.                                |
-| `GET`    | `/`              | `ROLE_ACCESS.allStaff`     | query: `?include_inactive`                          | `{ payment_methods: [ ... ] }`.                         |
+| `GET`    | `/`              | `ROLE_ACCESS.allStaff`     | query: `?include_inactive`                          | `{ payment_methods: [ ... ], card_enabled }`.           |
 | `POST`   | `/`              | `ROLE_ACCESS.ownerManager` | body: `name`                                        | -                                                       |
 | `PUT`    | `/:id`           | `ROLE_ACCESS.ownerManager` | path: `id`; body: `name`, `is_active`, `sort_order` | -                                                       |
 | `DELETE` | `/:id`           | `ROLE_ACCESS.ownerManager` | path: `id`                                          | -                                                       |
 | `POST`   | `/:id/merge`     | `ROLE_ACCESS.ownerManager` | path: `id`; body: `target_type`, `target_id`        | Folds a method into another; paid history is rewritten. |
+
+`payment_methods` are the store's own methods; migration 118 adds an active `UPI` method unless the
+store already has one. `card_enabled` mirrors the `card_payments_enabled` setting (default
+`false`): the POS payment and prepaid checkout dialogs offer the built-in Card tender only when it is
+`true`. Card payments are still accepted by the API, and refunds and reports keep showing them.
 
 ### Cash sessions
 

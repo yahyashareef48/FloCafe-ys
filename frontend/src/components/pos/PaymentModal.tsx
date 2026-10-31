@@ -31,7 +31,12 @@ import { resolveTaxComponents } from '@/lib/printer/tax-components';
 import { useCartStore } from '@/store/cart';
 import { useConfirm } from '@/hooks/use-confirm';
 import { useTranslations, useLocale, type AppConfig } from 'use-intl';
-import { PAYMENT_METHODS, type CustomPaymentMethod } from '@/lib/payment-methods';
+import {
+  PAYMENT_METHODS,
+  checkoutPaymentMethods,
+  customPaymentMethodIcon,
+  type CustomPaymentMethod,
+} from '@/lib/payment-methods';
 import { useFormatCurrency } from '@/hooks/useFormatCurrency';
 import { useFormatNumber } from '@/hooks/useFormatNumber';
 import { useCurrencyUnitAdapter } from '@/hooks/useCurrencyUnitAdapter';
@@ -181,7 +186,7 @@ export default function PaymentModal({
   const [sendingWa, setSendingWa] = useState(false);
   const [pointsEarned, setPointsEarned] = useState(0);
   const [payments, setPayments] = useState<Payment[]>(
-    PAYMENT_METHODS.map((method) => ({ method: method.key, amount: '' })),
+    checkoutPaymentMethods(false).map((method) => ({ method: method.key, amount: '' })),
   );
   // Tracks whether the cashier has manually typed a split amount — once true, we stop
   // auto-rescaling payment splits (e.g. on discount edits) so we don't clobber their entry.
@@ -588,7 +593,7 @@ export default function PaymentModal({
         const methods: CustomPaymentMethod[] = res.data.payment_methods || [];
         setCustomMethods(methods);
         setPayments((current) => [
-          ...PAYMENT_METHODS.map(
+          ...checkoutPaymentMethods(res.data.card_enabled === true).map(
             (method) =>
               current.find(
                 (row) => row.method === method.key && row.payment_method_id === undefined,
@@ -2037,7 +2042,11 @@ export default function PaymentModal({
                     method.key === payment.method && payment.payment_method_id === undefined,
                 );
                 const label = tenderLabel(payment);
-                const Icon = builtIn?.icon;
+                const custom = customMethods.find(
+                  (method) => method.id === payment.payment_method_id,
+                );
+                const Icon =
+                  builtIn?.icon ?? (custom ? customPaymentMethodIcon(custom.name) : undefined);
                 const active = (parseFloat(payment.amount) || 0) > 0;
                 const isAppliedShare = appliedEqualShare?.index === idx;
                 return (

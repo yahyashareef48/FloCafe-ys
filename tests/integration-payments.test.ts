@@ -38,7 +38,7 @@ async function main() {
   console.log('='.repeat(50));
 
   const db = initTestDb();
-  db.prepare("INSERT INTO payment_methods (name, is_active, sort_order, created_at, updated_at) VALUES ('UPI', 1, 10, ?, ?)").run(now(), now());
+  db.prepare("INSERT OR IGNORE INTO payment_methods (name, is_active, sort_order, created_at, updated_at) VALUES ('UPI', 1, 10, ?, ?)").run(now(), now());
 
   // Seed base data
   const { authHeader } = seedOwnerUser(db);

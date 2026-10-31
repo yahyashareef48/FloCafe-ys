@@ -7777,6 +7777,16 @@ export const MIGRATIONS: { version: number; name: string; up: () => void }[] = [
       addOrderItemCol('ingredient_cost_known', 'INTEGER NOT NULL DEFAULT 0');
     },
   },
+  {
+    version: 118,
+    name: 'seed_upi_payment_method',
+    up: () => {
+      // UPI is offered at checkout by default; a store that already has it keeps its own row.
+      db.prepare(
+        `INSERT OR IGNORE INTO payment_methods (name, is_active, sort_order, created_at, updated_at) VALUES ('UPI', 1, 0, ?, ?)`,
+      ).run(now(), now());
+    },
+  },
 ];
 
 function syncBackupBeforeMigration(fromVersion: number, toVersion: number): void {

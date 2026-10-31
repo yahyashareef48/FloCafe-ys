@@ -426,6 +426,12 @@ async function runModalKeypadIntegrationTests() {
         { key: 'cash', icon: Icon },
         { key: 'card', icon: Icon },
       ],
+      checkoutPaymentMethods: (cardEnabled: boolean) =>
+        [
+          { key: 'cash', icon: Icon },
+          { key: 'card', icon: Icon },
+        ].filter((method) => cardEnabled || method.key !== 'card'),
+      customPaymentMethodIcon: () => undefined,
     },
     '@/hooks/useFormatCurrency': { useFormatCurrency: () => (amount: number) => String(amount) },
     '@/hooks/useFormatNumber': { useFormatNumber: () => (amount: number) => String(amount) },

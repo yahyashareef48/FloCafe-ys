@@ -79,7 +79,16 @@ async function main() {
     const printerColumns = db.prepare('PRAGMA table_info(printers)').all().map((column: any) => column.name);
     assert(!printerColumns.includes('usb_device_path'), 'fresh printer schema does not keep ignored USB device path column');
     const freshMethods = await api(baseUrl, '/api/payment-methods', { headers: authHeader });
-    assertEqual(freshMethods.data.payment_methods.length, 0, 'fresh install has no custom methods and no seeded UPI');
+    assertEqualOrThrow(JSON.stringify(freshMethods.data.payment_methods.map((m: any) => [m.name, m.is_active])), '[["UPI",true]]', 'fresh install offers UPI as its one store payment method');
+    assertEqualOrThrow(freshMethods.data.card_enabled, false, 'Card is hidden at checkout by default');
+    db.prepare("UPDATE payment_methods SET name = 'upi', is_active = 0 WHERE name = 'UPI'").run();
+    MIGRATIONS.find((migration: any) => migration.version === 118).up();
+    assertEqualOrThrow(JSON.stringify(db.prepare('SELECT name, is_active FROM payment_methods').all()), '[{"name":"upi","is_active":0}]', 'the UPI migration leaves a store\'s own UPI row alone');
+    db.prepare("UPDATE payment_methods SET name = 'UPI', is_active = 1 WHERE name = 'upi'").run();
+    const cardOn = await api(baseUrl, '/api/settings/card_payments_enabled', { method: 'PUT', body: { value: 'true' }, headers: authHeader });
+    assertEqualOrThrow(cardOn.status, 200, 'Card can be turned back on');
+    assertEqualOrThrow((await api(baseUrl, '/api/payment-methods', { headers: authHeader })).data.card_enabled, true, 'checkout offers Card once turned on');
+    await api(baseUrl, '/api/settings/card_payments_enabled', { method: 'PUT', body: { value: 'false' }, headers: authHeader });
     const add = await api(baseUrl, '/api/payment-methods', { method: 'POST', body: { name: 'Google Pay' }, headers: authHeader });
     assertEqual(add.status, 201, 'custom payment method added');
     const googlePayId = add.data.payment_method.id;

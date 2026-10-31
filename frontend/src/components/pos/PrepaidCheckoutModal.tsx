@@ -19,7 +19,12 @@ import { useTaxPreview } from '@/hooks/use-tax-preview';
 import { useTranslations, type AppConfig } from 'use-intl';
 import TaxBreakdown from '@/components/pos/TaxBreakdown';
 import toast from 'react-hot-toast';
-import { PAYMENT_METHODS, type CustomPaymentMethod } from '@/lib/payment-methods';
+import {
+  PAYMENT_METHODS,
+  checkoutPaymentMethods,
+  customPaymentMethodIcon,
+  type CustomPaymentMethod,
+} from '@/lib/payment-methods';
 import { useFormatCurrency } from '@/hooks/useFormatCurrency';
 import { useFormatNumber } from '@/hooks/useFormatNumber';
 import { useCurrencyUnitAdapter } from '@/hooks/useCurrencyUnitAdapter';
@@ -221,7 +226,7 @@ export default function PrepaidCheckoutModal({
   }, [loadCharges]);
 
   const [payments, setPayments] = useState<Payment[]>(
-    PAYMENT_METHODS.map((method) => ({ method: method.key, amount: '' })),
+    checkoutPaymentMethods(false).map((method) => ({ method: method.key, amount: '' })),
   );
   // Tracks whether the cashier has manually typed a split amount — once true, we stop
   // auto-rescaling payment splits (e.g. on discount edits) so we don't clobber their entry.
@@ -279,7 +284,7 @@ export default function PrepaidCheckoutModal({
         const methods: CustomPaymentMethod[] = res.data.payment_methods || [];
         setCustomMethods(methods);
         setPayments((current) => [
-          ...PAYMENT_METHODS.map(
+          ...checkoutPaymentMethods(res.data.card_enabled === true).map(
             (method) =>
               current.find(
                 (row) => row.method === method.key && row.payment_method_id === undefined,
@@ -944,7 +949,8 @@ export default function PrepaidCheckoutModal({
               const label = builtIn
                 ? t(BUILT_IN_PAYMENT_KEYS[builtIn.key])
                 : custom?.name || tCommon('unknown');
-              const Icon = builtIn?.icon;
+              const Icon =
+                builtIn?.icon ?? (custom ? customPaymentMethodIcon(custom.name) : undefined);
               const active = (parseFloat(payment.amount) || 0) > 0;
               return (
                 <div

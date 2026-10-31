@@ -27,7 +27,7 @@ async function main() {
   if ((db.prepare("SELECT COUNT(*) as c FROM settings WHERE key = 'timezone'").get() as any).c === 0) {
     db.prepare("INSERT INTO settings (key, value) VALUES ('timezone', 'UTC')").run();
   }
-  db.prepare("INSERT INTO payment_methods (name, is_active, sort_order, created_at, updated_at) VALUES ('UPI', 1, 10, ?, ?)").run(now(), now());
+  db.prepare("INSERT OR IGNORE INTO payment_methods (name, is_active, sort_order, created_at, updated_at) VALUES ('UPI', 1, 10, ?, ?)").run(now(), now());
   const { authHeader } = seedOwnerUser(db);
   const { authHeader: secondUserAuth } = seedManagerUser(db);
   seedCategory(db, 'cat-214', 'Issue 214 menu');

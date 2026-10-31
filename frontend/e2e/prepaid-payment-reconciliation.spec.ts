@@ -159,9 +159,20 @@ test('prepaid checkout preserves the saved discount and bill when retrying after
   );
   expect(originalCardRefRes.ok()).toBeTruthy();
   const originalCardRefRequired = (await originalCardRefRes.json())?.setting?.value === 'true';
+  const originalCardEnabledRes = await request.get(`${BASE}/api/settings/card_payments_enabled`, {
+    headers: managerHeaders,
+  });
+  expect(originalCardEnabledRes.ok()).toBeTruthy();
+  const originalCardEnabled = (await originalCardEnabledRes.json())?.setting?.value ?? 'false';
   const cleanupRequest = await playwrightRequest.newContext();
 
   try {
+    // Card is hidden at checkout by default; this check pays by card.
+    const enableCardRes = await request.put(`${BASE}/api/settings/card_payments_enabled`, {
+      headers: managerHeaders,
+      data: { value: 'true' },
+    });
+    expect(enableCardRes.ok()).toBeTruthy();
     const enableDiscountRes = await request.put(`${BASE}/api/settings/discount`, {
       headers: managerHeaders,
       data: {
@@ -279,6 +290,10 @@ test('prepaid checkout preserves the saved discount and bill when retrying after
     await cleanupRequest.put(`${BASE}/api/settings/card_transaction_id_required`, {
       headers: managerHeaders,
       data: { value: originalCardRefRequired },
+    });
+    await cleanupRequest.put(`${BASE}/api/settings/card_payments_enabled`, {
+      headers: managerHeaders,
+      data: { value: originalCardEnabled },
     });
     await cleanupRequest.dispose();
   }

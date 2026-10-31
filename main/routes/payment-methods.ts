@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getDatabase, now, withTxn } from '../db';
+import { getDatabase, getSettingValue, now, withTxn } from '../db';
 import { requirePermission, hasPermission } from '../services/authorization';
 import { sendEvent } from '../services/telemetry';
 
@@ -37,7 +37,11 @@ router.get('/merge-history', requirePermission('payment-methods.manage'), (_req,
 
 router.get('/', requirePermission('payment-methods.view'), (req: Request, res: Response) => {
   const includeInactive = req.query.include_inactive === 'true' && hasPermission((req as any).user.userId, 'payment-methods.manage');
-  res.json({ payment_methods: list(includeInactive) });
+  res.json({
+    payment_methods: list(includeInactive),
+    // Card is hidden at checkout unless the store turns it on; old card bills and refunds keep it.
+    card_enabled: getSettingValue('card_payments_enabled') === 'true',
+  });
 });
 
 router.post('/', requirePermission('payment-methods.manage'), (req: Request, res: Response) => {

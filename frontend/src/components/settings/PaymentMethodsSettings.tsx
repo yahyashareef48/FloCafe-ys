@@ -30,6 +30,7 @@ export function PaymentMethodsSettings({ isAdmin }: { isAdmin: boolean }) {
     { key: 'wallet', labelKey: 'loyaltyWallet' },
   ] as const;
   const [methods, setMethods] = useState<CustomPaymentMethod[]>([]);
+  const [cardPaymentsEnabled, setCardPaymentsEnabled] = useState(false);
   const [names, setNames] = useState<Record<number, string>>({});
   const [newName, setNewName] = useState('');
   const [mergeTargets, setMergeTargets] = useState<Record<number, string>>({});
@@ -73,6 +74,7 @@ export function PaymentMethodsSettings({ isAdmin }: { isAdmin: boolean }) {
     ]);
     const rows = methodsRes.data.payment_methods || [];
     setMethods(rows);
+    setCardPaymentsEnabled(methodsRes.data.card_enabled === true);
     setNames(Object.fromEntries(rows.map((row: CustomPaymentMethod) => [row.id, row.name])));
     setMerges(historyRes.data.merges || []);
     setSplitChecksEnabled(splitRes.data?.setting?.value === 'true');
@@ -141,9 +143,35 @@ export function PaymentMethodsSettings({ isAdmin }: { isAdmin: boolean }) {
         <p className="text-sm text-muted-foreground mb-5">{t('paymentMethodsHint')}</p>
         <div className="rounded-lg border border-border divide-y">
           {builtInMethods.map((method) => (
-            <div key={method.key} className="px-3 py-2 flex justify-between text-sm">
+            <div
+              key={method.key}
+              className="px-3 py-2 flex items-center justify-between gap-3 text-sm"
+            >
               <span>{tPos(method.labelKey)}</span>
-              <span className="text-xs text-gray-400">{t('builtIn')}</span>
+              {method.key === 'card' ? (
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {t('cardShownAtCheckout')}
+                  <input
+                    type="checkbox"
+                    data-testid="card-payments-enabled"
+                    className="size-4"
+                    disabled={!isAdmin}
+                    checked={cardPaymentsEnabled}
+                    onChange={async (e) => {
+                      const value = e.target.checked;
+                      setCardPaymentsEnabled(value);
+                      try {
+                        await api.put('/settings/card_payments_enabled', { value: String(value) });
+                      } catch {
+                        setCardPaymentsEnabled(!value);
+                        toast.error(t('saveFailed'));
+                      }
+                    }}
+                  />
+                </label>
+              ) : (
+                <span className="text-xs text-gray-400">{t('builtIn')}</span>
+              )}
             </div>
           ))}
         </div>

@@ -167,6 +167,7 @@ const OPTIONAL_SETTING_DEFAULTS: Record<string, string> = {
   printer_trim_decimals: 'false',
   split_checks_enabled: 'false',
   card_transaction_id_required: 'false',
+  card_payments_enabled: 'false',
   // Print language policies (#441) — inherit store language, no second
   // language. Defaults preserve pre-policy behavior for existing tenants.
   [BILL_LANGUAGE_POLICY_KEY]: defaultLanguagePolicySettingJson(),
@@ -1737,6 +1738,7 @@ const ALLOWED_WILDCARD_KEYS = new Set([
   'server_app_bill_printing_enabled',
   'split_checks_enabled',
   'card_transaction_id_required',
+  'card_payments_enabled',
   BILL_LANGUAGE_POLICY_KEY,
   KOT_LANGUAGE_POLICY_KEY,
   Z_REPORT_LANGUAGE_POLICY_KEY,

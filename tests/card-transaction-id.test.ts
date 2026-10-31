@@ -210,7 +210,7 @@ function verifyPrepaidCheckoutModalDiscountPreservation(): void {
             return syncPromise({ setting: { value: 'true' } });
           }
           if (url === '/payment-methods') {
-            return syncPromise({ payment_methods: [] });
+            return syncPromise({ payment_methods: [], card_enabled: true });
           }
           return syncPromise({});
         },
@@ -246,6 +246,12 @@ function verifyPrepaidCheckoutModalDiscountPreservation(): void {
         { key: 'cash', icon: Icon },
         { key: 'card', icon: Icon },
       ],
+      checkoutPaymentMethods: (cardEnabled: boolean) =>
+        [
+          { key: 'cash', icon: Icon },
+          { key: 'card', icon: Icon },
+        ].filter((method) => cardEnabled || method.key !== 'card'),
+      customPaymentMethodIcon: () => undefined,
     },
     '@/hooks/useFormatCurrency': {
       useFormatCurrency: () => (amount: number) => `฿${amount.toFixed(2)}`,

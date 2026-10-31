@@ -294,8 +294,20 @@ function paymentRequestBodies(page: Page): unknown[] {
 
 test.describe('equal share payments', () => {
   let fixture: Fixture;
+  let cardEnabledBefore = 'false';
 
   test.beforeAll(async ({ request }) => {
+    // Card is hidden at checkout by default; these checks split across it.
+    const card = await request.get(`${BASE}/api/settings/card_payments_enabled`, {
+      headers: managerHeaders,
+    });
+    expect(card.ok()).toBeTruthy();
+    cardEnabledBefore = (await card.json())?.setting?.value ?? 'false';
+    const enable = await request.put(`${BASE}/api/settings/card_payments_enabled`, {
+      headers: managerHeaders,
+      data: { value: 'true' },
+    });
+    expect(enable.ok()).toBeTruthy();
     const suffix = Math.random().toString(36).slice(2, 8);
     const categoryId = await activeCategoryId(request);
     fixture = {
@@ -306,6 +318,10 @@ test.describe('equal share payments', () => {
   });
 
   test.afterAll(async ({ request }) => {
+    await request.put(`${BASE}/api/settings/card_payments_enabled`, {
+      headers: managerHeaders,
+      data: { value: cardEnabledBefore },
+    });
     // The suite shares a database; the fixture products are soft-deleted so no
     // later spec sees them in the catalog.
     await request.delete(`${BASE}/api/products/${fixture.productId}`, { headers: managerHeaders });
