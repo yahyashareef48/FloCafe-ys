@@ -243,7 +243,7 @@ final class PrinterHub {
         if (!hasBluetoothPermission()) return "Allow Al Baik POS to use nearby devices (Bluetooth) in Android settings.";
         try {
             if (!adapter.isEnabled()) return "Bluetooth is off. Turn it on and print again.";
-            adapter.cancelDiscovery();
+            stopDiscovery(adapter);
             BluetoothDevice device = adapter.getRemoteDevice(address);
             BluetoothSocket socket = connectSpp(device);
             try (OutputStream out = socket.getOutputStream()) {
@@ -261,6 +261,22 @@ final class PrinterHub {
             return "Could not reach the Bluetooth printer " + address + ". Check that it is on and paired. (" + e.getMessage() + ")";
         } catch (SecurityException e) {
             return "Allow Al Baik POS to use nearby devices (Bluetooth) in Android settings.";
+        }
+    }
+
+    /**
+     * A running scan slows the connection, but on Android 12+ cancelDiscovery needs the scan
+     * permission, which printing does not ask for; without it there is nothing of ours to stop.
+     */
+    private void stopDiscovery(BluetoothAdapter adapter) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+            && ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        try {
+            adapter.cancelDiscovery();
+        } catch (SecurityException e) {
+            Log.w(TAG, "Could not stop Bluetooth discovery", e);
         }
     }
 
