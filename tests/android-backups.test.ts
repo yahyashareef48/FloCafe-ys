@@ -1,8 +1,8 @@
 /**
  * Android backups — with the Android platform host installed, scheduled local
- * backups land in the host's documents folder, the "automatic backups" switch
- * stops them while manual backups keep working, and publishing still works on
- * storage without hard links (Android shared storage).
+ * backups are off until the "automatic backups" switch is turned on, then land
+ * in the host's documents folder; manual backups work either way, and
+ * publishing still works on storage without hard links (Android shared storage).
  */
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -75,9 +75,12 @@ async function main(): Promise<void> {
   getDatabase().prepare("INSERT INTO categories (id, name) VALUES ('c-1', 'Tea')").run();
   getDatabase().prepare("INSERT INTO products (id, category_id, name, price) VALUES ('p-1', 'c-1', 'Masala Chai', 30)").run();
 
-  console.log('\n--- Scheduled backups go to the Android documents folder ---');
+  console.log('\n--- Scheduled backups are off by default and go to the Android documents folder when on ---');
   assertEqualOrThrow(getLocalBackupDir(), path.join(documents, 'FloCafe', 'Backups'), 'the backup folder is under the Android documents folder');
-  assertEqualOrThrow(areAutomaticBackupsEnabled(), true, 'automatic backups start switched on');
+  assertEqualOrThrow(areAutomaticBackupsEnabled(), false, 'automatic backups start switched off');
+  await localBackup.runIfDue();
+  assertEqualOrThrow(fs.existsSync(getLocalBackupDir()), false, 'by default no daily backup is written and no folder is created');
+  setAutomaticBackupsEnabled(true);
   await localBackup.runIfDue();
   const first = backupFiles();
   assertEqualOrThrow(first.length, 1, 'switched on, the daily backup is written');

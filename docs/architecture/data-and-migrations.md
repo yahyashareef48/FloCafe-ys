@@ -159,7 +159,8 @@ loss. Retention failure is logged and never fails the committed restore.
 
 `main/services/automatic-backups.ts` holds the `automatic_backups_enabled` master switch, exposed as
 `GET`/`PUT /api/db-tools/automatic-backups` and the Automatic backups toggle in Backup & Data
-settings. It is on unless the value is `'false'`. When off, the daily local backup and the scheduled
+settings. It is off unless the value is `'true'`, so a new or never-configured install makes no
+scheduled backups. When off, the daily local backup and the scheduled
 Google Drive backup both skip; manual backups, the pre-migration backup, the recovery copies that
 initialize, currency reset, and restore make, and retries of a Drive upload already in progress
 still run. Resets and restores preserve the setting the same way as `local_backup_enabled`.
@@ -184,8 +185,8 @@ data.
 ### Daily local backup
 
 `main/services/local-backup.ts` writes one backup a day to `Documents/FloCafe/Backups`, outside
-`userData`, so it survives a data wipe, a reinstall, and an uninstall. It is on unless
-`local_backup_enabled` or `automatic_backups_enabled` is `'false'`. A check runs two minutes after startup and then hourly; it calls
+`userData`, so it survives a data wipe, a reinstall, and an uninstall. It runs only when
+`automatic_backups_enabled` is `'true'` and `local_backup_enabled` is not `'false'`. A check runs two minutes after startup and then hourly; it calls
 `createBackup()` when the newest file is at least 24 hours old, and skips a database with
 no orders, products, or customers so an empty install cannot push real backups out of retention.
 Files are named `flo-backup-<UTC timestamp with milliseconds>Z.db`; names from older releases
