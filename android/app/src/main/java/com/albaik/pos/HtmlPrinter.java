@@ -8,6 +8,8 @@ import android.print.PageRange;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
+import android.util.Log;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -34,6 +36,18 @@ final class HtmlPrinter {
                     onFinished.run();
                 });
                 printManager.print(jobName, adapter, new PrintAttributes.Builder().build());
+            }
+
+            @Override
+            public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                // Unhandled, a lost renderer ends the whole app.
+                Log.e("AlBaikPrint", "Print renderer stopped (crashed: " + detail.didCrash() + ")");
+                view.destroy();
+                if (!started) {
+                    started = true;
+                    onFinished.run();
+                }
+                return true;
             }
         });
         renderer.loadDataWithBaseURL(baseUrl, html, "text/html", "UTF-8", null);

@@ -6,8 +6,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import org.json.JSONObject;
 
@@ -74,12 +76,36 @@ final class RasterSurface {
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(false);
         view.layout(0, 0, 1, 1);
+        view.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean onRenderProcessGone(WebView gone, RenderProcessGoneDetail detail) {
+                // Unhandled, a lost renderer ends the whole app, servers included.
+                Log.e(TAG, "Raster renderer stopped (crashed: " + detail.didCrash() + ")");
+                discard(gone);
+                return true;
+            }
+        });
         view.addJavascriptInterface(new Host(), "AlBaikRasterHost");
         // assets/raster-host.js provides window.__floRaster; it must run before the page script.
         String host = "<script>" + hostScript() + "</script>";
         int firstScript = page.indexOf("<script>");
         String html = firstScript < 0 ? host + page : page.substring(0, firstScript) + host + page.substring(firstScript);
         view.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
+    }
+
+    /** Drops a dead view and fails its work; the next request loads a fresh one. */
+    private void discard(WebView gone) {
+        if (gone != view) {
+            gone.destroy();
+            return;
+        }
+        view = null;
+        loadedPage = null;
+        ready = false;
+        queued.clear();
+        gone.destroy();
+        for (ShellBridge.Reply pending : new ArrayList<>(inflight.values())) pending.error("The raster renderer stopped");
+        inflight.clear();
     }
 
     private String hostScript() {

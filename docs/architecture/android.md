@@ -87,6 +87,7 @@ and hide the system bars. `MainActivity` also asks once to be exempted from batt
 | --- | --- |
 | `flo.db`, pre-migration backups, `logs/main.log`, `master-pin.enc`, the WhatsApp auth directory | `flo-data/` in the app's no-backup files directory (`FLO_ANDROID_USER_DATA`) |
 | Daily local backups (`FloCafe/Backups`) and manual backups (`FloCafe/Manual Backups`) | `Documents/AlBaikPOS` in shared storage when it is writable, otherwise the app's own documents folder (`FLO_ANDROID_DOCUMENTS`) |
+| Crash reports: `crash-*.txt` (Java stack, written as the app dies) and `exit-*.txt` (Android's reason for an abnormal end, including native and WebView renderer crashes, plus the tail of `main.log`, written on the next start, Android 11+) | `logs/` in the documents folder above and in `flo-data/`, by `PosApplication` |
 | The 32-byte secret-storage key | `secret-key.bin` in the no-backup files directory, wrapped by a non-exportable Android Keystore AES key |
 
 `android:allowBackup` is `false`, so Android cloud backup never copies the database. Uninstalling
@@ -228,6 +229,8 @@ publishes only the debug APKs.
 
 The workflow runs the x86_64 debug APK in an emulator and inspects the live WebView over the
 DevTools protocol ([`android/scripts/ci-smoke.sh`](../../android/scripts/ci-smoke.sh)): the servers
-and their bind addresses, the shims, the raster surface, backups on the device's shared storage, the
-system save and print screens, an update to the release APK that must reopen the existing database,
-and Screen mode against a stand-in main device, including reconnecting after it goes away.
+and their bind addresses, the shims, the raster surface, a print job to an unanswered Bluetooth
+address (it must reach the connect step without closing the app), backups on the device's shared
+storage, the system save and print screens, an update to the release APK that must reopen the
+existing database, a forced crash that must leave both crash reports, and Screen mode against a
+stand-in main device, including reconnecting after it goes away.

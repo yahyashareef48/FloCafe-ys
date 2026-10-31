@@ -73,6 +73,31 @@ if [ "$checks" = 0 ] && [ -n "$RELEASE_APK" ]; then
   fi
 fi
 
+crash_checks=1
+if [ "$checks" = 0 ]; then
+  echo "--- A crash leaves a report in Documents/AlBaikPOS/logs ---"
+  wait_health() { for i in $(seq 1 120); do curl -fsS -m 2 http://127.0.0.1:3001/api/health > /dev/null 2>&1 && return 0; sleep 1; done; return 1; }
+  logs=/sdcard/Documents/AlBaikPOS/logs
+  adb shell rm -rf "$logs"
+  adb shell am start -W -n "$PKG/.LauncherActivity" > /dev/null
+  wait_health
+  adb shell am crash "$PKG"
+  sleep 3
+  adb shell am start -W -n "$PKG/.LauncherActivity" > /dev/null
+  wait_health
+  sleep 3
+  adb shell ls "$logs" | tee "$OUT/crash-logs.txt"
+  adb shell 'cat '"$logs"'/exit-*.txt' > "$OUT/exit-report.txt" 2>/dev/null || true
+  head -n 8 "$OUT/exit-report.txt"
+  if grep -q '^crash-' "$OUT/crash-logs.txt" && grep -q '^exit-' "$OUT/crash-logs.txt" && grep -q 'End of the POS server log' "$OUT/exit-report.txt"; then
+    echo "PASS a crash is saved, and the next start records how the app ended with the server log"
+    crash_checks=0
+  else
+    echo "FAIL no crash report was saved"
+  fi
+  curl -fsS -m 5 http://127.0.0.1:3001/api/health > /dev/null || { echo "FAIL the POS server did not come back after the crash"; crash_checks=1; }
+fi
+
 screen_checks=1
 if [ "$checks" = 0 ]; then
   echo "--- Screen mode against a stand-in main device on the CI host (10.0.2.2) ---"
@@ -110,4 +135,4 @@ for port in 3001 3002 3003; do
   hex="$(printf '%04X' $port)"
   grep -q "00000000:$hex" "$OUT/summary.txt" || { echo "port $port is not listening on all interfaces"; exit 1; }
 done
-[ "$ok" = 1 ] && [ "$checks" = 0 ] && [ "$update_checks" = 0 ] && [ "$screen_checks" = 0 ]
+[ "$ok" = 1 ] && [ "$checks" = 0 ] && [ "$update_checks" = 0 ] && [ "$crash_checks" = 0 ] && [ "$screen_checks" = 0 ]
