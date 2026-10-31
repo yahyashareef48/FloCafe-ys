@@ -14,6 +14,7 @@ import PaymentModal from '@/components/pos/PaymentModal';
 import CreateCustomerModal from '@/components/pos/CreateCustomerModal';
 import AddonModal from '@/components/pos/AddonModal';
 import RefundModal from '@/components/orders/RefundModal';
+import DeleteOrderModal from '@/components/orders/DeleteOrderModal';
 import { sendBillViaFlo } from '@/lib/whatsapp-share';
 import { useConfirm } from '@/hooks/use-confirm';
 import type { Table, Product, ProductVariant, Customer, Addon } from '@/lib/types';
@@ -189,6 +190,7 @@ export default function OrdersPage() {
   const [tabFilter, setTabFilter] = useState<FilterType>('active');
   const [paymentBill, setPaymentBill] = useState<Bill | null>(null);
   const [refundModal, setRefundModal] = useState<{ order: Order; bills: Bill[] } | null>(null);
+  const [deleteOrderTarget, setDeleteOrderTarget] = useState<Order | null>(null);
   const [tables, setTables] = useState<Table[]>([]);
   // null until /settings/kds_enabled resolves; the WebSocket stays closed
   // until the feature is confirmed on, because a disabled KDS refuses the
@@ -1876,6 +1878,9 @@ export default function OrdersPage() {
               onPayBill={handlePayBill}
               onAddItems={openAddItemsModal}
               onRefund={(ord, bills) => setRefundModal({ order: ord, bills })}
+              onDeleteOrder={
+                tenantCan(currentTenant, 'orders.status.update') ? setDeleteOrderTarget : undefined
+              }
               onConvertToTakeaway={handleConvertToTakeaway}
               onCancelOrder={(ord) =>
                 setCancelModal({
@@ -1958,6 +1963,9 @@ export default function OrdersPage() {
               onCheckout={handleCheckout}
               onAddItems={openAddItemsModal}
               onRefund={(ord, bills) => setRefundModal({ order: ord, bills })}
+              onDeleteOrder={
+                tenantCan(currentTenant, 'orders.status.update') ? setDeleteOrderTarget : undefined
+              }
               onConvertToTakeaway={handleConvertToTakeaway}
               onCancelOrder={(ord) =>
                 setCancelModal({
@@ -2043,6 +2051,18 @@ export default function OrdersPage() {
           onClose={() => setRefundModal(null)}
           onRefunded={() => {
             setRefundModal(null);
+            fetchOrders(undefined, { refreshLoadedPages: true });
+          }}
+        />
+      )}
+
+      {deleteOrderTarget && (
+        <DeleteOrderModal
+          order={deleteOrderTarget}
+          onClose={() => setDeleteOrderTarget(null)}
+          onDeleted={() => {
+            if (selectedOrderId === deleteOrderTarget.id) setSelectedOrderId(null);
+            setDeleteOrderTarget(null);
             fetchOrders(undefined, { refreshLoadedPages: true });
           }}
         />

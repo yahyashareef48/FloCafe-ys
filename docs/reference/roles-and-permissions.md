@@ -171,6 +171,10 @@ manager PIN (with `payments.take` when overriding unsettled payment), even when 
 is already an owner or manager. Full safeguard, restock, and audit rules are in
 [the Orders API reference](api.md#orders).
 
+**Order deletion.** Any staff member holding `orders.status.update` can start deleting an order
+entered by mistake, in any state, but the deletion runs only with an active owner's staff PIN; a
+manager's PIN is not accepted. See [the Orders API reference](api.md#orders).
+
 **Owner visibility.** The permission editor itself is rendered only for an authenticated user
 holding `authorization.manage` — an active owner, always. The API enforces this independently;
 hiding a control in the interface is not a security boundary.

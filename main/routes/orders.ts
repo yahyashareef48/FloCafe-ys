@@ -6205,4 +6205,166 @@ router.patch(
   },
 );
 
+type DeletedOrderSummary = { orderNumber: string; total: number; bills: number };
+
+/** Erases an order and everything hanging off it, putting back the stock it still holds. */
+function deleteOrderInTxn(
+  db: ReturnType<typeof getDatabase>,
+  orderId: string,
+  actorUserId: string,
+): DeletedOrderSummary | null {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId) as any;
+  if (!order) return null;
+
+  // Cancelled lines already gave their stock back and voided ones were wasted food.
+  const holdingStock = db
+    .prepare(
+      "SELECT * FROM order_items WHERE order_id = ? AND COALESCE(status, 'pending') NOT IN ('cancelled', 'voided', 'void_adjustment')",
+    )
+    .all(orderId) as any[];
+  for (const item of holdingStock) {
+    const referenceId = `${item.id}:${item.updated_at}`;
+    const inventoryTarget =
+      item.inventory_deducted_quantity > 0 ? orderItemInventoryTarget(db, item) : null;
+    if (inventoryTarget) {
+      adjustProductStock(db, {
+        productId: inventoryTarget.productId,
+        variantId: inventoryTarget.variantId,
+        quantityDelta: item.inventory_deducted_quantity,
+        movementType: 'cancel_restore',
+        referenceType: 'order_item',
+        referenceId,
+        reason: 'Order deleted',
+        actorUserId,
+      });
+    }
+    moveOrderItemAddonStock(db, orderItemAddonStockLines(db, item.id), {
+      direction: 'restore',
+      actorUserId,
+      referenceId,
+      reason: 'Order deleted',
+    });
+    const recipeSnapshot = parseRecipeSnapshot(item.recipe_snapshot);
+    if (recipeSnapshot) {
+      applyRecipeSnapshot(db, recipeSnapshot, { direction: 'restore', actorUserId, referenceId });
+    }
+  }
+
+  const billIds = (
+    db.prepare('SELECT id FROM bills WHERE order_id = ?').all(orderId) as { id: string }[]
+  ).map((bill) => bill.id);
+  const itemIds = (
+    db.prepare('SELECT id FROM order_items WHERE order_id = ?').all(orderId) as { id: number }[]
+  ).map((item) => item.id);
+  const deleteWhere = (table: string, column: string, ids: (string | number)[]) => {
+    for (const id of ids) db.prepare(`DELETE FROM ${table} WHERE ${column} = ?`).run(id);
+  };
+  // Children before parents so every DELETE satisfies foreign keys.
+  for (const table of [
+    'whatsapp_messages',
+    'print_logs',
+    'payment_transaction_refs',
+    'payment_transaction_ref_conflicts',
+    'payment_idempotency',
+    'refund_idempotency',
+    'refunds',
+    'loyalty_ledger',
+    'bill_items',
+  ]) {
+    deleteWhere(table, 'bill_id', billIds);
+  }
+  deleteWhere('refunds', 'order_item_id', itemIds);
+  deleteWhere('bill_items', 'order_item_id', itemIds);
+  deleteWhere('bills', 'id', billIds);
+  db.prepare('DELETE FROM order_audit_log WHERE order_id = ?').run(orderId);
+  deleteWhere('order_item_addons', 'order_item_id', itemIds);
+  db.prepare('DELETE FROM order_items WHERE order_id = ?').run(orderId);
+  db.prepare('DELETE FROM orders WHERE id = ?').run(orderId);
+  // Events not yet sent would describe an order that no longer exists.
+  db.prepare(
+    "DELETE FROM cloud_sync_outbox WHERE entity_type = 'order' AND entity_id = ? AND status = 'pending'",
+  ).run(String(orderId));
+
+  if (order.table_id) {
+    const stillSeated = db
+      .prepare(
+        "SELECT 1 FROM orders WHERE table_id = ? AND status IN ('pending', 'preparing', 'ready', 'served') LIMIT 1",
+      )
+      .get(order.table_id);
+    if (!stillSeated) {
+      db.prepare("UPDATE tables SET status = 'available', updated_at = ? WHERE id = ?").run(
+        now(),
+        order.table_id,
+      );
+    }
+  }
+  return {
+    orderNumber: String(order.order_number),
+    total: Number(order.total) || 0,
+    bills: billIds.length,
+  };
+}
+
+// DELETE /api/orders/:id — erases an order entered by mistake, in any state, as if it was never
+// placed: no refund or cancellation is recorded. The owner's staff PIN approves it.
+router.delete(
+  '/:id',
+  orderWriteRateLimit,
+  requirePermission('orders.status.update'),
+  asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const authUser = (req as any).user;
+      const overridePin = typeof req.body?.override_pin === 'string' ? req.body.override_pin : '';
+      const approverId = typeof req.body?.approver_id === 'string' ? req.body.approver_id : '';
+      if (!approverId || !overridePin) {
+        return res.status(400).json({ error: 'Owner PIN required to delete an order' });
+      }
+      const db = getDatabase();
+      if (!db.prepare('SELECT 1 FROM orders WHERE id = ?').get(req.params.id)) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+
+      const canonicalIp = normalizeIpForRateLimit(req.ip || req.socket.remoteAddress || 'unknown');
+      const rateLimitKey = `pin:${canonicalIp}:order-delete`;
+      const approver = await withPinVerificationLock(rateLimitKey, async () => {
+        if (isPinRateLimited(rateLimitKey)) return 'rate-limited' as const;
+        const candidate = db
+          .prepare(
+            "SELECT id, pin_hash FROM users WHERE id = ? AND role = 'owner' AND is_active = 1 AND pin_hash IS NOT NULL",
+          )
+          .get(approverId) as { id: string; pin_hash: string } | undefined;
+        if (
+          candidate &&
+          /^\d{4,6}$/.test(overridePin) &&
+          (await verifyPinAsync(candidate.pin_hash, overridePin))
+        ) {
+          clearPinRateLimit(rateLimitKey);
+          return candidate;
+        }
+        checkPinRateLimit(rateLimitKey);
+        return null;
+      });
+      if (approver === 'rate-limited') {
+        return res.status(429).json({ error: 'Too many PIN attempts. Try again in 15 minutes.' });
+      }
+      if (!approver) return res.status(403).json({ error: 'Invalid owner PIN' });
+
+      const deleted = db.transaction(() =>
+        deleteOrderInTxn(db, String(req.params.id), authUser.userId),
+      )();
+      if (!deleted) return res.status(404).json({ error: 'Order not found' });
+      console.log(
+        `[Orders] Order ${deleted.orderNumber} (total ${deleted.total}, ${deleted.bills} bill(s)) deleted by ${authUser.userId}, approved by owner ${approver.id}`,
+      );
+      notifyKdsUpdate();
+      res.json({ deleted: true, order_number: deleted.orderNumber });
+    } catch (error: any) {
+      console.error('[API] Internal error:', error);
+      res
+        .status(error.statusCode || 500)
+        .json({ error: error.statusCode ? error.message : 'Internal server error' });
+    }
+  }),
+);
+
 export const orderRoutes = router;

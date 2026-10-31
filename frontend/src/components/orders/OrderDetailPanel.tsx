@@ -94,6 +94,7 @@ export interface OrderDetailPanelProps {
   onRefund: (order: Order, bills: Bill[]) => void;
   onConvertToTakeaway: (order: Order) => void;
   onCancelOrder: (order: Order) => void;
+  onDeleteOrder?: (order: Order) => void;
   onPrint: (billId: number) => void;
   onPrintOrder?: (order: Order) => void;
   onPrintDeliverySlip?: (order: Order) => void;
@@ -153,6 +154,7 @@ function OrderDetailContent({
   onRefund,
   onConvertToTakeaway,
   onCancelOrder,
+  onDeleteOrder,
   onPrint,
   onPrintOrder,
   onPrintDeliverySlip,
@@ -386,6 +388,18 @@ function OrderDetailContent({
                         <Lock size={14} className="me-2" />
                       )}
                       {cancellingOrderId === order.id ? tOrders('cancelling') : tCommon('cancel')}
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {onDeleteOrder && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => onDeleteOrder(order)}
+                      className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/40"
+                    >
+                      <Trash2 size={14} className="me-2" />
+                      {tOrders('deleteOrder')}
                     </DropdownMenuItem>
                   </>
                 )}
