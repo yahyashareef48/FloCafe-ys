@@ -138,13 +138,18 @@ export async function androidPrintingSelfTest(body: HostActionBody = {}) {
     : null;
   const printers = await platformPrinters()?.list();
   const printTo = typeof body.printTo === 'string' ? body.printTo : '';
-  const sent = printTo ? await printViaUSB(Buffer.from('\x1b@Al Baik POS self-test\n\n\n', 'latin1'), printTo) : null;
+  const sent = printTo
+    ? await printViaUSB(Buffer.from('\x1b@Al Baik POS self-test\n\n\n', 'latin1'), printTo)
+    : null;
   return {
     raster: raster?.ok
       ? {
           ok: true,
           widthDots: raster.unit.bands[0]?.widthDots ?? 0,
-          inkPixels: raster.unit.bands.reduce((sum, band) => sum + band.pixels.filter((p) => p !== 0).length, 0),
+          inkPixels: raster.unit.bands.reduce(
+            (sum, band) => sum + band.pixels.filter((p) => p !== 0).length,
+            0,
+          ),
         }
       : { ok: false, detail: raster?.detail ?? 'No raster renderer' },
     printers: printers ?? [],

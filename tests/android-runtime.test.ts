@@ -53,7 +53,8 @@ const server = net.createServer((socket) => {
       else if (message.type === 'event') events.push(message);
       else if (typeof message.method === 'string') {
         nativeCalls.push(message);
-        if (message.method === 'pickFile') sendToNode({ id: message.id, result: { path: pickedRestorePath } });
+        if (message.method === 'pickFile')
+          sendToNode({ id: message.id, result: { path: pickedRestorePath } });
         else if (message.method === 'rasterRender') {
           const request = message.params.request;
           const pixels = Buffer.alloc(request.widthDots * 24, 1).toString('base64');
@@ -63,22 +64,45 @@ const server = net.createServer((socket) => {
               version: 1,
               requestId: request.requestId,
               ok: true,
-              unit: { unitId: request.requestId, financial: request.financial, complete: true, bands: [{ widthDots: request.widthDots, heightDots: 24, pixelsBase64: pixels }] },
+              unit: {
+                unitId: request.requestId,
+                financial: request.financial,
+                complete: true,
+                bands: [{ widthDots: request.widthDots, heightDots: 24, pixelsBase64: pixels }],
+              },
             },
           });
         } else if (message.method === 'printerSend') {
-          sendToNode({ id: message.id, result: { ok: false, detail: `no printer called ${message.params.name}` } });
+          sendToNode({
+            id: message.id,
+            result: { ok: false, detail: `no printer called ${message.params.name}` },
+          });
         } else if (message.method === 'printerList') {
-          sendToNode({ id: message.id, result: [{ name: 'SR588 (USB 0483:5720)', make: 'SR588', model: 'Posiflow', connectionType: 'usb', deviceUri: 'usb://0483/5720' }] });
-        }
-        else if (message.method === 'confirm') sendToNode({ id: message.id, result: { confirmed: true } });
+          sendToNode({
+            id: message.id,
+            result: [
+              {
+                name: 'SR588 (USB 0483:5720)',
+                make: 'SR588',
+                model: 'Posiflow',
+                connectionType: 'usb',
+                deviceUri: 'usb://0483/5720',
+              },
+            ],
+          });
+        } else if (message.method === 'confirm')
+          sendToNode({ id: message.id, result: { confirmed: true } });
         else sendToNode({ id: message.id, result: null });
       } else if (typeof message.id === 'number') responses.set(message.id, message);
     }
   });
 });
 
-async function waitFor<T>(label: string, probe: () => T | undefined | null | false, timeoutMs = 60_000): Promise<T> {
+async function waitFor<T>(
+  label: string,
+  probe: () => T | undefined | null | false,
+  timeoutMs = 60_000,
+): Promise<T> {
   const started = Date.now();
   for (;;) {
     const value = probe();
@@ -99,40 +123,71 @@ async function hostAction(route: string, body: unknown = {}): Promise<Message> {
 async function run(child: ChildProcess, output: () => string): Promise<void> {
   console.log('\n--- Boots without Electron and reports ready ---');
   await waitFor('bridge hello', () => helloToken);
-  assertEqualOrThrow(helloToken, bridgeToken, 'Node authenticates to the shell with the launch token');
+  assertEqualOrThrow(
+    helloToken,
+    bridgeToken,
+    'Node authenticates to the shell with the launch token',
+  );
   const failed = () => events.find((e) => e.event === 'failed');
-  const ready = await waitFor('ready event', () => {
-    if (failed()) throw new Error(`runtime failed: ${JSON.stringify(failed()!.data)}\n${output()}`);
-    if (child.exitCode !== null) throw new Error(`runtime exited early (${child.exitCode})\n${output()}`);
-    return events.find((e) => e.event === 'ready');
-  }, 120_000);
+  const ready = await waitFor(
+    'ready event',
+    () => {
+      if (failed())
+        throw new Error(`runtime failed: ${JSON.stringify(failed()!.data)}\n${output()}`);
+      if (child.exitCode !== null)
+        throw new Error(`runtime exited early (${child.exitCode})\n${output()}`);
+      return events.find((e) => e.event === 'ready');
+    },
+    120_000,
+  );
   const info = ready.data;
   assertEqualOrThrow(info.serverPort, ports.api, 'reports the POS API port');
   assertEqualOrThrow(info.kdsPort, ports.kds, 'reports the KDS port');
   assertEqualOrThrow(info.serverAppPort, ports.serverApp, 'reports the Server App port');
-  assertOrThrow(!/blocked: the Android runtime must not load Electron/.test(output()), 'no code path tried to load Electron');
+  assertOrThrow(
+    !/blocked: the Android runtime must not load Electron/.test(output()),
+    'no code path tried to load Electron',
+  );
 
   const health = await fetch(`http://127.0.0.1:${ports.api}/api/health`);
   assertEqualOrThrow(health.status, 200, 'POS API answers /api/health');
-  assertOrThrow(fs.existsSync(path.join(userData, 'flo.db')), 'database lives under the Android userData');
-  assertOrThrow(fs.existsSync(path.join(userData, 'logs', 'main.log')), 'log file lives under the Android userData');
+  assertOrThrow(
+    fs.existsSync(path.join(userData, 'flo.db')),
+    'database lives under the Android userData',
+  );
+  assertOrThrow(
+    fs.existsSync(path.join(userData, 'logs', 'main.log')),
+    'log file lives under the Android userData',
+  );
 
   console.log('\n--- Host actions run over the native bridge only ---');
   const appInfo = await hostAction('/app-info');
   assertEqualOrThrow(appInfo.result?.platform, 'android', 'app info reports android');
   const unknown = await hostAction('/no-such-action');
-  assertOrThrow(typeof unknown.error === 'string' && unknown.error.includes('Unknown host action'), 'unknown actions are rejected');
+  assertOrThrow(
+    typeof unknown.error === 'string' && unknown.error.includes('Unknown host action'),
+    'unknown actions are rejected',
+  );
   const prototypeKey = await hostAction('constructor');
   assertOrThrow(typeof prototypeKey.error === 'string', 'object prototype keys are not routes');
 
   const pinStatus = await hostAction('/master-pin-status');
-  assertEqualOrThrow(pinStatus.result.available, true, 'master PIN is available through keyed storage');
-  assertEqualOrThrow(pinStatus.result.isSet, true, 'master PIN sealed by the shell key is readable');
+  assertEqualOrThrow(
+    pinStatus.result.available,
+    true,
+    'master PIN is available through keyed storage',
+  );
+  assertEqualOrThrow(
+    pinStatus.result.isSet,
+    true,
+    'master PIN sealed by the shell key is readable',
+  );
 
   const settings = await hostAction('/settings');
   assertEqualOrThrow(typeof settings.result, 'object', 'settings are returned');
   assertOrThrow(
-    settings.result.jwt_secret === undefined || String(settings.result.jwt_secret).startsWith('****'),
+    settings.result.jwt_secret === undefined ||
+      String(settings.result.jwt_secret).startsWith('****'),
     'the JWT secret is masked',
   );
 
@@ -141,23 +196,66 @@ async function run(child: ChildProcess, output: () => string): Promise<void> {
   assertEqualOrThrow(selfTest.raster.ok, true, 'the shell raster surface renders a unit');
   assertEqualOrThrow(selfTest.raster.widthDots, 384, 'raster bands decode with their width');
   assertEqualOrThrow(selfTest.raster.inkPixels, 384 * 24, 'raster pixels decode from base64');
-  assertEqualOrThrow(selfTest.printers[0]?.name, 'SR588 (USB 0483:5720)', 'printer discovery reaches the shell');
-  assertOrThrow(nativeCalls.some((c) => c.method === 'rasterRender' && typeof c.params.pageHtml === 'string' && c.params.pageHtml.includes('__floRaster')), 'the raster page is sent to the shell');
+  assertEqualOrThrow(
+    selfTest.printers[0]?.name,
+    'SR588 (USB 0483:5720)',
+    'printer discovery reaches the shell',
+  );
+  assertOrThrow(
+    nativeCalls.some(
+      (c) =>
+        c.method === 'rasterRender' &&
+        typeof c.params.pageHtml === 'string' &&
+        c.params.pageHtml.includes('__floRaster'),
+    ),
+    'the raster page is sent to the shell',
+  );
   assertEqualOrThrow(selfTest.sent, null, 'the self-test prints nothing unless asked');
-  const printed = (await hostAction('/printing-self-test', { printTo: 'SR588 (Bluetooth C8:47:8C:E6:B0:DF)' })).result;
+  const printed = (
+    await hostAction('/printing-self-test', { printTo: 'SR588 (Bluetooth C8:47:8C:E6:B0:DF)' })
+  ).result;
   const job = nativeCalls.filter((c) => c.method === 'printerSend').pop();
-  assertEqualOrThrow(job?.params.name, 'SR588 (Bluetooth C8:47:8C:E6:B0:DF)', 'the self-test job goes to the named printer');
-  assertOrThrow(Buffer.from(String(job?.params.data), 'base64').toString('latin1').includes('Al Baik POS self-test'), 'the self-test job carries ESC/POS text');
+  assertEqualOrThrow(
+    job?.params.name,
+    'SR588 (Bluetooth C8:47:8C:E6:B0:DF)',
+    'the self-test job goes to the named printer',
+  );
+  assertOrThrow(
+    Buffer.from(String(job?.params.data), 'base64')
+      .toString('latin1')
+      .includes('Al Baik POS self-test'),
+    'the self-test job carries ESC/POS text',
+  );
   assertEqualOrThrow(printed.sent.ok, false, 'a refused job is reported');
-  assertEqualOrThrow(printed.sent.detail, 'no printer called SR588 (Bluetooth C8:47:8C:E6:B0:DF)', 'the shell reason reaches the caller');
+  assertEqualOrThrow(
+    printed.sent.detail,
+    'no printer called SR588 (Bluetooth C8:47:8C:E6:B0:DF)',
+    'the shell reason reaches the caller',
+  );
   const mainLog = fs.readFileSync(path.join(userData, 'logs', 'main.log'), 'utf8');
-  assertOrThrow(mainLog.includes('printViaUSB called') && mainLog.includes('SR588 (Bluetooth C8:47:8C:E6:B0:DF)'), 'printer console output reaches main.log for crash reports');
+  assertOrThrow(
+    mainLog.includes('printViaUSB called') &&
+      mainLog.includes('SR588 (Bluetooth C8:47:8C:E6:B0:DF)'),
+    'printer console output reaches main.log for crash reports',
+  );
 
   const storage = (await hostAction('/storage-self-test')).result;
   assertOrThrow(storage.manualBytes > 0, 'the storage self-test writes a backup');
-  assertEqualOrThrow(storage.publishedBytes, storage.manualBytes, 'the storage self-test publishes an identical copy');
-  assertEqualOrThrow(storage.documentsDir, documents, 'the storage self-test uses the Android documents folder');
-  assertEqualOrThrow(fs.readdirSync(path.join(documents, 'FloCafe', 'Manual Backups')).length, 0, 'the storage self-test cleans up after itself');
+  assertEqualOrThrow(
+    storage.publishedBytes,
+    storage.manualBytes,
+    'the storage self-test publishes an identical copy',
+  );
+  assertEqualOrThrow(
+    storage.documentsDir,
+    documents,
+    'the storage self-test uses the Android documents folder',
+  );
+  assertEqualOrThrow(
+    fs.readdirSync(path.join(documents, 'FloCafe', 'Manual Backups')).length,
+    0,
+    'the storage self-test cleans up after itself',
+  );
 
   console.log('\n--- Backup and restore run the shared actions ---');
   const wrongPin = await hostAction('/backup', { pin: '0000' });
@@ -173,11 +271,17 @@ async function run(child: ChildProcess, output: () => string): Promise<void> {
   pickedRestorePath = backup.path;
   const restore = (await hostAction('/restore', { pin: '2468' })).result;
   assertEqualOrThrow(restore.success, true, `restore succeeds (${JSON.stringify(restore)})`);
-  assertOrThrow(nativeCalls.some((c) => c.method === 'pickFile'), 'restore asks the shell for the file');
+  assertOrThrow(
+    nativeCalls.some((c) => c.method === 'pickFile'),
+    'restore asks the shell for the file',
+  );
 
   const picked = (await hostAction('/pick-restore-file')).result;
   assertEqualOrThrow(picked.canceled, false, 'pick-restore-file returns the shell pick');
-  assertOrThrow(typeof picked.token === 'string' && picked.token.length > 0, 'pick-restore-file issues a selection token');
+  assertOrThrow(
+    typeof picked.token === 'string' && picked.token.length > 0,
+    'pick-restore-file issues a selection token',
+  );
 
   console.log('\n--- Shell-initiated shutdown drains the runtime ---');
   const shutdownId = nextRequestId++;
@@ -205,7 +309,11 @@ async function main(): Promise<void> {
   let output = '';
   const child = spawn(
     process.execPath,
-    ['--require', path.join(__dirname, 'fixtures', 'block-electron.cjs'), path.join(runtimeRoot, 'dist', 'main', 'android', 'entry.js')],
+    [
+      '--require',
+      path.join(__dirname, 'fixtures', 'block-electron.cjs'),
+      path.join(runtimeRoot, 'dist', 'main', 'android', 'entry.js'),
+    ],
     {
       cwd: runtimeRoot,
       env: {

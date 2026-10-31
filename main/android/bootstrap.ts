@@ -52,8 +52,16 @@ function mirrorConsoleToLogFile(logFile: string): void {
   const fileLog = log.create({ logId: 'android-console' });
   fileLog.transports.console.level = false;
   fileLog.transports.file.resolvePathFn = () => logFile;
-  const methods = { log: fileLog.info, info: fileLog.info, warn: fileLog.warn, error: fileLog.error };
-  for (const [name, write] of Object.entries(methods) as [keyof typeof methods, (...args: unknown[]) => void][]) {
+  const methods = {
+    log: fileLog.info,
+    info: fileLog.info,
+    warn: fileLog.warn,
+    error: fileLog.error,
+  };
+  for (const [name, write] of Object.entries(methods) as [
+    keyof typeof methods,
+    (...args: unknown[]) => void,
+  ][]) {
     const original = console[name].bind(console);
     console[name] = (...args: unknown[]) => {
       original(...args);
