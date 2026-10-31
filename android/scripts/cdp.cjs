@@ -36,8 +36,17 @@ async function connect(port, urlPrefix) {
       entry.resolve(message.result.result.value);
     }
   });
+  // A WebView or app that dies mid-check must fail the run, not leave it waiting until Node exits 0.
+  ws.on('close', () => {
+    for (const entry of pending.values()) entry.reject(new Error('the WebView connection closed (app or page died)'));
+    pending.clear();
+  });
   const evaluate = (expression) =>
     new Promise((resolve, reject) => {
+      if (ws.readyState !== WebSocket.OPEN) {
+        reject(new Error('the WebView connection is closed (app or page died)'));
+        return;
+      }
       const id = nextId++;
       pending.set(id, { resolve, reject });
       ws.send(JSON.stringify({ id, method: 'Runtime.evaluate', params: { expression, awaitPromise: true, returnByValue: true } }));
