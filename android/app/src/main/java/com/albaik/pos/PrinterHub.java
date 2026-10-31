@@ -57,7 +57,12 @@ final class PrinterHub {
     private static final Pattern PRINTER_LIKE_NAME = Pattern.compile("(?i)print|pos|thermal|receipt|rpp|mtp|sr\\d|pt-|zj|xp-");
     private static final int USB_CHUNK_BYTES = 16 * 1024;
     private static final int USB_TIMEOUT_MS = 10_000;
-    private static final int BLUETOOTH_CHUNK_BYTES = 1024;
+    // Small mobile printers have tiny receive buffers and silently drop what overflows them, then
+    // print the rest of an image command as text. ~8 KB/s stays below what a 58 mm head prints.
+    private static final int BLUETOOTH_CHUNK_BYTES = 128;
+    private static final long BLUETOOTH_CHUNK_PAUSE_MS = 15;
+    // Closing the socket discards bytes the stack has not sent yet.
+    private static final long BLUETOOTH_DRAIN_MS = 1500;
 
     private final Context context;
     // One job at a time: printers do not interleave two jobs, and USB claims are exclusive.
@@ -254,9 +259,10 @@ final class PrinterHub {
                 for (int offset = 0; offset < data.length; offset += BLUETOOTH_CHUNK_BYTES) {
                     out.write(data, offset, Math.min(BLUETOOTH_CHUNK_BYTES, data.length - offset));
                     out.flush();
+                    Thread.sleep(BLUETOOTH_CHUNK_PAUSE_MS);
                 }
-                // Closing at once can drop the tail the printer has not read yet.
-                Thread.sleep(400);
+                Thread.sleep(BLUETOOTH_DRAIN_MS);
+                Breadcrumbs.note(context, "bluetooth: sent " + data.length + " bytes");
             } finally {
                 socket.close();
             }
