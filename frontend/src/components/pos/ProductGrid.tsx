@@ -530,7 +530,7 @@ export default function ProductGrid({
         >
           {showProductImages && (
             <span
-              className="relative shrink-0 w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center text-xs font-bold text-white/80"
+              className="relative shrink-0 w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center text-xs font-bold text-white"
               style={{ backgroundColor: nameToColor(product.name) }}
             >
               {product.name.substring(0, 2).toUpperCase()}
@@ -609,7 +609,7 @@ export default function ProductGrid({
               className="absolute inset-0 flex items-center justify-center"
               style={{ backgroundColor: nameToColor(product.name) }}
             >
-              <span className="text-2xl font-bold text-white/80">
+              <span className="text-2xl font-bold text-white">
                 {product.name.substring(0, 2).toUpperCase()}
               </span>
             </div>

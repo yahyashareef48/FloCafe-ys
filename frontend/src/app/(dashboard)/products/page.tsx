@@ -1113,7 +1113,7 @@ export default function ProductsPage() {
                               className="absolute inset-0 flex items-center justify-center"
                               style={{ backgroundColor: nameToColor(product.name) }}
                             >
-                              <span className="text-sm font-bold text-white/80">
+                              <span className="text-sm font-bold text-white">
                                 {product.name.substring(0, 2).toUpperCase()}
                               </span>
                             </div>
