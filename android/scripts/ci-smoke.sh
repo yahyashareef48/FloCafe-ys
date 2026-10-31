@@ -133,6 +133,10 @@ adb exec-out screencap -p > "$OUT/screen.png" || true
 adb logcat -d > "$OUT/logcat-full.txt" || true
 grep -E 'AlBaik|AndroidRuntime|FATAL|Fatal signal|DEBUG +:|ActivityManager.*com\.albaik\.pos|libc +:.*com\.albaik' "$OUT/logcat-full.txt" | grep -v s_glBindAttribLocation > "$OUT/logcat-app.txt" || true
 tail -n 120 "$OUT/logcat-app.txt"
+if grep -q 'Fatal signal' "$OUT/logcat-full.txt"; then
+  echo "--- Native crash in the app process ---"
+  grep -E 'Fatal signal|F DEBUG|F libc|AlBaikNode' "$OUT/logcat-full.txt" | grep -A80 -m1 'Fatal signal' | head -n 120
+fi
 
 for port in 3001 3002 3003; do
   hex="$(printf '%04X' $port)"

@@ -80,6 +80,12 @@ async function main() {
   await check('a Bluetooth print does not ask for permissions the app already has', `${!/nearby devices/.test(String(sent.detail))}`, true);
   await check('the app is still running after the Bluetooth print', `${pidOf() === pidBefore && pidBefore !== ''}`, true);
 
+  // A tablet closed while building a real bill, before any printer step; run the same path here.
+  const receiptRun = (await evaluate(nativeCall('hostAction', { route: '/printing-self-test', body: { receipt: true, printTo: 'SR588 (Bluetooth 00:11:22:AA:BB:CC)' } }))).result || {};
+  console.log(`receipt print: ${JSON.stringify(receiptRun.receipt)}`);
+  await check('a rupee bill is formatted, drawn and sent to the Bluetooth printer', `${!!receiptRun.receipt && /Could not reach the Bluetooth printer|Bluetooth is off/.test(String(receiptRun.receipt.detail))}`, true);
+  await check('the app is still running after printing a bill', `${pidOf() === pidBefore}`, true);
+
   // System UI round trips: start the request, check the Android screen opened, cancel with Back.
   await evaluate(`window.__saveReply = null; (${nativeCall('saveDownload', { name: 'sales.csv', mimeType: 'text/csv', base64: 'YSxiCjEsMgo=' })}).then((m) => { window.__saveReply = m; }); true`);
   const saveTop = await waitForTop(/documentsui/i);

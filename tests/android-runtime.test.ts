@@ -13,6 +13,16 @@ import { randomBytes } from 'node:crypto';
 const bcrypt = require('bcryptjs');
 const { assertOrThrow, assertEqualOrThrow } = require('./helpers/test-setup');
 const { createKeyedSafeStorage } = require('../main/platform/keyed-safe-storage');
+const Database = require('better-sqlite3');
+
+function getDatabaseRowCount(file: string, sql: string): number {
+  const db = new Database(file, { readonly: true, fileMustExist: true });
+  try {
+    return Number(db.prepare(sql).get().n);
+  } finally {
+    db.close();
+  }
+}
 
 const root = path.resolve(__dirname, '..');
 // Lets a packaging check run this suite against the staged Android bundle.
@@ -231,6 +241,33 @@ async function run(child: ChildProcess, output: () => string): Promise<void> {
     printed.sent.detail,
     'no printer called SR588 (Bluetooth C8:47:8C:E6:B0:DF)',
     'the shell reason reaches the caller',
+  );
+  const sendsBefore = nativeCalls.filter((c) => c.method === 'printerSend').length;
+  const receipt = (
+    await hostAction('/printing-self-test', {
+      receipt: true,
+      printTo: 'SR588 (Bluetooth C8:47:8C:E6:B0:DF)',
+    })
+  ).result;
+  const receiptJob = nativeCalls.filter((c) => c.method === 'printerSend')[sendsBefore];
+  assertEqualOrThrow(
+    receiptJob?.params.name,
+    'SR588 (Bluetooth C8:47:8C:E6:B0:DF)',
+    'the self-test receipt goes through the full print path to the named printer',
+  );
+  const receiptBytes = Buffer.from(String(receiptJob?.params.data), 'base64');
+  assertOrThrow(
+    receiptBytes.length > 500 && receiptBytes[0] === 0x1b && receiptBytes[1] === 0x40,
+    `the self-test receipt is a full ESC/POS bill (${receiptBytes.length} bytes)`,
+  );
+  assertEqualOrThrow(receipt.receipt.ok, false, 'the refused receipt is reported');
+  assertEqualOrThrow(
+    getDatabaseRowCount(
+      path.join(userData, 'flo.db'),
+      "SELECT COUNT(*) AS n FROM printers WHERE id = 'android-self-test-printer'",
+    ),
+    0,
+    'the temporary printer is removed',
   );
   const mainLog = fs.readFileSync(path.join(userData, 'logs', 'main.log'), 'utf8');
   assertOrThrow(

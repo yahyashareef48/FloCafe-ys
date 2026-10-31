@@ -26,9 +26,9 @@ import {
   type HostDialogs,
 } from '../host-actions';
 import { platformApp, platformPrinters, platformRasterRenderer } from '../platform';
-import { createBackup } from '../db';
+import { createBackup, getDatabase } from '../db';
 import { retainBackupLocally } from '../services/local-backup';
-import { printViaUSB } from '../printers/thermal';
+import { printReceipt, printViaUSB } from '../printers/thermal';
 import { callNative } from './native-bridge';
 
 /** Folder for manual backups; the shell then offers to copy the file anywhere the operator picks. */
@@ -138,6 +138,7 @@ export async function androidPrintingSelfTest(body: HostActionBody = {}) {
     : null;
   const printers = await platformPrinters()?.list();
   const printTo = typeof body.printTo === 'string' ? body.printTo : '';
+  const receipt = body.receipt === true ? await printSelfTestReceipt(printTo) : null;
   const sent = printTo
     ? await printViaUSB(Buffer.from('\x1b@Al Baik POS self-test\n\n\n', 'latin1'), printTo)
     : null;
@@ -154,7 +155,74 @@ export async function androidPrintingSelfTest(body: HostActionBody = {}) {
       : { ok: false, detail: raster?.detail ?? 'No raster renderer' },
     printers: printers ?? [],
     sent,
+    receipt,
   };
+}
+
+/**
+ * Prints a rupee bill through the full receipt path (format, raster, dispatch) to `printTo`, set
+ * up like a generic 80 mm profile at 32 columns. A temporary default printer is used only when
+ * none is configured.
+ */
+async function printSelfTestReceipt(printTo: string) {
+  const db = getDatabase();
+  const tempId = 'android-self-test-printer';
+  const configured = db
+    .prepare("SELECT 1 FROM printers WHERE connection_type != 'webusb' LIMIT 1")
+    .get();
+  if (!configured) {
+    db.prepare(
+      "INSERT INTO printers (id, name, connection_type, is_default, paper_width) VALUES (?, ?, 'usb', 1, 'cols-32')",
+    ).run(tempId, printTo || 'SR588 (Bluetooth 00:11:22:AA:BB:CC)');
+  }
+  const order = {
+    order_number: 'ORD-SELFTEST-0001',
+    token_number: 7,
+    created_at: '2026-10-31 14:51:43',
+    type: 'dine_in',
+    items: [
+      {
+        product_name: 'Paneer Tikka',
+        quantity: 1,
+        unit_price: 250,
+        total: 250,
+        tax_amount: 0,
+        addons: [],
+      },
+      {
+        product_name: 'Jeera Rice',
+        quantity: 2,
+        unit_price: 150,
+        total: 300,
+        tax_amount: 0,
+        addons: [],
+      },
+    ],
+  };
+  const bill = {
+    bill_number: 'INV-SELFTEST-0001',
+    subtotal: 550,
+    discount_amount: 0,
+    tax_amount: 0,
+    total: 550,
+    payment_details: [{ method: 'cash', amount: 550 }],
+    order,
+  };
+  const business = {
+    name: 'Al Baik',
+    address: '',
+    phone: '',
+    taxRegistrationNumber: '',
+    currency: 'INR',
+    currency_symbol: '₹',
+    country: 'IN',
+    highlight_token: true,
+  };
+  try {
+    return await printReceipt(order, bill, business, 'classic');
+  } finally {
+    db.prepare('DELETE FROM printers WHERE id = ?').run(tempId);
+  }
 }
 
 /**
