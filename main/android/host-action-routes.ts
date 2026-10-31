@@ -35,6 +35,7 @@ import {
   resolvePrinterContext,
 } from '../printers/thermal';
 import { getCurrencySymbol } from '../countries';
+import { graphemeSegments } from '../../shared/print/width';
 import { callNative } from './native-bridge';
 
 /** Folder for manual backups; the shell then offers to copy the file anywhere the operator picks. */
@@ -281,9 +282,25 @@ export function androidFormatProbe() {
     ],
     ['toLocaleString en-US', () => date.toLocaleString('en-US-u-nu-latn')],
     ['String.normalize NFD', () => 'café'.normalize('NFD').length],
+    ['grapheme segments (print width helper)', () => graphemeSegments('₹250 पनीर').length],
+    ['regex Extended_Pictographic', () => /\p{Extended_Pictographic}/u.test('🍕')],
+    ['regex Mark', () => /\p{Mark}/u.test('\u0301')],
+    ['localeCompare', () => 'Paneer'.localeCompare('paneer')],
+    ['localeCompare hi', () => 'पनीर'.localeCompare('चाय', 'hi')],
+    ['Intl.Collator en', () => new Intl.Collator('en').compare('a', 'B')],
     [
-      'Intl.Segmenter grapheme',
-      () => [...new Intl.Segmenter('en', { granularity: 'grapheme' }).segment('₹250')].length,
+      'Intl.DateTimeFormat formatToParts',
+      () =>
+        new Intl.DateTimeFormat('en-US', {
+          timeZone: 'Asia/Kolkata',
+          hour: 'numeric',
+        }).formatToParts(date).length,
+    ],
+    ['Intl.DisplayNames region', () => new Intl.DisplayNames(['en'], { type: 'region' }).of('IN')],
+    ['Intl.supportedValuesOf timeZone', () => Intl.supportedValuesOf('timeZone').length],
+    [
+      'Intl.NumberFormat hi-IN',
+      () => new Intl.NumberFormat('hi-IN', { style: 'currency', currency: 'INR' }).format(1250),
     ],
     ['formatReceipt generic', () => formatReceipt(order, bill, business, 'classic', 32).length],
     [

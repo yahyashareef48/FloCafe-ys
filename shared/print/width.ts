@@ -1,7 +1,10 @@
 /** Canonical configured thermal layout widths shared by every renderer. */
 
 const COMBINING_MARK_RE = /\p{Mark}/u;
-const GRAPHEME_SEGMENTER = typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+// The Android Node runtime ships ICU without break-iterator data: segment() crashes the
+// process instead of throwing, so it takes the fallback like a runtime without Segmenter.
+const isAndroidNode = typeof process !== 'undefined' && process.platform === 'android';
+const GRAPHEME_SEGMENTER = typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function' && !isAndroidNode
   ? new Intl.Segmenter('und', { granularity: 'grapheme' })
   : null;
 const THAI_SARA_AM_CODE_POINT = 0x0e33;

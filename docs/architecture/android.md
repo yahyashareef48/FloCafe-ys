@@ -165,6 +165,11 @@ day-close Z output with the desktop raw TCP path).
   choice that keeps it. Bluetooth jobs are sent over SPP (RFCOMM) and need the "Nearby devices"
   permission. A `usb` printer whose name has neither tag (for example one saved by the Windows app)
   prints to the single attached USB printer, and fails with a message when there is not exactly one.
+- **No `Intl.Segmenter` in Node.** The nodejs-mobile ICU data has no break-iterator rules, and
+  `Intl.Segmenter#segment` crashes the whole app instead of throwing, so the shared print width
+  helpers (`shared/print/width.ts`) split graphemes with their own fallback when
+  `process.platform` is `android`. `/format-probe` runs every ICU feature the backend uses on the
+  device, and the smoke test runs it.
 - **Raster text.** Text the printer's code page cannot encode, such as the rupee sign on a generic
   58 mm profile or Arabic-script item names, is drawn by `RasterSurface`: a hidden WebView running
   the backend's `rasterRendererHtml()` page behind
