@@ -5,6 +5,7 @@
 import { strict as assert } from 'node:assert';
 import { isPosCategorySort, isPosItemSort, readPosSortSettings } from '../main/lib/pos-sort';
 import { sortCategories, sortProducts } from '../frontend/src/lib/pos-sort';
+import { contrastWithWhite, nameToColor, tileLightness } from '../frontend/src/lib/image-utils';
 
 const categories = [
   { id: 'c1', name: 'Mains' },
@@ -108,5 +109,18 @@ assert.equal(ids(products), 'p1,p2,p3,p4,p5', 'input array is not mutated');
     'sections follow category order with products without a category last',
   );
   assert.equal(groupByCategory([], cats).length, 0, 'empty categories get no section');
+}
+{
+  // Product tiles without a picture carry their name in white on a colour picked from the name.
+  for (let hue = 0; hue < 360; hue += 1) {
+    const contrast = contrastWithWhite(hue, 55, tileLightness(hue));
+    assert.ok(
+      contrast >= 4.5,
+      `white text on hue ${hue} meets WCAG AA (got ${contrast.toFixed(2)})`,
+    );
+  }
+  assert.ok(contrastWithWhite(90, 45, 65) < 2, 'the contrast check rejects a pale tile');
+  assert.equal(nameToColor('Lemon Soda'), nameToColor('Lemon Soda'), 'a name keeps its colour');
+  assert.match(nameToColor('Cola'), /^hsl\(\d+, 55%, \d+%\)$/, 'tile colours are opaque HSL');
 }
 console.log('pos-catalog-sort: all assertions passed');

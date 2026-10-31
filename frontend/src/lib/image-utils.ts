@@ -51,7 +51,10 @@ export function compressImage(file: File, quality = 0.8): Promise<string | null>
       canvas.width = size;
       canvas.height = size;
       const ctx = canvas.getContext('2d');
-      if (!ctx) { resolve(null); return; }
+      if (!ctx) {
+        resolve(null);
+        return;
+      }
 
       ctx.drawImage(img, offsetX, offsetY, size, size, 0, 0, size, size);
 
@@ -97,7 +100,32 @@ export function nameToColor(name: string): string {
     hash = codePoint + ((hash << 5) - hash);
   }
   const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 45%, 65%)`;
+  return `hsl(${hue}, ${TILE_SATURATION}%, ${tileLightness(hue)}%)`;
+}
+
+const TILE_SATURATION = 55;
+const MIN_WHITE_TEXT_CONTRAST = 4.5;
+
+/** The lightest shade of a hue that keeps white text at WCAG AA contrast; yellows end up darker than blues. */
+export function tileLightness(hue: number): number {
+  for (let lightness = 50; lightness > 15; lightness -= 1) {
+    if (contrastWithWhite(hue, TILE_SATURATION, lightness) >= MIN_WHITE_TEXT_CONTRAST)
+      return lightness;
+  }
+  return 15;
+}
+
+export function contrastWithWhite(hue: number, saturation: number, lightness: number): number {
+  const s = saturation / 100;
+  const l = lightness / 100;
+  const a = s * Math.min(l, 1 - l);
+  const channel = (n: number) => {
+    const k = (n + hue / 30) % 12;
+    const value = l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance = 0.2126 * channel(0) + 0.7152 * channel(8) + 0.0722 * channel(4);
+  return 1.05 / (luminance + 0.05);
 }
 
 /** Checks whether Base64 data URI is within character size limit (50K chars). */
