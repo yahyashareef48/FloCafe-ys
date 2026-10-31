@@ -14,6 +14,7 @@ const TEST_EXCLUSIONS = {
   'test:e2e': 'Alias for the dedicated browser Playwright job.',
   'test:upgrade-regression': 'Alias of test:upgrade-path, which is in the default suite.',
   'test:currency-split': 'Subset alias already executed by test:currency in the default suite.',
+  'test:android-bluetooth-link': 'Needs a JDK; runs in the Android workflow before the APK build.',
 };
 
 // Suite files that a real script runs but that `pretest`/`test` does not reach.
