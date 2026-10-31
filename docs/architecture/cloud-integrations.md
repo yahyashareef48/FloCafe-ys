@@ -14,7 +14,8 @@ The owner can switch every optional outbound connection off with the `offline_mo
 (`PUT /api/settings/offline-mode`, permission `offline-mode.manage`, Settings → Privacy). It is off
 by default and is restore-protected across database restore and import.
 `main/services/offline-mode.ts` exposes `isOfflineMode()`, which is also true when
-`FLO_MATRIX_OFFLINE` is `1`, and `getOfflineModeAbortSignal()`, which aborts when Offline mode turns
+`FLO_MATRIX_OFFLINE` is `1` and always true in the Android app, where `isOfflineModeLocked()` makes
+the route refuse to switch it off (see [Android](android.md#no-backups-and-no-cloud)), and `getOfflineModeAbortSignal()`, which aborts when Offline mode turns
 on. While it is on:
 
 - FloAdmin cloud sync starts no timers (including auto-registration retries) and `trackedFetch`

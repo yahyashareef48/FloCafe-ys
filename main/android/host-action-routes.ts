@@ -27,7 +27,6 @@ import {
 } from '../host-actions';
 import { platformApp, platformPrinters, platformRasterRenderer } from '../platform';
 import { createBackup, getDatabase } from '../db';
-import { retainBackupLocally } from '../services/local-backup';
 import {
   formatReceipt,
   printReceipt,
@@ -345,38 +344,36 @@ export function androidFormatProbe() {
 }
 
 /**
- * Writes a manual backup and publishes a copy into the daily-backup folder on the device's real
- * storage, then removes both, for diagnostics and CI. Reports whether that storage has hard links.
+ * Checks, on the device's real storage, that backups are refused and leave no file behind, and
+ * that the documents folder (where crash reports go) is writable, for diagnostics and CI.
  */
 export async function androidStorageSelfTest() {
-  const dir = manualBackupDir();
-  fs.mkdirSync(dir, { recursive: true });
-  const manualPath = path.join(dir, `self-test-${Date.now()}.db`);
-  let published: string | null = null;
-  let hardLinks = false;
+  const documentsDir = platformApp().getPath('documents');
+  const backupPath = path.join(manualBackupDir(), `self-test-${Date.now()}.db`);
+  let backupError = '';
   try {
-    await createBackup(manualPath);
-    const manualBytes = fs.statSync(manualPath).size;
-    const probe = `${manualPath}.link`;
-    try {
-      fs.linkSync(manualPath, probe);
-      hardLinks = true;
-      fs.unlinkSync(probe);
-    } catch {
-      hardLinks = false;
-    }
-    published = retainBackupLocally(manualPath);
-    return {
-      documentsDir: platformApp().getPath('documents'),
-      manualBytes,
-      hardLinks,
-      publishedBytes: published && fs.existsSync(published) ? fs.statSync(published).size : 0,
-    };
-  } finally {
-    for (const file of [manualPath, published]) {
-      if (file) fs.rmSync(file, { force: true });
-    }
+    await createBackup(backupPath);
+  } catch (error) {
+    backupError = (error as Error).message;
   }
+  const backupLeftFile = fs.existsSync(backupPath);
+  fs.rmSync(backupPath, { force: true });
+  const probe = path.join(documentsDir, 'logs', `.storage-self-test-${Date.now()}`);
+  let documentsWritable = false;
+  try {
+    fs.mkdirSync(path.dirname(probe), { recursive: true });
+    fs.writeFileSync(probe, 'ok');
+    documentsWritable = fs.readFileSync(probe, 'utf8') === 'ok';
+  } finally {
+    fs.rmSync(probe, { force: true });
+  }
+  return {
+    documentsDir,
+    backupRefused: backupError !== '',
+    backupError,
+    backupLeftFile,
+    documentsWritable,
+  };
 }
 
 export function createAndroidHostActionHandler(shutdownSignal?: AbortSignal): HostActionHandler {

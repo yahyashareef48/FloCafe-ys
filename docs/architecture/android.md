@@ -73,8 +73,8 @@ nodejs-mobile release and the `better-sqlite3` Android prebuild, which must equa
    starts Node with the environment `main/android/bootstrap.ts` reads.
 3. The entry installs the Android [platform host](runtime-and-lifecycle.md#platform-host), connects
    to the shell's bridge, and starts the same services as the desktop `initialize()`: database,
-   POS API, cloud sync, Google Drive, local backup, KDS server, Server App, and printer
-   initialisation. Telemetry and PostHog are never started on Android.
+   POS API, KDS server, Server App, and printer initialisation. Telemetry, PostHog, cloud sync,
+   Google Drive and scheduled backups are never started on Android.
 4. Node sends `ready` with the three ports. The shell then loads `http://127.0.0.1:3001/` and
    advertises the POS on the network.
 
@@ -85,13 +85,30 @@ and hide the system bars. `MainActivity` also asks once to be exempted from batt
 
 | Data | Location |
 | --- | --- |
-| `flo.db`, pre-migration backups, `logs/main.log`, `master-pin.enc`, the WhatsApp auth directory | `flo-data/` in the app's no-backup files directory (`FLO_ANDROID_USER_DATA`) |
-| Daily local backups (`FloCafe/Backups`) and manual backups (`FloCafe/Manual Backups`) | `Documents/AlBaikPOS` in shared storage when it is writable, otherwise the app's own documents folder (`FLO_ANDROID_DOCUMENTS`) |
+| `flo.db`, `logs/main.log`, `master-pin.enc`, the WhatsApp auth directory | `flo-data/` in the app's no-backup files directory (`FLO_ANDROID_USER_DATA`) |
+| The documents folder (crash reports only) | `Documents/AlBaikPOS` in shared storage when it is writable, otherwise the app's own documents folder (`FLO_ANDROID_DOCUMENTS`) |
 | Crash reports: `crash-*.txt` (Java stack, written as the app dies) and `exit-*.txt` (Android's reason for an abnormal end, including native and WebView renderer crashes, plus the last printing steps from `logs/native.log` and the tail of `main.log`, which on Android also receives console output, written on the next start, Android 11+) | `logs/` in the documents folder above and in `flo-data/`, by `PosApplication` |
 | The 32-byte secret-storage key | `secret-key.bin` in the no-backup files directory, wrapped by a non-exportable Android Keystore AES key |
 
 `android:allowBackup` is `false`, so Android cloud backup never copies the database. Uninstalling
-the app deletes `flo-data/`; backups in shared `Documents/AlBaikPOS` remain.
+the app deletes `flo-data/`.
+
+### No backups and no cloud
+
+The Android app keeps no copy of the store's data; the store wipes its sales data daily. Under the
+Android platform host (`platformId() === 'android'`):
+
+- `createBackup()` is refused (`ERR_BACKUPS_DISABLED`), so manual backups, the database download,
+  daily local backups and Google Drive backups all fail before writing anything, and the
+  automatic and local backup switches read as off and cannot be turned on.
+- The pre-migration backup is skipped, and a reset or currency reset deletes its own copy once it
+  commits. The short-lived recovery copy a reset or restore uses to roll back an interrupted
+  replacement is kept until that replacement finishes, as on desktop.
+- At startup, `removeKeptBackups()` deletes `flo-backup-*.db` files an earlier build left in
+  `flo-data/backups`.
+- Offline mode is always on (`isOfflineModeLocked()`), so there is no FloPOS cloud registration or
+  sync, Google Drive or WhatsApp; `PUT /api/settings/offline-mode` with `false` answers `409`.
+  Restore from a backup file the operator brings still works.
 
 Secrets the desktop app seals with Electron `safeStorage` (master PIN, JWT secret file, Google Drive
 tokens) are sealed with AES-256-GCM under the Keystore-wrapped key
@@ -124,7 +141,7 @@ channel limited to the trusted origin and the main frame. They make no network c
 
 | Methods | Android behaviour |
 | --- | --- |
-| `backupDatabase`, `restoreBackup`, `pickRestoreFile`, `dbHealthCheck`, `dbApplySafeFixes`, `dbInitialize`, `getMasterPinStatus`, `getSettings`, `setSetting`, `getKdsInfo`, `getAppInfo`, `getLogTail`, `reportRendererError`, `openWhatsAppShare`, `getPrinters` | `hostAction` to [`main/android/host-action-routes.ts`](../../main/android/host-action-routes.ts), which calls the same [`main/host-actions.ts`](../../main/host-actions.ts) functions as Electron IPC. A successful `backupDatabase` also offers the system "save as" dialog for a copy. |
+| `backupDatabase`, `restoreBackup`, `pickRestoreFile`, `dbHealthCheck`, `dbApplySafeFixes`, `dbInitialize`, `getMasterPinStatus`, `getSettings`, `setSetting`, `getKdsInfo`, `getAppInfo`, `getLogTail`, `reportRendererError`, `openWhatsAppShare`, `getPrinters` | `hostAction` to [`main/android/host-action-routes.ts`](../../main/android/host-action-routes.ts), which calls the same [`main/host-actions.ts`](../../main/host-actions.ts) functions as Electron IPC. `backupDatabase` is refused on Android (see [No backups and no cloud](#no-backups-and-no-cloud)). |
 | `openKdsWindow` | Shows the KDS page in an in-page overlay |
 | `getPostHogBootstrap` | `{ enabled: false }` |
 | `getUpdateStatus`, `checkForUpdates`, `downloadUpdate`, `restartAndInstall`, `onUpdateStatus` | Report `store-managed`; Android updates by installing a new APK |
@@ -235,7 +252,7 @@ publishes only the debug APKs.
 The workflow runs the x86_64 debug APK in an emulator and inspects the live WebView over the
 DevTools protocol ([`android/scripts/ci-smoke.sh`](../../android/scripts/ci-smoke.sh)): the servers
 and their bind addresses, the shims, the raster surface, a print job to an unanswered Bluetooth
-address (it must reach the connect step without closing the app), backups on the device's shared
-storage, the system save and print screens, an update to the release APK that must reopen the
+address (it must reach the connect step without closing the app), a refused backup that leaves no
+file on the device's shared storage, the system save and print screens, an update to the release APK that must reopen the
 existing database, a forced crash that must leave both crash reports, and Screen mode against a
 stand-in main device, including reconnecting after it goes away.

@@ -3,6 +3,7 @@ import {
   beginDatabaseShutdown,
   closeDatabase,
   initDatabase,
+  removeKeptBackups,
   waitForDatabaseRequests,
 } from '../db';
 import { startServer, stopServer } from '../server';
@@ -54,15 +55,16 @@ function throwIfShutdownRequested(): void {
   }
 }
 
-// Mirrors the Electron initialize() order. Telemetry and PostHog are never started on Android.
+// Mirrors the Electron initialize() order. Telemetry, PostHog, cloud sync, Google Drive and
+// scheduled backups are never started on Android.
 export async function startAndroidServices(): Promise<AndroidRuntimeInfo> {
   initDatabase();
+  const removedBackups = removeKeptBackups();
+  if (removedBackups > 0)
+    console.log(`[Android] Removed ${removedBackups} kept backup(s); backups are off`);
   throwIfShutdownRequested();
   await startServer();
   throwIfShutdownRequested();
-  cloudSync.start();
-  googleDrive.start();
-  localBackup.start();
   await startKdsServer();
   throwIfShutdownRequested();
   await startServerApp();

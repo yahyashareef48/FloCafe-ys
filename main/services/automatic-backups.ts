@@ -1,4 +1,4 @@
-import { getSettingValue, upsertSettings } from '../db';
+import { backupsDisabled, getSettingValue, upsertSettings } from '../db';
 
 export const AUTOMATIC_BACKUPS_SETTING_KEY = 'automatic_backups_enabled';
 
@@ -7,7 +7,7 @@ export const AUTOMATIC_BACKUPS_SETTING_KEY = 'automatic_backups_enabled';
  * update backups ignore it.
  */
 export function areAutomaticBackupsEnabled(): boolean {
-  return getSettingValue(AUTOMATIC_BACKUPS_SETTING_KEY) === 'true';
+  return !backupsDisabled() && getSettingValue(AUTOMATIC_BACKUPS_SETTING_KEY) === 'true';
 }
 
 export function setAutomaticBackupsEnabled(enabled: boolean): void {

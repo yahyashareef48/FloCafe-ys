@@ -282,33 +282,62 @@ async function run(child: ChildProcess, output: () => string): Promise<void> {
   );
 
   const storage = (await hostAction('/storage-self-test')).result;
-  assertOrThrow(storage.manualBytes > 0, 'the storage self-test writes a backup');
   assertEqualOrThrow(
-    storage.publishedBytes,
-    storage.manualBytes,
-    'the storage self-test publishes an identical copy',
+    storage.backupRefused,
+    true,
+    `the storage self-test is refused a backup (${storage.backupError})`,
+  );
+  assertEqualOrThrow(storage.backupLeftFile, false, 'a refused backup leaves no file');
+  assertEqualOrThrow(
+    storage.documentsWritable,
+    true,
+    'the documents folder for crash reports is writable',
   );
   assertEqualOrThrow(
     storage.documentsDir,
     documents,
     'the storage self-test uses the Android documents folder',
   );
+
+  console.log('\n--- Backups are refused; restore still works ---');
+  const refused = (await hostAction('/backup', { pin: '2468' })).result;
   assertEqualOrThrow(
-    fs.readdirSync(path.join(documents, 'FloCafe', 'Manual Backups')).length,
+    refused.success,
+    false,
+    `the Android app refuses a manual backup (${JSON.stringify(refused)})`,
+  );
+  const manualDir = path.join(documents, 'FloCafe', 'Manual Backups');
+  assertEqualOrThrow(
+    fs.existsSync(manualDir)
+      ? fs.readdirSync(manualDir).filter((name) => name.endsWith('.db')).length
+      : 0,
     0,
-    'the storage self-test cleans up after itself',
+    'no manual backup file is written',
+  );
+  const privateBackups = path.join(userData, 'backups');
+  assertEqualOrThrow(
+    fs.existsSync(privateBackups)
+      ? fs.readdirSync(privateBackups).filter((name) => /^flo-backup-.*\.db$/.test(name)).length
+      : 0,
+    0,
+    'no backup is kept in the private folder, including before the first migration',
   );
 
-  console.log('\n--- Backup and restore run the shared actions ---');
-  const wrongPin = await hostAction('/backup', { pin: '0000' });
-  assertEqualOrThrow(wrongPin.result.success, false, 'backup refuses a wrong master PIN');
-  const backup = (await hostAction('/backup', { pin: '2468' })).result;
-  assertEqualOrThrow(backup.success, true, `backup succeeds (${JSON.stringify(backup)})`);
-  assertOrThrow(
-    backup.path.startsWith(path.join(documents, 'FloCafe', 'Manual Backups')),
-    'manual backup lands in the Android documents folder',
-  );
-  assertOrThrow(fs.existsSync(backup.path), 'backup file exists');
+  // A file the operator brings: a copy of the live database stamped like a backup.
+  fs.mkdirSync(manualDir, { recursive: true });
+  const broughtBackup = path.join(manualDir, 'brought-backup.db');
+  const live = new Database(path.join(userData, 'flo.db'), { readonly: true });
+  const schemaVersion = Number(live.pragma('user_version', { simple: true }));
+  await live.backup(broughtBackup);
+  live.close();
+  const stamp = new Database(broughtBackup);
+  stamp.pragma('journal_mode = DELETE');
+  stamp.exec('CREATE TABLE IF NOT EXISTS _flo_meta (key TEXT PRIMARY KEY, value TEXT)');
+  stamp
+    .prepare("INSERT OR REPLACE INTO _flo_meta (key, value) VALUES ('schema_version', ?)")
+    .run(String(schemaVersion));
+  stamp.close();
+  const backup = { path: broughtBackup };
 
   pickedRestorePath = backup.path;
   const restore = (await hostAction('/restore', { pin: '2468' })).result;

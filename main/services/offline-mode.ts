@@ -1,4 +1,5 @@
 import { getSettingValue } from '../db';
+import { platformId } from '../platform';
 
 export const OFFLINE_MODE_SETTING = 'offline_mode';
 
@@ -11,14 +12,22 @@ export class OfflineModeError extends Error {
   }
 }
 
-/** True when the owner switched every optional outbound connection off. */
+/**
+ * True when the owner switched every optional outbound connection off. The Android app is always
+ * offline: no FloPOS cloud registration or sync, Google Drive, or WhatsApp.
+ */
 export function isOfflineMode(): boolean {
-  if (process.env.FLO_MATRIX_OFFLINE === '1') return true;
+  if (process.env.FLO_MATRIX_OFFLINE === '1' || isOfflineModeLocked()) return true;
   try {
     return getSettingValue(OFFLINE_MODE_SETTING) === 'true';
   } catch {
     return false;
   }
+}
+
+/** Offline mode cannot be switched off on Android. */
+export function isOfflineModeLocked(): boolean {
+  return platformId() === 'android';
 }
 
 const enabledListeners = new Set<() => void>();

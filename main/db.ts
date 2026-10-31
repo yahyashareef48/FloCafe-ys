@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import type { Request, Response, NextFunction } from 'express';
 import * as path from 'path';
 import * as os from 'os';
-import { platformApp } from './platform';
+import { platformApp, platformId } from './platform';
 import log from 'electron-log';
 import * as fs from 'fs';
 import * as bcrypt from 'bcryptjs';
@@ -608,6 +608,31 @@ export function getDbPath(): string {
 function getBackupDir(): string {
   const userDataPath = platformApp().getPath('userData');
   return path.join(userDataPath, 'backups');
+}
+
+/** The Android app keeps no backups of any kind: the store wipes its sales data daily. */
+export function backupsDisabled(): boolean {
+  return platformId() === 'android';
+}
+
+/** Deletes backups an earlier Android build left in the private backups folder. */
+export function removeKeptBackups(): number {
+  const dir = getBackupDir();
+  if (!backupsDisabled() || !fs.existsSync(dir)) return 0;
+  let removed = 0;
+  for (const name of fs.readdirSync(dir)) {
+    if (!/^flo-backup-.*\.db$/.test(name)) continue;
+    fs.rmSync(path.join(dir, name), { force: true });
+    removed += 1;
+  }
+  return removed;
+}
+
+/** A reset's own copy is deleted once the reset has committed when backups are disabled. */
+function withoutKeptBackup<T extends { backupPath: string; committed?: boolean }>(result: T): T {
+  if (!backupsDisabled() || result.committed === false) return result;
+  fs.rmSync(result.backupPath, { force: true });
+  return { ...result, backupPath: '' };
 }
 
 // Marker written on first startup to distinguish empty fresh install from missing db file.
@@ -2002,6 +2027,13 @@ export function createBackup(
   signal?: AbortSignal,
   options?: BackupOptions,
 ): Promise<{ path: string; schemaVersion: number }> {
+  if (backupsDisabled()) {
+    return Promise.reject(
+      Object.assign(new Error('Backups are turned off in the Android app'), {
+        code: 'ERR_BACKUPS_DISABLED',
+      }),
+    );
+  }
   return withDatabaseMaintenanceLock(
     (maintenanceSignal) => createBackupUnlocked(targetPath, maintenanceSignal, options),
     signal,
@@ -2140,7 +2172,7 @@ export async function resetDatabaseWithBackup(
   return withDatabaseMaintenanceLock(
     (maintenanceSignal) => resetDatabaseWithBackupUnlocked(maintenanceSignal),
     signal,
-  );
+  ).then(withoutKeptBackup);
 }
 
 type CurrencyResetMenuSnapshot = {
@@ -2306,7 +2338,12 @@ export async function resetDatabaseForCurrencyChange(
 ): Promise<{ backupPath: string; committed?: boolean; cleanupPending?: boolean }> {
   return withDatabaseMaintenanceLock(async (maintenanceSignal) => {
     const currentDb = getDatabase();
-    const PRESERVED_SETTINGS = ['country', 'currency', 'timezone', ...BACKUP_PREFERENCE_SETTING_KEYS];
+    const PRESERVED_SETTINGS = [
+      'country',
+      'currency',
+      'timezone',
+      ...BACKUP_PREFERENCE_SETTING_KEYS,
+    ];
     const settingsRows = currentDb
       .prepare(
         `SELECT key, value FROM settings WHERE key IN (${PRESERVED_SETTINGS.map(() => '?').join(', ')})`,
@@ -2347,7 +2384,7 @@ export async function resetDatabaseForCurrencyChange(
         );
       })();
     });
-  }, signal);
+  }, signal).then(withoutKeptBackup);
 }
 
 /** Reads the canonical schema_version stamp createBackup() writes into _flo_meta. */
@@ -7743,7 +7780,7 @@ export const MIGRATIONS: { version: number; name: string; up: () => void }[] = [
 ];
 
 function syncBackupBeforeMigration(fromVersion: number, toVersion: number): void {
-  if (buildingIdealSchema) return;
+  if (buildingIdealSchema || backupsDisabled()) return;
   let targetPath = '';
   let completed = false;
   try {

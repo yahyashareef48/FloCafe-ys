@@ -68,7 +68,8 @@ async function main() {
   );
   const storage = (await evaluate(nativeCall('hostAction', { route: '/storage-self-test', body: {} }))).result || {};
   console.log(`storage self-test: ${JSON.stringify(storage)}`);
-  await check('backups write to and publish on the device storage', `${storage.manualBytes > 0 && storage.publishedBytes === storage.manualBytes}`, true);
+  await check('backups are refused and leave no file on the device storage', `${storage.backupRefused === true && storage.backupLeftFile === false}`, true);
+  await check('the documents folder for crash reports is writable', `${storage.documentsWritable === true}`, true);
 
   // No printer answers at this address, so a working path ends in "Could not reach", not a crash.
   const pidBefore = pidOf();

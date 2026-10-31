@@ -4,7 +4,7 @@ import { platformApp } from '../platform';
 import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { createBackup, getDatabase, getSettingValue, upsertSettings } from '../db';
+import { backupsDisabled, createBackup, getDatabase, getSettingValue, upsertSettings } from '../db';
 import { areAutomaticBackupsEnabled } from './automatic-backups';
 
 export const LOCAL_BACKUP_SETTING_KEY = 'local_backup_enabled';
@@ -25,6 +25,7 @@ export function getLocalBackupDir(): string {
 }
 
 export function isLocalBackupEnabled(): boolean {
+  if (backupsDisabled()) return false;
   return getSettingValue(LOCAL_BACKUP_SETTING_KEY) !== 'false';
 }
 

@@ -37,6 +37,7 @@ import { readProductAnalyticsChoice, syncPostHogIdentity } from '../services/pos
 import {
   OFFLINE_MODE_SETTING,
   isOfflineMode,
+  isOfflineModeLocked,
   notifyOfflineModeEnabled,
 } from '../services/offline-mode';
 import * as whatsapp from '../services/whatsapp';
@@ -1637,6 +1638,9 @@ router.put(
       const value = req.body?.offline_mode;
       if (typeof value !== 'boolean') {
         return res.status(400).json({ error: 'offline_mode must be a boolean' });
+      }
+      if (!value && isOfflineModeLocked()) {
+        return res.status(409).json({ error: 'Offline mode is always on in the Android app' });
       }
       getDatabase()
         .prepare(

@@ -160,7 +160,8 @@ loss. Retention failure is logged and never fails the committed restore.
 `main/services/automatic-backups.ts` holds the `automatic_backups_enabled` master switch, exposed as
 `GET`/`PUT /api/db-tools/automatic-backups` and the Automatic backups toggle in Backup & Data
 settings. It is off unless the value is `'true'`, so a new or never-configured install makes no
-scheduled backups. When off, the daily local backup and the scheduled
+scheduled backups (the Android app keeps no backups at all; see
+[Android](android.md#no-backups-and-no-cloud)). When off, the daily local backup and the scheduled
 Google Drive backup both skip; manual backups, the pre-migration backup, the recovery copies that
 initialize, currency reset, and restore make, and retries of a Drive upload already in progress
 still run. Resets and restores preserve the setting the same way as `local_backup_enabled`.
