@@ -41,6 +41,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -219,7 +220,7 @@ public abstract class WebShellActivity extends ComponentActivity {
             public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
                 if (pendingFileChooser != null) pendingFileChooser.onReceiveValue(null);
                 pendingFileChooser = callback;
-                launch(params.createIntent(), result -> {
+                launch(fileChooserIntent(params), result -> {
                     ValueCallback<Uri[]> chooser = pendingFileChooser;
                     pendingFileChooser = null;
                     if (chooser != null) chooser.onReceiveValue(FileChooserParams.parseResult(result.getResultCode(), result.getData()));
@@ -229,6 +230,28 @@ public abstract class WebShellActivity extends ComponentActivity {
         });
         ((FrameLayout) findViewById(R.id.root)).addView(webView, 0, new FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+    }
+
+    /**
+     * The WebView turns accept=".csv" into a text/csv filter, but Android's file apps often label CSV
+     * files text/comma-separated-values, so the picker listed no files. Only image pickers keep a filter.
+     */
+    static Intent fileChooserIntent(WebChromeClient.FileChooserParams params) {
+        Intent intent = params.createIntent();
+        String action = intent.getAction();
+        boolean opensFiles = Intent.ACTION_GET_CONTENT.equals(action) || Intent.ACTION_OPEN_DOCUMENT.equals(action);
+        if (!opensFiles || acceptsOnlyImages(params.getAcceptTypes())) return intent;
+        intent.removeExtra(Intent.EXTRA_MIME_TYPES);
+        intent.setType("*/*");
+        return intent;
+    }
+
+    static boolean acceptsOnlyImages(String[] acceptTypes) {
+        if (acceptTypes == null || acceptTypes.length == 0) return false;
+        for (String type : acceptTypes) {
+            if (!type.trim().toLowerCase(Locale.ROOT).startsWith("image/")) return false;
+        }
+        return true;
     }
 
     protected String readAsset(String name) {
