@@ -712,7 +712,7 @@ router.get('/topProducts', requirePermission('reports.view'), (req: Request, res
     }
     const requestedLimit = Number(req.query.limit);
     const limit = Number.isInteger(requestedLimit)
-      ? Math.min(Math.max(requestedLimit, 1), 100)
+      ? Math.min(Math.max(requestedLimit, 1), 1000)
       : 10;
     const windowStart = reportDayBounds(startDate)[0];
     const windowEnd = reportDayBounds(endDate)[1];
