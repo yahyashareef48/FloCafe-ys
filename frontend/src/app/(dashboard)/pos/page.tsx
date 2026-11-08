@@ -212,7 +212,8 @@ const parsePrepaidPaymentRequest = (serialized: string): PrepaidPaymentRequest |
         payment.method.length === 0 ||
         typeof payment.amount !== 'number' ||
         !Number.isFinite(payment.amount) ||
-        payment.amount <= 0 ||
+        payment.amount < 0 ||
+        (payment.amount === 0 && record.payments.length !== 1) ||
         (payment.payment_method_id !== undefined &&
           typeof payment.payment_method_id !== 'number') ||
         (payment.transaction_id !== undefined && typeof payment.transaction_id !== 'string')
@@ -524,6 +525,49 @@ export default function POSPage() {
     prepaidAttemptRef.current = null;
     prepaidAttemptKeyRef.current = null;
     return true;
+  };
+
+  const isNotFoundResponse = (error: unknown) =>
+    (error as { response?: { status?: number } } | null)?.response?.status === 404;
+  /**
+   * Drops the parts of a saved retry the server proves can never finish, so a
+   * deleted, cancelled or rebuilt order cannot lock checkout. Anything unproven is kept.
+   */
+  const reconcilePrepaidAttempt = async (
+    attempt: PrepaidAttempt | null,
+  ): Promise<PrepaidAttempt | null> => {
+    if (!attempt?.order) return attempt;
+    try {
+      const { data } = await api.get(`/orders/${attempt.order.id}`);
+      if (data?.order?.status === 'cancelled') {
+        clearPrepaidAttempt();
+        return null;
+      }
+    } catch (error) {
+      if (!isNotFoundResponse(error)) return attempt;
+      clearPrepaidAttempt();
+      return null;
+    }
+    if (!attempt.bill) return attempt;
+    const savedRequestUsable =
+      !attempt.paymentFingerprint || parsePrepaidPaymentRequest(attempt.paymentFingerprint);
+    let billGone = false;
+    try {
+      const { data } = await api.get(`/bills/${attempt.bill.id}`);
+      const unpaidWithoutPayment =
+        data?.bill?.payment_status === 'unpaid' && Number(data.bill.paid_amount || 0) === 0;
+      if (savedRequestUsable || !unpaidWithoutPayment) return attempt;
+    } catch (error) {
+      if (!isNotFoundResponse(error)) return attempt;
+      billGone = true;
+    }
+    const reset: PrepaidAttempt = {
+      ...attempt,
+      ...(billGone ? { bill: undefined } : {}),
+      paymentFingerprint: '',
+      paymentIdempotencyKey: newIdempotencyKey(),
+    };
+    return savePrepaidAttempt(reset) ? reset : attempt;
   };
 
   /** Keeps bounded operation facts for the deliberate help flow only. */
@@ -1221,6 +1265,7 @@ export default function POSPage() {
       } catch {
         // Storage failures are reported when checkout is confirmed.
       }
+      matchingAttempt = await reconcilePrepaidAttempt(matchingAttempt);
       setPrepaidModalAttempt(matchingAttempt);
       setShowPrepaidCheckout(true);
       return;
@@ -1517,6 +1562,8 @@ export default function POSPage() {
         ...(p.transaction_id !== undefined ? { transaction_id: p.transaction_id } : {}),
       }));
     if (walletAmount > 0) paymentLines.push({ method: 'wallet', amount: walletAmount });
+    // A fully discounted bill still needs one zero line so the backend settles it as paid.
+    if (paymentLines.length === 0) paymentLines = [{ method: 'cash', amount: 0 }];
     const paymentCustomerId: string | number | null = cart.customerId ?? null;
     let paymentFingerprint = JSON.stringify({
       payments: paymentLines,
@@ -1533,7 +1580,7 @@ export default function POSPage() {
       setSubmitting(false);
       return;
     }
-    const existingAttempt =
+    let existingAttempt =
       storedAttempt &&
       storedAttempt.userId === activeUserId &&
       storedAttempt.cartFingerprint === cartFingerprint &&
@@ -1541,6 +1588,7 @@ export default function POSPage() {
       storedAttempt.paymentIdempotencyKey
         ? storedAttempt
         : null;
+    existingAttempt = await reconcilePrepaidAttempt(existingAttempt);
     const savedPaymentRequest =
       existingAttempt?.bill && existingAttempt.paymentFingerprint
         ? parsePrepaidPaymentRequest(existingAttempt.paymentFingerprint)
@@ -2005,7 +2053,9 @@ export default function POSPage() {
           failureCorrelationId,
         );
       else {
-        if (failureOperation === 'payment.create' && attempt.bill) {
+        if (committedOrder && isNotFoundResponse(error)) {
+          clearPrepaidAttempt();
+        } else if (failureOperation === 'payment.create' && attempt.bill) {
           const failure = classifyOrderRequestFailure(error, {
             operation: 'payment.create',
             correlationId: failureCorrelationId || '',

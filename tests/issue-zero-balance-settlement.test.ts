@@ -613,6 +613,75 @@ async function main(): Promise<void> {
       );
     }
 
+    // ── prepaid POS checkout sends one zero cash line for a 100% order discount ──
+    console.log('\n─── prepaid-full-discount-batch: zero cash line settles the batch route ───');
+    {
+      const create = await createOrder({
+        type: 'takeaway',
+        items: [{ product_id: 'prod-1000', quantity: 1 }],
+      });
+      setSetting(db, 'discount_max_percentage', '100');
+      assertEqual(create.status, 201, 'prepaid-full-discount-batch: order created');
+      const orderId = create.data.order.id;
+      const disc = await applyOrderDiscount(orderId, {
+        discount_type: 'percentage',
+        discount_value: 100,
+        discount_reason: 'zb prepaid-full-discount-batch',
+      });
+      assertEqual(disc.status, 200, 'prepaid-full-discount-batch: 100% order discount applied');
+      const gen = await generateBill(orderId);
+      assertEqual(gen.status, 201, 'prepaid-full-discount-batch: bill generated');
+      const billId = gen.data.bill.id;
+      assertEqual(Number(billRow(db, billId).total), 0, 'prepaid-full-discount-batch: total is 0');
+      const empty = await api(baseUrl, `/api/bills/${billId}/payments`, {
+        method: 'POST',
+        body: { payments: [], customer_id: null },
+        headers: A,
+      });
+      assertEqual(empty.status, 400, 'prepaid-full-discount-batch: empty batch is rejected');
+      const settle = await api(baseUrl, `/api/bills/${billId}/payments`, {
+        method: 'POST',
+        body: { payments: [{ method: 'cash', amount: 0 }], customer_id: null },
+        headers: A,
+      });
+      assert(
+        settle.status >= 200 && settle.status < 300,
+        `prepaid-full-discount-batch: zero line accepted (got ${settle.status} ${JSON.stringify(settle.data)})`,
+      );
+      assertEqual(
+        billRow(db, billId).payment_status,
+        'paid',
+        'prepaid-full-discount-batch: bill is paid',
+      );
+      assertEqual(
+        Number(billRow(db, billId).paid_amount),
+        0,
+        'prepaid-full-discount-batch: no money recorded',
+      );
+      assertEqual(
+        orderRow(db, orderId).status,
+        'completed',
+        'prepaid-full-discount-batch: order completed',
+      );
+
+      const { billId: dueBillId } = await newTakeawayOrder('prod-400');
+      const zeroOnDue = await api(baseUrl, `/api/bills/${dueBillId}/payments`, {
+        method: 'POST',
+        body: { payments: [{ method: 'cash', amount: 0 }], customer_id: null },
+        headers: A,
+      });
+      assertEqual(
+        zeroOnDue.status,
+        400,
+        'prepaid-full-discount-batch: zero line rejected on due bill',
+      );
+      assertEqual(
+        billRow(db, dueBillId).payment_status,
+        'unpaid',
+        'prepaid-full-discount-batch: due bill stays unpaid',
+      );
+    }
+
     // ── cancel is not blocked by a zero-closed sibling ──
     console.log('\n─── cancel-after-zero-close: cancel not blocked by zero-closed sibling ───');
     {
