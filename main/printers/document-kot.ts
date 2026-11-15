@@ -294,9 +294,6 @@ function kotHeaderLines(
     sourceLines?.push(header.token.text);
     sourceControlLines?.push(lines.at(-1) ?? '');
   }
-  lines.push('');
-  sourceLines?.push('');
-  sourceControlLines?.push('');
   lines.push(
     truncateShapedLine(
       station,
@@ -499,7 +496,6 @@ export function renderKotDocumentToLines(
     });
   }
   lines.push(bar);
-  lines.push('');
 
   if (items) {
     for (const [rowIndex, row] of items.rows.entries()) {
@@ -536,8 +532,7 @@ export function renderKotDocumentToLines(
     }
   }
 
-  lines.push('');
-  lines.push(bar);
+  if (options.cutMode !== 'none') lines.push(bar);
   lines.push('{CUT}');
 
   return lines;

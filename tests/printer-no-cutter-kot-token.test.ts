@@ -2,8 +2,9 @@
  * Printers without a cutter, and the kitchen ticket's token and item layout.
  *
  * - Migration v119 adds printers.auto_cut (default on) without touching existing rows.
- * - The printers API stores auto_cut; a printer with it off prints a "Cut here" tear
- *   line where every other printer sends the ESC/POS cut command.
+ * - The printers API stores auto_cut and no_cutter_mode. Without a cutter, `all` joins
+ *   back-to-back jobs with a "Cut here" line and feeds once idle; `parts` prints the
+ *   first part and holds the rest until /print-parts/next.
  * - /api/printers/print-kot prints the bill's token (or the order number's counter
  *   before billing) large under the banner when the store prints tokens.
  * - Item headings print bold at the ticket's normal text size, wrapped under their
@@ -45,6 +46,8 @@ const {
 } = require('../main/db');
 
 const GS_V = Buffer.from([0x1d, 0x56]);
+const TAIL_FEED = Buffer.from([0x1b, 0x64, 0x03]);
+const { JOIN_WINDOW_MS, resetNoCutterJobs } = require('../main/printers/no-cutter-jobs');
 const NORMAL_BOLD = Buffer.from([0x1b, 0x21, 0x08]);
 const DOUBLE_WIDTH_HEIGHT_BOLD = Buffer.from([0x1b, 0x21, 0x38]);
 const DOUBLE_HEIGHT_ONLY_BOLD = Buffer.from([0x1b, 0x21, 0x18]);
@@ -140,7 +143,7 @@ function migrationChecks(): void {
 
 function escPosChecks(): void {
   console.log('\n--- buildEscPos: cut command or tear line ---');
-  const { buildEscPos, tearLineText } = require('../main/printers/formatting-helpers');
+  const { buildEscPos, tearLineText, tearLineBytes } = require('../main/printers/formatting-helpers');
   const { GENERIC_THERMAL_CAPABILITIES, LATIN_THERMAL_CAPABILITIES } = require(
     '../shared/print/thermal-capabilities',
   );
@@ -151,7 +154,12 @@ function escPosChecks(): void {
   assertOrThrow(full.includes(Buffer.from([0x1d, 0x56, 0x00])), 'full cut sends GS V 0');
   assertOrThrow(partial.includes(Buffer.from([0x1d, 0x56, 0x42, 0x00])), 'partial cut sends GS V B 0');
   assertOrThrow(!none.includes(GS_V), 'a printer without a cutter gets no cut command');
-  assertIncludesOrThrow(none.toString('latin1'), ' Cut here ', 'it prints a Cut here line instead');
+  assertOrThrow(!none.toString('latin1').includes('Cut here'), 'a single job ends without a tear line');
+  assertIncludesOrThrow(
+    tearLineBytes(32, 'en').toString('latin1'),
+    '----- Cut here -----',
+    'the tear line between parts is a dashed Cut here line',
+  );
 
   const english = tearLineText(32, 'en', GENERIC_THERMAL_CAPABILITIES);
   assertEqualOrThrow(english.length, 32, 'the tear line spans the paper width');
@@ -218,7 +226,11 @@ function kotLayoutChecks(): void {
     'only the token is printed large',
   );
   assertOrThrow(!result.data.includes(DOUBLE_HEIGHT_ONLY_BOLD), 'no line is stretched to double height alone');
-  assertOrThrow(!result.data.includes(GS_V), 'the KOT ends with a tear line on a printer without a cutter');
+  assertOrThrow(!result.data.includes(GS_V), 'a KOT for a printer without a cutter sends no cut');
+  assertOrThrow(
+    !result.lines.slice(-3).some((line: string) => /^-+$/.test(line) || line === ''),
+    'it ends on its last item: no blank line, closing rule, or tear line',
+  );
 
   const withoutToken = renderKotViaDocument({ ...order, kot_token: '' }, items, 'Shawarma', options);
   assertOrThrow(
@@ -264,11 +276,9 @@ async function routeChecks(): Promise<void> {
 
     const invalid = await request(app).put(`/api/printers/${id}`).send({ auto_cut: 'no' });
     assertEqualOrThrow(invalid.status, 400, 'a non-boolean auto_cut is rejected');
-    const updated = await request(app).put(`/api/printers/${id}`).send({ auto_cut: false });
-    assertEqualOrThrow(updated.status, 200, 'auto_cut can be turned off');
-    assertEqualOrThrow(updated.body.printer.auto_cut, 0, 'auto_cut is stored off');
-    const renamed = await request(app).put(`/api/printers/${id}`).send({ name: 'Pocket' });
-    assertEqualOrThrow(renamed.body.printer.auto_cut, 0, 'an update without auto_cut keeps it');
+    const badMode = await request(app).put(`/api/printers/${id}`).send({ no_cutter_mode: 'some' });
+    assertEqualOrThrow(badMode.status, 400, 'an unknown no_cutter_mode is rejected');
+    assertEqualOrThrow(created.body.printer.no_cutter_mode, 'all', 'no_cutter_mode defaults to all');
 
     const orderId = Number(
       db
@@ -279,33 +289,98 @@ async function routeChecks(): Promise<void> {
         .run().lastInsertRowid,
     );
     const items = [{ product_name: 'Mini Shawarma Samoli', quantity: 1, status: 'pending' }];
-    const printKot = async () => {
-      const before = capture.jobs.length;
+    const postKot = async () => {
       const res = await request(app)
         .post('/api/printers/print-kot')
         .send({ orderId, stationName: 'Shawarma', items });
-      assertEqualOrThrow(res.status, 200, `print-kot succeeds (${JSON.stringify(res.body)})`);
+      assertEqualOrThrow(res.status, 200, 'print-kot succeeds');
+      return res.body;
+    };
+    const printKot = async () => {
+      const before = capture.jobs.length;
+      await postKot();
       await waitForJobs(capture.jobs, before + 1);
-      return capture.jobs[before].toString('latin1');
+      return capture.jobs[before];
     };
 
+    console.log('\n--- Token on the KOT ---');
     setSetting('bill_highlight_token', 'false');
-    const tokensOff = await printKot();
+    const tokensOff = (await printKot()).toString('latin1');
     assertOrThrow(!printsToken(tokensOff, '0007'), 'no token when the store prints none');
-    assertIncludesOrThrow(tokensOff, ' Cut here ', 'the route honours the printer without a cutter');
-    assertOrThrow(!Buffer.from(tokensOff, 'latin1').includes(GS_V), 'the route sends no cut command');
+    assertOrThrow(Buffer.from(tokensOff, 'latin1').includes(GS_V), 'a printer with a cutter still cuts');
 
     setSetting('bill_highlight_token', 'true');
-    const beforeBill = await printKot();
+    const beforeBill = (await printKot()).toString('latin1');
     assertOrThrow(printsToken(beforeBill, '0007'), 'an unbilled order shows its order number counter');
-
     db.prepare(
       `INSERT INTO bills (bill_number, order_id, subtotal, total, balance, payment_status, created_at, updated_at)
        VALUES ('INV-20261115-0003', ?, 40, 40, 0, 'paid', datetime('now'), datetime('now'))`,
     ).run(orderId);
-    const afterBill = await printKot();
+    const afterBill = (await printKot()).toString('latin1');
     assertOrThrow(printsToken(afterBill, '0003'), 'a billed order shows the bill token');
     assertOrThrow(!printsToken(afterBill, '0007'), 'the bill token replaces the order counter');
+
+    console.log('\n--- No cutter: print all at once ---');
+    const allMode = await request(app)
+      .put(`/api/printers/${id}`)
+      .send({ auto_cut: false, no_cutter_mode: 'all' });
+    assertEqualOrThrow(allMode.body.printer.auto_cut, 0, 'auto_cut is stored off');
+    assertEqualOrThrow(allMode.body.printer.no_cutter_mode, 'all', 'all mode is stored');
+    resetNoCutterJobs();
+    const first = await printKot();
+    const second = await printKot();
+    assertOrThrow(!first.includes(GS_V) && !second.includes(GS_V), 'no cut command is sent');
+    assertOrThrow(!first.toString('latin1').includes('Cut here'), 'the first part has no tear line');
+    assertOrThrow(
+      !first.subarray(-3).equals(TAIL_FEED),
+      'the first part leaves the feed for later, so the next part follows tightly',
+    );
+    assertOrThrow(
+      second.toString('latin1').indexOf('Cut here') >= 0 &&
+        second.toString('latin1').indexOf('Cut here') < second.indexOf(Buffer.from([0x1b, 0x40])),
+      'the next part starts with the tear line',
+    );
+    const jobsBeforeFeed = capture.jobs.length;
+    await new Promise((resolve) => setTimeout(resolve, JOIN_WINDOW_MS + 500));
+    await waitForJobs(capture.jobs, jobsBeforeFeed + 1);
+    assertOrThrow(
+      capture.jobs[jobsBeforeFeed]?.equals(TAIL_FEED) === true,
+      'once the printer is idle, only a feed follows: no tear line at the end',
+    );
+
+    console.log('\n--- No cutter: print in parts ---');
+    await request(app).put(`/api/printers/${id}`).send({ no_cutter_mode: 'parts' });
+    resetNoCutterJobs();
+    const partOne = await printKot();
+    assertOrThrow(partOne.subarray(-3).equals(TAIL_FEED), 'the first part prints at once and feeds');
+    const jobsAfterFirst = capture.jobs.length;
+    const queued = await postKot();
+    assertEqualOrThrow(queued.print_parts?.pending?.length, 1, 'the next part waits');
+    assertEqualOrThrow(queued.print_parts?.printed, 1, 'one part is printed');
+    assertEqualOrThrow(queued.print_parts?.total, 2, 'two parts in all');
+    assertEqualOrThrow(queued.print_parts?.pending?.[0]?.kind, 'kot', 'the waiting part is a KOT');
+    assertEqualOrThrow(queued.print_parts?.pending?.[0]?.station, 'Shawarma', 'it names its station');
+    await postKot();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    assertEqualOrThrow(capture.jobs.length, jobsAfterFirst, 'waiting parts are not printed');
+    const listed = await request(app).get('/api/printers/print-parts');
+    assertEqualOrThrow(listed.body.print_parts.pending.length, 2, 'the banner can list waiting parts');
+
+    const next = await request(app).post('/api/printers/print-parts/next');
+    assertEqualOrThrow(next.status, 200, 'print next succeeds');
+    await waitForJobs(capture.jobs, jobsAfterFirst + 1);
+    assertEqualOrThrow(capture.jobs.length, jobsAfterFirst + 1, 'print next prints one part');
+    assertEqualOrThrow(next.body.print_parts.printed, 2, 'two parts are printed');
+    assertEqualOrThrow(next.body.print_parts.pending.length, 1, 'one part still waits');
+    const last = await request(app).post('/api/printers/print-parts/next');
+    assertEqualOrThrow(last.body.print_parts.pending.length, 0, 'nothing waits after the last part');
+
+    const fresh = await printKot();
+    assertOrThrow(fresh.subarray(-3).equals(TAIL_FEED), 'after the last part, a new print starts at once');
+    await postKot();
+    const discarded = await request(app).post('/api/printers/print-parts/discard');
+    assertEqualOrThrow(discarded.body.print_parts.pending.length, 0, 'skip the rest clears waiting parts');
+    resetNoCutterJobs();
   } finally {
     await capture.close();
   }

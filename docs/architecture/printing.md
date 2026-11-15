@@ -227,8 +227,14 @@ of the two generic profiles, chosen by paper width.
 
 A profile also names its cutter (`full` or `partial`). A printer row with `auto_cut` set to `0`
 overrides it with `none`: `printerCutMode()` resolves this, `resolvePrinterContext()` applies it to
-every backend job, and `buildEscPos()` then prints a dashed `print.cutHere` tear line, fed past the
-tear bar, where `{CUT}` would send `GS V`.
+every backend job, and `buildEscPos()` then emits nothing for `{CUT}`. `dispatchPrint()` hands such
+jobs to `main/printers/no-cutter-jobs.ts`, which follows the row's `no_cutter_mode`. In `all`, a job
+that reaches a printer while its idle feed is still pending is prefixed with the `print.cutHere`
+tear line, and the feed is sent after `JOIN_WINDOW_MS` without a job. In `parts`, the first job of a
+burst is sent with the feed and later jobs are held in memory until `/print-parts/next`; the
+`/print-kot` and `/print-bill` responses carry the queue as `print_parts`, which drives the
+renderer's banner. Held parts are lost if the app restarts. Test pages and Z-reports are sent
+directly and are not sequenced.
 
 `capabilitiesForPrinter()` then caps the profile's raster width to the configured paper width when
 that width is narrower than the profile's hardware, so a 42-column configuration on 80 mm hardware

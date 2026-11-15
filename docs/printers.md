@@ -27,10 +27,19 @@ printer's drawer-kick port. When enabled, Al Baik POS appends the standard ESC/P
 printed receipt jobs for that printer, and only for payment methods on the drawer's allowlist.
 
 Turn off **Auto-cutter** on a network or USB printer that has no paper cutter, such as a pocket
-Bluetooth printer. Every job for that printer then ends with a dashed **Cut here** line, fed past
-the tear bar, instead of the cut command, so consecutive kitchen tickets and bills can be torn apart.
-The label prints in the job's language when the printer can encode it, and in English otherwise.
-The setting is not offered for WebUSB printers.
+Bluetooth printer, then choose how it prints several parts, such as the kitchen tickets and bill of
+one checkout. The setting is not offered for WebUSB printers.
+
+- **Print all at once:** parts that reach the printer within three seconds of each other print as
+  one strip, with a dashed **Cut here** line between them. The paper feeds once the printer has been
+  idle for three seconds, so the last part can be torn off; it has no Cut here line.
+- **Print in parts:** the first part prints and feeds at once. Each further part of the same action
+  waits, and a banner shows how many have printed and names the next one. **Print next** prints it;
+  the banner closes after the last part. The X on the banner drops the parts still waiting. A print
+  that arrives more than eight seconds after the previous part, once nothing is waiting, starts anew.
+
+The Cut here label prints in the store language when the printer can encode it, and in English
+otherwise. A no-cutter kitchen ticket ends on its last item, with no closing rule.
 
 ## Receipt logos
 

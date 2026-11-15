@@ -44,6 +44,7 @@ export type HwPrinter = {
   port?: number;
   cash_drawer_pulse_enabled: number;
   auto_cut?: number;
+  no_cutter_mode?: 'all' | 'parts';
   paper_width: string;
   is_default: number;
   profile_id?: string;
@@ -71,6 +72,7 @@ export type PrinterForm = {
   port: string;
   paper_width: string;
   auto_cut: boolean;
+  no_cutter_mode: 'all' | 'parts';
 };
 
 export type PrintingForm = {
@@ -132,6 +134,7 @@ const emptyPrinterForm: PrinterForm = {
   port: '9100',
   paper_width: 'cols-42',
   auto_cut: true,
+  no_cutter_mode: 'all',
 };
 
 export interface PrintersSettingsTabProps {
@@ -279,6 +282,7 @@ export function PrintersSettingsTab({
       port: String(p.port || 9100),
       paper_width: normalizePrinterWidthValue(p.paper_width),
       auto_cut: p.auto_cut !== 0,
+      no_cutter_mode: p.no_cutter_mode === 'parts' ? 'parts' : 'all',
     });
     setEditingPrinterId(p.id);
     setShowPrinterForm(true);
@@ -298,6 +302,7 @@ export function PrintersSettingsTab({
         port: printerForm.connection_type === 'network' ? Number(printerForm.port) : undefined,
         paper_width: printerForm.paper_width,
         auto_cut: printerForm.auto_cut,
+        no_cutter_mode: printerForm.no_cutter_mode,
       };
       if (editingPrinterId) {
         await api.put(`/printers/${editingPrinterId}`, payload);
@@ -714,6 +719,35 @@ export function PrintersSettingsTab({
                     onChange={(v) => setPrinterForm((p) => ({ ...p, auto_cut: v }))}
                   />
                 </div>
+              )}
+
+              {printerForm.connection_type !== 'webusb' && !printerForm.auto_cut && (
+                <fieldset className="mt-3 space-y-2">
+                  <legend className="mb-1 text-xs text-muted-foreground">{t('noCutterMode')}</legend>
+                  {(['all', 'parts'] as const).map((mode) => (
+                    <label
+                      key={mode}
+                      className="flex cursor-pointer items-start gap-2 rounded-lg border border-border p-2"
+                    >
+                      <input
+                        type="radio"
+                        name="no-cutter-mode"
+                        value={mode}
+                        checked={printerForm.no_cutter_mode === mode}
+                        onChange={() => setPrinterForm((p) => ({ ...p, no_cutter_mode: mode }))}
+                        className="mt-1 accent-brand"
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium text-foreground">
+                          {mode === 'all' ? t('noCutterModeAll') : t('noCutterModeParts')}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                          {mode === 'all' ? t('noCutterModeAllHint') : t('noCutterModePartsHint')}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
               )}
 
               <div className="mt-4 flex gap-2">
