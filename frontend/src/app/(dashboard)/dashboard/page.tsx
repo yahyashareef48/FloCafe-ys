@@ -34,7 +34,6 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useTranslations, useLocale, type AppConfig } from 'use-intl';
-import { Ltr } from '@/components/layout/Ltr';
 import { CashCloseModal } from '@/components/dashboard/CashCloseModal';
 import { useCashClose } from '@/hooks/useCashClose';
 import toast from 'react-hot-toast';
@@ -49,7 +48,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { PAYMENT_METHODS } from '@/lib/payment-methods';
-import { ORDER_STATUS_LABEL_KEYS } from '@/lib/i18n-enums';
 import { splitHoursMinutes } from '@/lib/table-timing';
 import { tenantCan } from '@/lib/permissions';
 import { businessDateForInstant } from '@shared/business-date';
@@ -130,16 +128,6 @@ interface TopProduct {
   ingredient_cost?: number | null;
   profit?: number | null;
   margin_percent?: number | null;
-}
-
-interface RecentOrder {
-  id: number;
-  order_number: string;
-  status: string;
-  total: number;
-  customer_name: string | null;
-  table_name: string | null;
-  created_at: string;
 }
 
 interface TopStaff {
@@ -228,16 +216,6 @@ function formatWeekdayLabel(dayIndex: number, locale: string): string {
   return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(reference);
 }
 
-const orderStatusColor: Record<string, string> = {
-  pending: 'text-yellow-600 dark:text-yellow-400',
-  preparing: 'text-blue-600 dark:text-blue-400',
-  ready: 'text-green-600 dark:text-green-400',
-  served: 'text-purple-600 dark:text-purple-400',
-  completed: 'text-muted-foreground',
-  cancelled: 'text-red-500 dark:text-red-400',
-};
-
-type OrdersKey = keyof AppConfig['Messages']['orders'];
 type PosKey = keyof AppConfig['Messages']['pos'];
 
 // Built-in payment method label keys mapped to typed `pos` leaf keys.
@@ -252,13 +230,11 @@ export default function DashboardPage() {
   const t = useTranslations('dashboard');
   const tCommon = useTranslations('common');
   const tPos = useTranslations('pos');
-  const tOrders = useTranslations('orders');
   const router = useRouter();
   const [stats, setStats] = useState<DailyStats | null>(null);
   const [daySummary, setDaySummary] = useState<DaySummary | null>(null);
   const [financialSummary, setFinancialSummary] = useState<FinancialSummary | null>(null);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
-  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [insights, setInsights] = useState<Insights | null>(null);
   const [weeklyComparison, setWeeklyComparison] = useState<WeeklyComparison | null>(null);
   const [loading, setLoading] = useState(true);
@@ -368,30 +344,20 @@ export default function DashboardPage() {
       scopedSummary,
       financialSummaryRequest,
       api.get('/reports/topProducts', {
-        params: { start_date: range.startDate, end_date: range.endDate, limit: 5 },
-        signal: controller.signal,
-      }),
-      api.get('/reports/recentOrders', {
-        params:
-          periodMode === 'month'
-            ? { start_date: range.startDate, end_date: range.endDate, limit: 6 }
-            : { date: selectedDate, limit: 6 },
+        params: { start_date: range.startDate, end_date: range.endDate, limit: 10 },
         signal: controller.signal,
       }),
       api.get('/reports/insights', { params: { days: 30 }, signal: controller.signal }),
       comparisonRequest,
     ])
-      .then(
-        ([statsRes, summaryRes, financialRes, topRes, recentRes, insightsRes, comparisonRes]) => {
-          setStats(statsRes?.data ?? null);
-          setDaySummary(summaryRes?.data?.summary ?? null);
-          setFinancialSummary(financialRes?.data.financialSummary ?? null);
-          setTopProducts(topRes.data.topProducts || []);
-          setRecentOrders(recentRes.data.recentOrders || []);
-          setInsights(insightsRes.data);
-          setWeeklyComparison(comparisonRes);
-        },
-      )
+      .then(([statsRes, summaryRes, financialRes, topRes, insightsRes, comparisonRes]) => {
+        setStats(statsRes?.data ?? null);
+        setDaySummary(summaryRes?.data?.summary ?? null);
+        setFinancialSummary(financialRes?.data.financialSummary ?? null);
+        setTopProducts(topRes.data.topProducts || []);
+        setInsights(insightsRes.data);
+        setWeeklyComparison(comparisonRes);
+      })
       .catch((err: unknown) => {
         if (err instanceof Error && (err.name === 'CanceledError' || err.name === 'AbortError'))
           return;
@@ -883,73 +849,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
-            {/* Recent Orders */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-              <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <span className="flex size-9 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                    <ClipboardList size={16} />
-                  </span>
-                  <h2 className="font-semibold text-foreground">
-                    {isToday
-                      ? t('recentOrders')
-                      : periodMode === 'month'
-                        ? t('monthOrders')
-                        : t('orders')}
-                  </h2>
-                </div>
-                <Link
-                  href="/orders"
-                  className="flex items-center gap-1 text-xs text-brand hover:text-brand-hover font-medium"
-                >
-                  {t('viewAll')} <ArrowRight size={12} className="rtl-flip" />
-                </Link>
-              </div>
-              {recentOrders.length === 0 ? (
-                <div className="flex min-h-48 flex-col items-center justify-center px-6 py-10 text-center">
-                  <span className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-                    <ClipboardList size={23} />
-                  </span>
-                  <p className="text-sm font-medium text-foreground">{t('noOrdersYet')}</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-border">
-                  {recentOrders.map((order) => (
-                    <Link
-                      key={order.id}
-                      href="/orders"
-                      className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-muted/60"
-                    >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-foreground">
-                            #<Ltr>{order.order_number}</Ltr>
-                          </span>
-                          <span
-                            className={`text-xs font-medium ${orderStatusColor[order.status] || 'text-muted-foreground'}`}
-                          >
-                            {(() => {
-                              const k = (
-                                ORDER_STATUS_LABEL_KEYS as Record<string, OrdersKey | undefined>
-                              )[order.status];
-                              return k ? tOrders(k) : order.status;
-                            })()}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {order.customer_name || order.table_name || t('walkIn')}
-                        </p>
-                      </div>
-                      <span className="text-sm font-semibold text-foreground shrink-0">
-                        {fmt(Number(order.total))}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
+          <div className="mt-5">
             {/* Top Products Today */}
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
@@ -966,7 +866,11 @@ export default function DashboardPage() {
                   </h2>
                 </div>
                 <Link
-                  href="/products"
+                  href={
+                    periodMode === 'month'
+                      ? `/dashboard/products?month=${selectedMonth}`
+                      : `/dashboard/products?date=${selectedDate}`
+                  }
                   className="flex items-center gap-1 text-xs text-brand hover:text-brand-hover font-medium"
                 >
                   {t('viewAll')} <ArrowRight size={12} className="rtl-flip" />
