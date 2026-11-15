@@ -488,7 +488,7 @@ Router: `main/routes/payment-methods.ts`. Full path: `/api/payment-methods`.
 | Method   | Path             | Authorization              | Parameters                                          | Response                                                |
 | -------- | ---------------- | -------------------------- | --------------------------------------------------- | ------------------------------------------------------- |
 | `GET`    | `/merge-history` | `ROLE_ACCESS.ownerManager` | none                                                | Record of method merges.                                |
-| `GET`    | `/`              | `ROLE_ACCESS.allStaff`     | query: `?include_inactive`                          | `{ payment_methods: [ ... ], card_enabled }`.           |
+| `GET`    | `/`              | `ROLE_ACCESS.allStaff`     | query: `?include_inactive`                          | `{ payment_methods: [ ... ], card_enabled, upi_qr_enabled }`. |
 | `POST`   | `/`              | `ROLE_ACCESS.ownerManager` | body: `name`                                        | -                                                       |
 | `PUT`    | `/:id`           | `ROLE_ACCESS.ownerManager` | path: `id`; body: `name`, `is_active`, `sort_order` | -                                                       |
 | `DELETE` | `/:id`           | `ROLE_ACCESS.ownerManager` | path: `id`                                          | -                                                       |
@@ -503,8 +503,9 @@ store already has one. `card_enabled` mirrors the `card_payments_enabled` settin
 `POST /upi-qr` draws a QR for one exact amount from the `upi_id` setting (Settings > Payments; empty
 by default, validated as `name@handle`) and the business name, as the NPCI link
 `upi://pay?pa=<upi_id>&pn=<name>&am=<amount>&cu=INR`. It answers `409 upi_not_configured` without a UPI
-ID and `409 upi_requires_inr` when the store currency is not INR. Both checkout dialogs show **Show UPI
-QR** under a method named UPI once it has an amount. On screens 768 px wide or more, prepaid checkout
+ID and `409 upi_requires_inr` when the store currency is not INR. `GET /` reports `upi_qr_enabled` when
+both hold. Only then do both checkout dialogs show **Show UPI QR** under a method named UPI; it stays
+disabled until that method has an amount. On screens 768 px wide or more, prepaid checkout
 fills the right half of the screen and shows the QR in the left half; elsewhere the QR opens over the
 dialog. The QR does not report payment: the cashier confirms the money arrived before completing the
 sale.

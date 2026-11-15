@@ -83,6 +83,8 @@ async function routeChecks(): Promise<void> {
 
   const unset = await request(app).get('/api/settings/upi_id');
   assertEqualOrThrow(unset.body.setting?.value, '', 'upi_id reads as empty before it is set');
+  const listedBefore = await request(app).get('/api/payment-methods');
+  assertEqualOrThrow(listedBefore.body.upi_qr_enabled, false, 'checkout hides the QR button without a UPI ID');
   const notConfigured = await request(app).post('/api/payment-methods/upi-qr').send({ amount: 320 });
   assertEqualOrThrow(notConfigured.status, 409, 'no QR without a UPI ID');
   assertEqualOrThrow(notConfigured.body.error, 'upi_not_configured', 'and the reason says so');
@@ -91,6 +93,8 @@ async function routeChecks(): Promise<void> {
   assertEqualOrThrow(bad.status, 400, 'an invalid UPI ID is not saved');
   const saved = await request(app).put('/api/settings/upi_id').send({ value: 'shop@oksbi' });
   assertEqualOrThrow(saved.status, 200, 'a valid UPI ID is saved');
+  const listedAfter = await request(app).get('/api/payment-methods');
+  assertEqualOrThrow(listedAfter.body.upi_qr_enabled, true, 'checkout offers the QR once a UPI ID is saved');
 
   const qr = await request(app).post('/api/payment-methods/upi-qr').send({ amount: 320 });
   assertEqualOrThrow(qr.status, 200, 'the QR is made');
@@ -108,6 +112,8 @@ async function routeChecks(): Promise<void> {
   setSetting('currency', 'AED');
   const foreign = await request(app).post('/api/payment-methods/upi-qr').send({ amount: 10 });
   assertEqualOrThrow(foreign.body.error, 'upi_requires_inr', 'UPI QR needs INR');
+  const listedForeign = await request(app).get('/api/payment-methods');
+  assertEqualOrThrow(listedForeign.body.upi_qr_enabled, false, 'checkout hides the QR button outside INR');
 
   const cleared = await request(app).put('/api/settings/upi_id').send({ value: '' });
   assertEqualOrThrow(cleared.status, 200, 'the UPI ID can be cleared');

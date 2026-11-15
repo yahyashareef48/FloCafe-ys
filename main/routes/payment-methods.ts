@@ -71,6 +71,10 @@ router.get('/', requirePermission('payment-methods.view'), (req: Request, res: R
     payment_methods: list(includeInactive),
     // Card is hidden at checkout unless the store turns it on; old card bills and refunds keep it.
     card_enabled: getSettingValue('card_payments_enabled') === 'true',
+    // Checkout offers a UPI QR only once a UPI ID is saved, and only for INR.
+    upi_qr_enabled:
+      isValidUpiId(getSettingValue('upi_id') ?? '') &&
+      String(getSettingValue('currency') ?? 'INR').toUpperCase() === 'INR',
   });
 });
 
