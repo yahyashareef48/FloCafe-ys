@@ -1228,7 +1228,15 @@
     "dayCloseBlockedByOpenShiftHint": "Isara muna ang bukas na shift #{id} ({name}) bago isara ang araw ng negosyong ito.",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# bukas na order ang ililipat sa susunod na shift} other {# bukas na mga order ang ililipat sa susunod na shift}}",
     "shiftCloseUnpaidWarningHint": "Mananatiling bukas ang mga order na ito para sa susunod na shift. Ang pagsasara ng shift na ito ay nagtutugma lamang sa mga bayad na cash na nakolekta na sa shift na ito.",
-    "shiftCloseUnpaidMoreCount": "+{count} pang bukas na order"
+    "shiftCloseUnpaidMoreCount": "+{count} pang bukas na order",
+    "printPartsPrinted": "Na-print ang {printed} sa {total}",
+    "printPartsNext": "Susunod: {part}",
+    "printPartsPrintNext": "I-print ang susunod",
+    "printPartsKitchen": "Ticket ng kusina ({station})",
+    "printPartsBill": "Resibo",
+    "printPartsOther": "Pag-print",
+    "printPartsSkip": "Laktawan ang natitira",
+    "printPartsFailed": "Hindi ma-print. Tingnan ang printer at subukang muli."
   },
   "printTest": {
     "amt": "Halaga",
@@ -1361,7 +1369,8 @@
       "columns": "Mga Column",
       "wrapHint": "Kung may lumampas na linya, pumili ng mas mababang bilang ng column.",
       "success": "Gumagana nang maayos ang iyong printer!"
-    }
+    },
+    "cutHere": "Gupitin dito"
   },
   "products": {
     "includeDescriptions": "Isama ang mga paglalarawan",
@@ -2134,6 +2143,9 @@
     "kdsViewSaved": "Nai-save ang default na view",
     "kitchenStations": "Kusina Stations",
     "kitchenStationsHint": "I-ruta ang mga kategorya sa isang kitchen station, piliin ang printer nito, at italaga ang chef na dapat makakita ng mga item sa KDS.",
+    "kotPrintUnassigned": "I-print ang mga item na walang istasyon",
+    "kotPrintUnassignedHint": "Naka-on: ang mga item sa kategoryang walang istasyon ay ipi-print sa hiwalay na ticket ng kusina. Naka-off: hindi ipi-print.",
+    "stationUnassignedNotPrinted": "hindi ipi-print",
     "kitchenWorkflowBothOffNote": "Both the Kusina Display and KOT printing are off. Kusina items won't display or print anywhere — orders will need to be marked served directly at the counter.",
     "kotPrintLanguage": "Kusina ticket language",
     "kotPrintLanguageHint": "Kusina tickets follow the store language unless a fixed language is chosen.",
@@ -2228,6 +2240,13 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "Mga Napi-print na Column",
+    "printerAutoCut": "Awtomatikong pamutol",
+    "printerAutoCutHint": "I-off ito kung walang paper cutter ang printer.",
+    "noCutterMode": "Walang pamutol",
+    "noCutterModeAll": "I-print lahat nang sabay",
+    "noCutterModeAllHint": "Sabay na ipi-print ang mga ticket at resibo, may linyang Gupitin dito sa pagitan.",
+    "noCutterModeParts": "I-print nang paisa-isa",
+    "noCutterModePartsHint": "Agad na ipi-print ang unang bahagi. I-tap ang I-print ang susunod sa banner para sa bawat kasunod.",
     "paperWidth58": "2.5\" (58mm, 32 cols)",
     "paperWidth58Wide": "Makitid na roll (36 cols)",
     "paperWidth80": "3.5\" (80mm, 48 cols - wide)",

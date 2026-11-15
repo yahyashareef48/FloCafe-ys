@@ -24,7 +24,7 @@ import {
   rasterCapabilityEnabled,
   type RasterSemanticUnit,
 } from '../../shared/print/raster';
-import { isGeneratedPrintLanguage } from '../print/print-labels.generated';
+import { isGeneratedPrintLanguage, printLabel } from '../print/print-labels.generated';
 import { isExcludedFromBillReceipt } from '../../shared/order-item-status';
 import type { PrinterCutMode } from './profiles';
 
@@ -398,6 +398,48 @@ export function appendCashDrawerPulse(data: Buffer): Buffer {
   return Buffer.concat([data, Buffer.from([0x1b, 0x70, 0x00, 0x19, 0xfa])]);
 }
 
+/** Dashed `- - Cut here - -` line printed where a printer without a cutter should be torn. */
+export function tearLineText(
+  columns: number | undefined,
+  language: string | undefined,
+  capabilities: ThermalPrinterCapabilities,
+): string {
+  const width = Number.isInteger(columns) && (columns as number) > 0 ? (columns as number) : 32;
+  const localized = normalizeThermalTextByCapabilities(
+    printLabel(normalizePrintLanguage(language), 'print.cutHere'),
+    capabilities,
+  );
+  const label =
+    !hasArabicScript(localized) && selectThermalCodePage(localized, capabilities)
+      ? localized
+      : printLabel('en', 'print.cutHere');
+  const side = Math.max(2, Math.floor((width - displayCellWidth(label) - 2) / 2));
+  const dashes = '-'.repeat(side);
+  return truncateToDisplayCells(`${dashes} ${label} ${dashes}`, width);
+}
+
+/** Paper feed that carries the last printed line past a no-cutter printer's tear bar. */
+export const NO_CUTTER_TAIL_FEED: readonly number[] = [0x1b, 0x64, 0x03];
+
+/** Centred tear line with a blank line above and below, printed between joined no-cutter parts. */
+export function tearLineBytes(
+  columns: number | undefined,
+  language: string | undefined,
+  capabilities: ThermalPrinterCapabilities = GENERIC_THERMAL_CAPABILITIES,
+): Buffer {
+  const merged = mergeThermalCapabilities(capabilities);
+  const tearLine = tearLineText(columns, language, merged);
+  const codePage = selectThermalCodePage(tearLine, merged) ?? 'ascii';
+  return Buffer.from([
+    0x1b, 0x64, 0x01,
+    0x1b, 0x45, 0x00, 0x1b, 0x21, 0x00, 0x1b, 0x61, 0x01,
+    0x1b, 0x74, escPosCodePageId(codePage),
+    ...CodepageEncoder.encode(tearLine, codePage),
+    0x0a, 0x1b, 0x61, 0x00,
+    0x1b, 0x64, 0x01,
+  ]);
+}
+
 export interface RasterLineUnit {
   readonly lineIndex: number;
   readonly lineCount?: number;
@@ -543,6 +585,7 @@ export function buildEscPos(
     }
 
     if (line.trim() === '{CUT}') {
+      if (options.cutMode === 'none') continue;
       buf.push(0x1b, 0x64, 0x05);
       if (options.cutMode === 'partial') {
         buf.push(0x1d, 0x56, 0x42, 0x00);

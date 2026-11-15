@@ -146,6 +146,7 @@ const PRINT_NAMESPACE_KEYS = [
   'print.test.columns',
   'print.test.wrapHint',
   'print.test.success',
+  'print.cutHere',
 ];
 
 /**

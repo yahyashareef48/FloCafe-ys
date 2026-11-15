@@ -1228,7 +1228,15 @@
     "dayCloseBlockedByOpenShiftHint": "यो व्यावसायिक दिन बन्द गर्नुअघि खुला सिफ्ट #{id} ({name}) बन्द गर्नुहोस्।",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# खुला अर्डर अर्को सिफ्टमा सर्नेछ} other {# खुला अर्डरहरू अर्को सिफ्टमा सर्नेछन्}}",
     "shiftCloseUnpaidWarningHint": "यी अर्डरहरू अर्को सिफ्टका लागि खुला नै रहन्छन्। यो सिफ्ट बन्द गर्दा यस सिफ्टमा पहिले नै संकलन गरिएका नगद भुक्तानी मात्र मिलान गरिन्छ।",
-    "shiftCloseUnpaidMoreCount": "+थप {count} खुला अर्डरहरू"
+    "shiftCloseUnpaidMoreCount": "+थप {count} खुला अर्डरहरू",
+    "printPartsPrinted": "{total} मध्ये {printed} छापियो",
+    "printPartsNext": "अर्को: {part}",
+    "printPartsPrintNext": "अर्को छाप्नुहोस्",
+    "printPartsKitchen": "भान्सा टिकट ({station})",
+    "printPartsBill": "बिल",
+    "printPartsOther": "छपाइ",
+    "printPartsSkip": "बाँकी छोड्नुहोस्",
+    "printPartsFailed": "छाप्न सकिएन। प्रिन्टर जाँचेर फेरि प्रयास गर्नुहोस्।"
   },
   "printTest": {
     "amt": "रकम",
@@ -1361,7 +1369,8 @@
       "columns": "स्तम्भहरू",
       "wrapHint": "लाइन र्याप हुन्छ भने अर्को स्तम्भ छान्नुहोस्।",
       "success": "यदि तपाइँ यसलाई पढ्न सक्नुहुन्छ भने, तपाइँको प्रिन्टरले काम गरिरहेको छ!"
-    }
+    },
+    "cutHere": "यहाँ काट्नुहोस्"
   },
   "products": {
     "includeDescriptions": "विवरण समावेश गर्नुहोस्",
@@ -2134,6 +2143,9 @@
     "kdsViewSaved": "पूर्वनिर्धारित दृश्य बचत गरियो",
     "kitchenStations": "भान्सा स्टेशनहरू",
     "kitchenStationsHint": "कोटिहरू भान्साको स्टेशनमा लैजानुहोस्, यसको प्रिन्टर छनोट गर्नुहोस्, र KDS मा ती वस्तुहरू हेर्ने शेफलाई नियुक्त गर्नुहोस्।",
+    "kotPrintUnassigned": "स्टेसन नभएका वस्तु छाप्नुहोस्",
+    "kotPrintUnassignedHint": "सक्रिय: कुनै स्टेसनमा नभएका श्रेणीका वस्तु छुट्टै भान्सा टिकटमा छापिन्छन्। निष्क्रिय: छापिँदैनन्।",
+    "stationUnassignedNotPrinted": "छापिँदैन",
     "kitchenWorkflowBothOffNote": "किचन डिस्प्ले र KOT प्रिन्टिङ दुवै बन्द छन्। भान्साका वस्तुहरू कतै पनि प्रदर्शन वा प्रिन्ट हुने छैनन् — अर्डरहरू काउन्टरमा सिधै सेवा गरिएको चिन्ह लगाउन आवश्यक हुनेछ।",
     "kotPrintLanguage": "भान्सा टिकट भाषा",
     "kotPrintLanguageHint": "भान्साको टिकटहरू पसलको भाषा पछ्याउँछन् जबसम्म कुनै निश्चित भाषा चयन गरिएको छैन।",
@@ -2226,6 +2238,13 @@
     "paperSize58": "२.५\" (५८ मिमी)",
     "paperSize80": "३.५\" (८० मिमी)",
     "paperWidth": "मुद्रण योग्य स्तम्भहरू",
+    "printerAutoCut": "अटो-कटर",
+    "printerAutoCutHint": "प्रिन्टरमा कागज काट्ने कटर छैन भने यसलाई बन्द गर्नुहोस्।",
+    "noCutterMode": "कटर बिना",
+    "noCutterModeAll": "सबै एकैपटक छाप्नुहोस्",
+    "noCutterModeAllHint": "टिकट र बिल सँगै छापिन्छन्, बीचमा यहाँ काट्नुहोस् लाइन हुन्छ।",
+    "noCutterModeParts": "भागमा छाप्नुहोस्",
+    "noCutterModePartsHint": "पहिलो भाग तुरुन्तै छापिन्छ। हरेक अर्को भागका लागि ब्यानरमा अर्को छाप्नुहोस् थिच्नुहोस्।",
     "paperWidth58": "2.5\" (58mm, 32 cols)",
     "paperWidth58Wide": "संकीर्ण रोल (३६ कोल)",
     "paperWidth80": "3.5\" (80mm, 48 cols - चौडा)",

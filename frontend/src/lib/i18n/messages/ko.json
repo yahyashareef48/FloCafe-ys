@@ -1228,7 +1228,15 @@
     "dayCloseBlockedByOpenShiftHint": "이 영업일을 마감하기 전에 열려 있는 교대근무 #{id}({name})를 마감하세요.",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {미결제 주문 #건이 다음 교대근무로 이월됩니다} other {미결제 주문 #건이 다음 교대근무로 이월됩니다}}",
     "shiftCloseUnpaidWarningHint": "이 주문들은 다음 교대근무를 위해 열린 상태로 유지됩니다. 이번 교대근무 마감은 이번 교대근무 중에 이미 수납된 현금 결제만 정산합니다.",
-    "shiftCloseUnpaidMoreCount": "+{count}건의 미결제 주문 더보기"
+    "shiftCloseUnpaidMoreCount": "+{count}건의 미결제 주문 더보기",
+    "printPartsPrinted": "{total}개 중 {printed}개 인쇄됨",
+    "printPartsNext": "다음: {part}",
+    "printPartsPrintNext": "다음 인쇄",
+    "printPartsKitchen": "주방 티켓 ({station})",
+    "printPartsBill": "영수증",
+    "printPartsOther": "인쇄물",
+    "printPartsSkip": "나머지 건너뛰기",
+    "printPartsFailed": "인쇄하지 못했습니다. 프린터를 확인하고 다시 시도하세요."
   },
   "printTest": {
     "amt": "금액",
@@ -1361,7 +1369,8 @@
       "columns": "열",
       "wrapHint": "다음 줄이 줄바꿈되면 더 작은 열 값을 선택하세요.",
       "success": "이 글이 보인다면 프린터가 정상 작동하고 있습니다!"
-    }
+    },
+    "cutHere": "여기를 자르세요"
   },
   "products": {
     "includeDescriptions": "설명 포함",
@@ -2134,6 +2143,9 @@
     "kdsViewSaved": "기본 보기 저장됨",
     "kitchenStations": "주방 스테이션",
     "kitchenStationsHint": "카테고리를 주방 스테이션에 라우팅하고, 해당 프린터를 선택하며, KDS에서 해당 항목을 볼 셰프를 배정하세요.",
+    "kotPrintUnassigned": "스테이션 없는 품목 인쇄",
+    "kotPrintUnassignedHint": "켜기: 어떤 스테이션에도 없는 카테고리의 품목을 별도 주방 티켓으로 인쇄합니다. 끄기: 인쇄하지 않습니다.",
+    "stationUnassignedNotPrinted": "인쇄 안 함",
     "kitchenWorkflowBothOffNote": "주방 디스플레이와 KOT 인쇄가 모두 꺼져 있습니다. 주방 항목이 어디에도 표시되거나 인쇄되지 않습니다. 주문은 카운터에서 직접 서빙 완료로 표시해야 합니다.",
     "kotPrintLanguage": "주방 티켓 언어",
     "kotPrintLanguageHint": "고정 언어를 선택하지 않으면 주방 티켓은 매장 언어를 따릅니다.",
@@ -2228,6 +2240,13 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "인쇄 가능 열 수",
+    "printerAutoCut": "자동 커터",
+    "printerAutoCutHint": "프린터에 용지 커터가 없으면 끄세요.",
+    "noCutterMode": "커터가 없을 때",
+    "noCutterModeAll": "한 번에 모두 인쇄",
+    "noCutterModeAllHint": "티켓과 영수증을 함께 인쇄하고 사이에 여기를 자르세요 선을 넣습니다.",
+    "noCutterModeParts": "나눠서 인쇄",
+    "noCutterModePartsHint": "첫 부분은 바로 인쇄됩니다. 다음 부분마다 배너의 다음 인쇄를 누르세요.",
     "paperWidth58": "2.5\" (58mm, 32열)",
     "paperWidth58Wide": "좁은 롤 (36열)",
     "paperWidth80": "3.5\" (80mm, 48열 - 와이드)",

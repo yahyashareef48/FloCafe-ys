@@ -1228,7 +1228,15 @@
     "dayCloseBlockedByOpenShiftHint": "Sluit eerst de geopende dienst #{id} ({name}) voordat u deze werkdag afsluit.",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# open bestelling wordt meegenomen} other {# open bestellingen worden meegenomen}}",
     "shiftCloseUnpaidWarningHint": "Deze bestellingen blijven open voor de volgende dienst. Bij het sluiten van deze dienst worden alleen de contante betalingen verrekend die tijdens deze dienst al zijn ontvangen.",
-    "shiftCloseUnpaidMoreCount": "+{count} extra open bestellingen"
+    "shiftCloseUnpaidMoreCount": "+{count} extra open bestellingen",
+    "printPartsPrinted": "{printed} van {total} geprint",
+    "printPartsNext": "Volgende: {part}",
+    "printPartsPrintNext": "Volgende printen",
+    "printPartsKitchen": "Keukenbon ({station})",
+    "printPartsBill": "Rekening",
+    "printPartsOther": "Afdruk",
+    "printPartsSkip": "Rest overslaan",
+    "printPartsFailed": "Printen mislukt. Controleer de printer en probeer opnieuw."
   },
   "printTest": {
     "amt": "Bedrag",
@@ -1361,7 +1369,8 @@
       "columns": "Kolommen",
       "wrapHint": "Als de volgende regel wordt afgebroken, kiest u een kleinere kolomwaarde.",
       "success": "Als u dit kunt lezen, werkt uw printer!"
-    }
+    },
+    "cutHere": "Hier afscheuren"
   },
   "products": {
     "includeDescriptions": "Beschrijvingen opnemen",
@@ -2134,6 +2143,9 @@
     "kdsViewSaved": "Standaardweergave opgeslagen",
     "kitchenStations": "Keukenstations",
     "kitchenStationsHint": "Stuur categorieën naar een keukenstation, kies de printer ervan en wijs de kok aan die deze artikelen in de KDS ziet.",
+    "kotPrintUnassigned": "Artikelen zonder station printen",
+    "kotPrintUnassignedHint": "Aan: artikelen uit categorieën zonder station komen op een aparte keukenbon. Uit: ze worden niet geprint.",
+    "stationUnassignedNotPrinted": "niet geprint",
     "kitchenWorkflowBothOffNote": "Zowel de keukenmonitor als de KOT-bonnen zijn uitgeschakeld. Keukenartikelen worden nergens weergegeven of afgedrukt. Bestellingen moeten direct aan de balie als geserveerd worden gemarkeerd.",
     "kotPrintLanguage": "Taal voor keukenbonnen",
     "kotPrintLanguageHint": "Keukenbonnen volgen de winkeltaal, tenzij er een vaste taal wordt gekozen.",
@@ -2228,6 +2240,13 @@
     "paperSize58": "2,5\" (58 mm)",
     "paperSize80": "3,5\" (80 mm)",
     "paperWidth": "Afdrukbare kolommen",
+    "printerAutoCut": "Automatische snijder",
+    "printerAutoCutHint": "Zet dit uit als de printer geen papiersnijder heeft.",
+    "noCutterMode": "Zonder snijder",
+    "noCutterModeAll": "Alles in één keer printen",
+    "noCutterModeAllHint": "Bonnen en rekening worden samen geprint, met een Hier afscheuren-lijn ertussen.",
+    "noCutterModeParts": "In delen printen",
+    "noCutterModePartsHint": "Het eerste deel wordt meteen geprint. Tik voor elk volgend deel op Volgende printen in de balk.",
     "paperWidth58": "2,5\" (58 mm, 32 kolommen)",
     "paperWidth58Wide": "Smalle rol (36 kolommen)",
     "paperWidth80": "3,5\" (80 mm, 48 kolommen - breed)",

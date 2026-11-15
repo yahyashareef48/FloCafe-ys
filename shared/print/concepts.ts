@@ -76,6 +76,7 @@ export const PRINT_CONCEPT_IDS = [
   'print.test.columns',
   'print.test.wrapHint',
   'print.test.success',
+  'print.cutHere',
   'receipt.billNumber',
   'receipt.date',
   'pos.tableLabel',

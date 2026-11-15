@@ -1228,7 +1228,15 @@
     "dayCloseBlockedByOpenShiftHint": "Schließen Sie die offene Schicht #{id} ({name}), bevor Sie diesen Geschäftstag abschließen.",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# offene Bestellung wird übertragen} other {# offene Bestellungen werden übertragen}}",
     "shiftCloseUnpaidWarningHint": "Diese Bestellungen bleiben für die nächste Schicht geöffnet. Beim Schließen dieser Schicht werden nur die in dieser Schicht bereits kassierten Barzahlungen abgestimmt.",
-    "shiftCloseUnpaidMoreCount": "+{count} weitere offene Bestellungen"
+    "shiftCloseUnpaidMoreCount": "+{count} weitere offene Bestellungen",
+    "printPartsPrinted": "{printed} von {total} gedruckt",
+    "printPartsNext": "Als Nächstes: {part}",
+    "printPartsPrintNext": "Nächsten drucken",
+    "printPartsKitchen": "Küchenbon ({station})",
+    "printPartsBill": "Rechnung",
+    "printPartsOther": "Druck",
+    "printPartsSkip": "Rest überspringen",
+    "printPartsFailed": "Drucken fehlgeschlagen. Drucker prüfen und erneut versuchen."
   },
   "printTest": {
     "amt": "Betrag",
@@ -1361,7 +1369,8 @@
       "columns": "Spalten",
       "wrapHint": "Wenn die nächste Zeile umbricht, wählen Sie eine kleinere Spaltenanzahl.",
       "success": "Wenn Sie dies lesen können, funktioniert Ihr Drucker!"
-    }
+    },
+    "cutHere": "Hier abtrennen"
   },
   "products": {
     "includeDescriptions": "Beschreibungen einschließen",
@@ -2134,6 +2143,9 @@
     "kdsViewSaved": "Standardansicht gespeichert",
     "kitchenStations": "Küchenstationen",
     "kitchenStationsHint": "Leiten Sie Kategorien an eine Küchenstation, wählen Sie deren Drucker und weisen Sie den Koch zu, der diese Artikel im KDS sehen soll.",
+    "kotPrintUnassigned": "Artikel ohne Station drucken",
+    "kotPrintUnassignedHint": "Ein: Artikel aus Kategorien ohne Station kommen auf einen eigenen Küchenbon. Aus: Sie werden nicht gedruckt.",
+    "stationUnassignedNotPrinted": "wird nicht gedruckt",
     "kitchenWorkflowBothOffNote": "Küchenanzeige und KOT-Druck sind deaktiviert. Küchenartikel werden nirgendwo angezeigt oder gedruckt – Bestellungen müssen direkt an der Theke als serviert markiert werden.",
     "kotPrintLanguage": "Sprache der Küchentickets",
     "kotPrintLanguageHint": "Küchentickets folgen der Geschäftssprache, sofern keine feste Sprache ausgewählt ist.",
@@ -2228,6 +2240,13 @@
     "paperSize58": "2,5\" (58mm)",
     "paperSize80": "3,5\" (80mm)",
     "paperWidth": "Druckbare Spalten",
+    "printerAutoCut": "Automatischer Abschneider",
+    "printerAutoCutHint": "Ausschalten, wenn der Drucker keinen Papierabschneider hat.",
+    "noCutterMode": "Ohne Abschneider",
+    "noCutterModeAll": "Alles auf einmal drucken",
+    "noCutterModeAllHint": "Bons und Rechnung werden zusammen gedruckt, getrennt durch eine Hier-abtrennen-Linie.",
+    "noCutterModeParts": "In Teilen drucken",
+    "noCutterModePartsHint": "Der erste Teil wird sofort gedruckt. Für jeden weiteren Teil im Banner auf Nächsten drucken tippen.",
     "paperWidth58": "2,5\" (58mm, 32 Spalten)",
     "paperWidth58Wide": "Schmale Rolle (36 Spalten)",
     "paperWidth80": "3,5\" (80mm, 48 Spalten - breit)",

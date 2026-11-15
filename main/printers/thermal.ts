@@ -13,6 +13,7 @@ import {
   SupportedPrinterProfile,
   dotsForPaperWidth,
   capabilitiesForPrinter,
+  printerCutMode,
 } from './profiles';
 import {
   getCountryByCode,
@@ -119,7 +120,16 @@ import {
   appendCashDrawerPulse,
   buildEscPos,
   parseAddons,
+  NO_CUTTER_TAIL_FEED,
+  tearLineBytes,
 } from './formatting-helpers';
+import {
+  discardPrintParts,
+  printNextPart,
+  printPartsState,
+  routeNoCutterJob,
+  type PrintPartLabel,
+} from './no-cutter-jobs';
 
 export {
   type PrintWarning,
@@ -169,6 +179,8 @@ export type PrintResult = {
 /** Low-level dispatch result — carries the actual OS/driver reason, not just ok/fail. */
 export type DispatchResult = {
   ok: boolean;
+  /** Held for the operator to print as a later part on a no-cutter printer. */
+  queued?: boolean;
   detail?: string;
   failureClass?: PrintFailureClass;
   platformErrorCode?: number;
@@ -1028,7 +1040,7 @@ export async function printReceipt(
         .join(' '),
     );
 
-    const dispatch = await dispatchPrint(printer, receiptData, signal);
+    const dispatch = await dispatchPrint(printer, receiptData, signal, { kind: 'bill' });
     return warnings.length > 0 ? { ...dispatch, warnings } : dispatch;
   } catch (error: any) {
     console.error('[Printer] Print error:', error);
@@ -1187,7 +1199,10 @@ export async function printKOT(
       };
     }
     console.log('[Printer] KOT data length:', data.length, 'bytes');
-    const dispatch = await dispatchPrint(printer, data, signal);
+    const dispatch = await dispatchPrint(printer, data, signal, {
+      kind: 'kot',
+      station: stationName,
+    });
     return warnings.length > 0 ? { ...dispatch, warnings } : dispatch;
   } catch (error: any) {
     console.error('[Printer] KOT print error:', error);
@@ -1494,7 +1509,8 @@ export function resolvePrinterContext(
   printer: any,
   arabicShapingOverride?: boolean,
 ): PrinterContext {
-  const profile = resolvePrinterProfile(printer);
+  const resolvedProfile = resolvePrinterProfile(printer);
+  const profile = { ...resolvedProfile, cutMode: printerCutMode(printer, resolvedProfile) };
   const columns = getColumnsForPrinter(printer, profile);
   const capabilities = capabilitiesForPrinter(
     profile,
@@ -1505,6 +1521,33 @@ export function resolvePrinterContext(
 }
 
 async function dispatchPrint(
+  printer: any,
+  data: Buffer,
+  signal?: AbortSignal,
+  label: PrintPartLabel = { kind: 'other' },
+): Promise<DispatchResult> {
+  const { profile, columns, capabilities } = resolvePrinterContext(printer);
+  if (profile.cutMode !== 'none') return sendToPrinter(printer, data, signal);
+  return routeNoCutterJob(
+    {
+      printer,
+      data,
+      label,
+      mode: printer.no_cutter_mode === 'parts' ? 'parts' : 'all',
+      tearLine: tearLineBytes(
+        columns,
+        normalizePrintLanguage(getSettingValue('language') ?? undefined),
+        capabilities,
+      ),
+      tailFeed: Buffer.from(NO_CUTTER_TAIL_FEED),
+    },
+    (target, bytes) => sendToPrinter(target, bytes),
+  );
+}
+
+export { printPartsState, printNextPart, discardPrintParts };
+
+async function sendToPrinter(
   printer: any,
   data: Buffer,
   signal?: AbortSignal,
@@ -3046,8 +3089,12 @@ export function buildTestPage(
     bar,
     '{CUT}',
   ];
+  const noCutterFeed = Buffer.from(cutMode === 'none' ? NO_CUTTER_TAIL_FEED : []);
   if (!capabilities || !rasterCapabilityEnabled(capabilities))
-    return buildEscPos(lines, false, { cutMode, language: lang, columns: width });
+    return Buffer.concat([
+      buildEscPos(lines, false, { cutMode, language: lang, columns: width }),
+      noCutterFeed,
+    ]);
   // Explicit shaping capability prevents raster profile passing unshaped Arabic to text.
   const textData = buildEscPos(lines.slice(0, -1), false, {
     cutMode,
@@ -3073,7 +3120,7 @@ export function buildTestPage(
   return Buffer.concat([
     textData,
     Buffer.from(rasterData),
-    Buffer.from(encodeRasterFeedAndCut(cutMode)),
+    cutMode === 'none' ? noCutterFeed : Buffer.from(encodeRasterFeedAndCut(cutMode)),
   ]);
 }
 

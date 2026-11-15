@@ -1228,7 +1228,15 @@
     "dayCloseBlockedByOpenShiftHint": "Close open shift #{id} ({name}) before closing this business day.",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# open order will carry over} other {# open orders will carry over}}",
     "shiftCloseUnpaidWarningHint": "These orders stay open for the next shift. Closing this shift only reconciles cash payments already collected during this shift.",
-    "shiftCloseUnpaidMoreCount": "+{count} more open orders"
+    "shiftCloseUnpaidMoreCount": "+{count} more open orders",
+    "printPartsPrinted": "Printed {printed} of {total}",
+    "printPartsNext": "Next: {part}",
+    "printPartsPrintNext": "Print next",
+    "printPartsKitchen": "Kitchen ticket ({station})",
+    "printPartsBill": "Bill",
+    "printPartsOther": "Print",
+    "printPartsSkip": "Skip the rest",
+    "printPartsFailed": "Could not print. Check the printer and try again."
   },
   "printTest": {
     "amt": "Amt",
@@ -1361,7 +1369,8 @@
       "columns": "Columns",
       "wrapHint": "If the next line wraps, choose a smaller column value.",
       "success": "If you can read this, your printer is working!"
-    }
+    },
+    "cutHere": "Cut here"
   },
   "products": {
     "includeDescriptions": "Include descriptions",
@@ -2134,6 +2143,9 @@
     "kdsViewSaved": "Default view saved",
     "kitchenStations": "Kitchen Stations",
     "kitchenStationsHint": "Route categories to a kitchen station, choose its printer, and assign the chef who should see those items in KDS.",
+    "kotPrintUnassigned": "Print items without a station",
+    "kotPrintUnassignedHint": "On: items in categories no station uses print on a separate Kitchen ticket. Off: they are not printed.",
+    "stationUnassignedNotPrinted": "not printed",
     "kitchenWorkflowBothOffNote": "Both the Kitchen Display and KOT printing are off. Kitchen items won't display or print anywhere — orders will need to be marked served directly at the counter.",
     "kotPrintLanguage": "Kitchen ticket language",
     "kotPrintLanguageHint": "Kitchen tickets follow the store language unless a fixed language is chosen.",
@@ -2228,6 +2240,13 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "Printable Columns",
+    "printerAutoCut": "Auto-cutter",
+    "printerAutoCutHint": "Turn this off if the printer has no paper cutter.",
+    "noCutterMode": "Without a cutter",
+    "noCutterModeAll": "Print all at once",
+    "noCutterModeAllHint": "Tickets and the bill print together, with a Cut here line between them.",
+    "noCutterModeParts": "Print in parts",
+    "noCutterModePartsHint": "The first part prints right away. Tap Print next on the banner for each next part.",
     "paperWidth58": "2.5\" (58mm, 32 cols)",
     "paperWidth58Wide": "Narrow roll (36 cols)",
     "paperWidth80": "3.5\" (80mm, 48 cols - wide)",

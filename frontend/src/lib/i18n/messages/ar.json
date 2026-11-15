@@ -1228,7 +1228,15 @@
     "dayCloseBlockedByOpenShiftHint": "أغلق الوردية المفتوحة #{id} ({name}) قبل إغلاق يوم العمل هذا.",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {سيتم ترحيل طلب مفتوح واحد (#)} other {سيتم ترحيل # طلبات مفتوحة}}",
     "shiftCloseUnpaidWarningHint": "تظل هذه الطلبات مفتوحة للوردية التالية. إغلاق هذه الوردية يطابق فقط المدفوعات النقدية التي تم تحصيلها بالفعل خلال هذه الوردية.",
-    "shiftCloseUnpaidMoreCount": "+{count} طلبات مفتوحة أخرى"
+    "shiftCloseUnpaidMoreCount": "+{count} طلبات مفتوحة أخرى",
+    "printPartsPrinted": "طُبع {printed} من {total}",
+    "printPartsNext": "التالي: {part}",
+    "printPartsPrintNext": "طباعة التالي",
+    "printPartsKitchen": "تذكرة المطبخ ({station})",
+    "printPartsBill": "الفاتورة",
+    "printPartsOther": "طباعة",
+    "printPartsSkip": "تخطي الباقي",
+    "printPartsFailed": "تعذرت الطباعة. تحقق من الطابعة وحاول مجددًا."
   },
   "printTest": {
     "amt": "المبلغ",
@@ -1361,7 +1369,8 @@
       "columns": "الأعمدة",
       "wrapHint": "إذا تم تقطيع السطر التالي، فاختر قيمة عمود أصغر.",
       "success": "إذا كنت تستطيع قراءة هذا، فهذا يعني أن طابعتك تعمل!"
-    }
+    },
+    "cutHere": "قص هنا"
   },
   "products": {
     "includeDescriptions": "تضمين الأوصاف",
@@ -2134,6 +2143,9 @@
     "kdsViewSaved": "تم حفظ طريقة العرض الافتراضية",
     "kitchenStations": "محطات المطبخ",
     "kitchenStationsHint": "قم بتوجيه فئات الأطباق إلى محطة المطبخ، واختر الطابعة الخاصة بها، وعين الطاهي الذي يجب أن يرى تلك الأطباق في نظام KDS.",
+    "kotPrintUnassigned": "طباعة الأصناف التي بلا محطة",
+    "kotPrintUnassignedHint": "تشغيل: تُطبع أصناف الفئات غير المرتبطة بأي محطة في تذكرة مطبخ منفصلة. إيقاف: لا تُطبع.",
+    "stationUnassignedNotPrinted": "لا تُطبع",
     "kitchenWorkflowBothOffNote": "تم إيقاف تشغيل كل من شاشة المطبخ ووظيفة الطباعة KOT. لن يتم عرض أو طباعة أصناف المطبخ في أي مكان — وسيتعين وضع علامة «تم تقديم الطلب» مباشرةً عند المنضدة.",
     "kotPrintLanguage": "لغة أوراق الطلبات في المطبخ",
     "kotPrintLanguageHint": "تتبع أوامر المطبخ لغة المتجر ما لم يتم اختيار لغة محددة.",
@@ -2228,6 +2240,13 @@
     "paperSize58": "2.5 بوصة (58 ملم)",
     "paperSize80": "3.5 بوصة (80 ملم)",
     "paperWidth": "الأعمدة القابلة للطباعة",
+    "printerAutoCut": "القاطع التلقائي",
+    "printerAutoCutHint": "أوقف هذا الخيار إذا لم تكن في الطابعة قاطعة ورق.",
+    "noCutterMode": "بدون قاطعة",
+    "noCutterModeAll": "طباعة الكل دفعة واحدة",
+    "noCutterModeAllHint": "تُطبع التذاكر والفاتورة معًا، مع خط قص هنا بينها.",
+    "noCutterModeParts": "طباعة على أجزاء",
+    "noCutterModePartsHint": "يُطبع الجزء الأول فورًا. اضغط طباعة التالي في الشريط لكل جزء تالٍ.",
     "paperWidth58": "2.5 بوصة (58 ملم، 32 عمودًا)",
     "paperWidth58Wide": "لفافة ضيقة (36 عمودًا)",
     "paperWidth80": "3.5 بوصة (80 ملم، 48 عمودًا - عرض)",

@@ -1228,7 +1228,15 @@
     "dayCloseBlockedByOpenShiftHint": "Cierra el turno abierto #{id} ({name}) antes de cerrar este día comercial.",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# pedido abierto pasará al siguiente turno} other {# pedidos abiertos pasarán al siguiente turno}}",
     "shiftCloseUnpaidWarningHint": "Estos pedidos permanecen abiertos para el siguiente turno. Al cerrar este turno solo se concilian los pagos en efectivo ya cobrados durante este turno.",
-    "shiftCloseUnpaidMoreCount": "+{count} pedidos abiertos más"
+    "shiftCloseUnpaidMoreCount": "+{count} pedidos abiertos más",
+    "printPartsPrinted": "Impresas {printed} de {total}",
+    "printPartsNext": "Siguiente: {part}",
+    "printPartsPrintNext": "Imprimir siguiente",
+    "printPartsKitchen": "Comanda de cocina ({station})",
+    "printPartsBill": "Cuenta",
+    "printPartsOther": "Impresión",
+    "printPartsSkip": "Omitir el resto",
+    "printPartsFailed": "No se pudo imprimir. Revisa la impresora e inténtalo de nuevo."
   },
   "printTest": {
     "amt": "Total",
@@ -1361,7 +1369,8 @@
       "columns": "Columnas",
       "wrapHint": "Si la siguiente línea se corta, elija un valor de columnas menor.",
       "success": "¡Si puede leer esto, su impresora funciona!"
-    }
+    },
+    "cutHere": "Cortar aquí"
   },
   "products": {
     "includeDescriptions": "Incluir descripciones",
@@ -2134,6 +2143,9 @@
     "kdsViewSaved": "Vista predeterminada guardada",
     "kitchenStations": "Estaciones de cocina",
     "kitchenStationsHint": "Enviá categorías a una estación de cocina, elegí su impresora y asigná el chef que debe ver esos items en el KDS.",
+    "kotPrintUnassigned": "Imprimir productos sin estación",
+    "kotPrintUnassignedHint": "Activado: los productos de categorías sin estación salen en una comanda de cocina aparte. Desactivado: no se imprimen.",
+    "stationUnassignedNotPrinted": "no se imprime",
     "kitchenWorkflowBothOffNote": "La Kitchen Display y la impresión de KOT están desactivadas. Los items de cocina no se mostrarán ni imprimirán en ningún lado — los pedidos deberán marcarse como servidos directamente en el mostrador.",
     "kotPrintLanguage": "Idioma de los tiques de cocina",
     "kotPrintLanguageHint": "Los tiques de cocina siguen el idioma del comercio salvo que se elija uno fijo.",
@@ -2228,6 +2240,13 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "Columnas imprimibles",
+    "printerAutoCut": "Cortador automático",
+    "printerAutoCutHint": "Desactívalo si la impresora no tiene cortador de papel.",
+    "noCutterMode": "Sin cortador",
+    "noCutterModeAll": "Imprimir todo de una vez",
+    "noCutterModeAllHint": "Los tickets y la cuenta se imprimen juntos, con una línea Cortar aquí entre ellos.",
+    "noCutterModeParts": "Imprimir por partes",
+    "noCutterModePartsHint": "La primera parte se imprime al instante. Toca Imprimir siguiente en el aviso para cada parte.",
     "paperWidth58": "2.5\" (58mm, 32 cols)",
     "paperWidth58Wide": "Rollo estrecho (36 cols)",
     "paperWidth80": "3.5\" (80mm, 48 cols - ancho)",

@@ -1228,7 +1228,15 @@
     "dayCloseBlockedByOpenShiftHint": "请在日结此营业日之前先关闭未关班次 #{id}（{name}）。",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# 笔未结订单将结转至下一班次} other {# 笔未结订单将结转至下一班次}}",
     "shiftCloseUnpaidWarningHint": "这些订单将保持开启并交接给下一班次。关闭本班次仅核对本班次期间已收取的现金付款。",
-    "shiftCloseUnpaidMoreCount": "另有 +{count} 笔未结订单"
+    "shiftCloseUnpaidMoreCount": "另有 +{count} 笔未结订单",
+    "printPartsPrinted": "已打印 {printed}/{total}",
+    "printPartsNext": "下一段：{part}",
+    "printPartsPrintNext": "打印下一段",
+    "printPartsKitchen": "厨房单（{station}）",
+    "printPartsBill": "账单",
+    "printPartsOther": "打印",
+    "printPartsSkip": "跳过其余",
+    "printPartsFailed": "无法打印。请检查打印机后重试。"
   },
   "printTest": {
     "amt": "金额",
@@ -1361,7 +1369,8 @@
       "columns": "列数",
       "wrapHint": "如果下一行换行，请选择更小的列数值。",
       "success": "如果能读到这行字，说明打印机工作正常！"
-    }
+    },
+    "cutHere": "从此处撕下"
   },
   "products": {
     "includeDescriptions": "包含描述",
@@ -2134,6 +2143,9 @@
     "kdsViewSaved": "默认视图已保存",
     "kitchenStations": "厨房工作站",
     "kitchenStationsHint": "将分类路由到厨房工作站，选择其打印机，并指定应在 KDS 中看到这些条目的厨师。",
+    "kotPrintUnassigned": "打印未分配工作站的菜品",
+    "kotPrintUnassignedHint": "开启：未分配到任何工作站的类别菜品会打印在另一张厨房单上。关闭：不打印。",
+    "stationUnassignedNotPrinted": "不打印",
     "kitchenWorkflowBothOffNote": "厨房显示和厨房单打印均已关闭。厨房条目不会在任何地方显示或打印——订单需直接在前台标记为已上餐。",
     "kotPrintLanguage": "厨房单语言",
     "kotPrintLanguageHint": "除非选择固定语言，厨房单跟随门店语言。",
@@ -2228,6 +2240,13 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "可打印列数",
+    "printerAutoCut": "自动切纸刀",
+    "printerAutoCutHint": "如果打印机没有切纸刀，请关闭此选项。",
+    "noCutterMode": "没有切纸刀时",
+    "noCutterModeAll": "一次全部打印",
+    "noCutterModeAllHint": "厨房单和账单连续打印，中间打印“从此处撕下”线。",
+    "noCutterModeParts": "分段打印",
+    "noCutterModePartsHint": "第一段会立即打印。之后每一段请点横幅上的“打印下一段”。",
     "paperWidth58": "2.5\" (58mm, 32 列)",
     "paperWidth58Wide": "窄卷（36 列）",
     "paperWidth80": "3.5\" (80mm, 48 列 - 宽)",

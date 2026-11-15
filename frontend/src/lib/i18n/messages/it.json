@@ -1228,7 +1228,15 @@
     "dayCloseBlockedByOpenShiftHint": "Chiudi il turno aperto #{id} ({name}) prima di chiudere questa giornata lavorativa.",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# ordine aperto verrà trasferito} other {# ordini aperti verranno trasferiti}}",
     "shiftCloseUnpaidWarningHint": "Questi ordini restano aperti per il turno successivo. La chiusura di questo turno riconcilia solo i pagamenti in contanti già incassati durante questo turno.",
-    "shiftCloseUnpaidMoreCount": "+{count} altri ordini aperti"
+    "shiftCloseUnpaidMoreCount": "+{count} altri ordini aperti",
+    "printPartsPrinted": "Stampate {printed} di {total}",
+    "printPartsNext": "Prossima: {part}",
+    "printPartsPrintNext": "Stampa successiva",
+    "printPartsKitchen": "Comanda cucina ({station})",
+    "printPartsBill": "Conto",
+    "printPartsOther": "Stampa",
+    "printPartsSkip": "Salta il resto",
+    "printPartsFailed": "Impossibile stampare. Controlla la stampante e riprova."
   },
   "printTest": {
     "amt": "Importo",
@@ -1361,7 +1369,8 @@
       "columns": "Colonne",
       "wrapHint": "Se la riga successiva va a capo, scegli un valore di colonne inferiore.",
       "success": "Se riesci a leggere questo, la stampante funziona!"
-    }
+    },
+    "cutHere": "Tagliare qui"
   },
   "products": {
     "includeDescriptions": "Includi descrizioni",
@@ -2134,6 +2143,9 @@
     "kdsViewSaved": "Vista predefinita salvata",
     "kitchenStations": "Postazioni di cucina",
     "kitchenStationsHint": "Instrada le categorie a una postazione di cucina, scegli la sua stampante e assegna il cuoco che deve vedere quegli articoli nel KDS.",
+    "kotPrintUnassigned": "Stampa articoli senza postazione",
+    "kotPrintUnassignedHint": "Attivo: gli articoli di categorie senza postazione escono su una comanda cucina a parte. Disattivo: non vengono stampati.",
+    "stationUnassignedNotPrinted": "non stampato",
     "kitchenWorkflowBothOffNote": "Sia il Kitchen Display che la stampa KOT sono disattivati. Gli articoli di cucina non verranno visualizzati o stampati da nessuna parte: gli ordini dovranno essere contrassegnati come serviti direttamente al bancone.",
     "kotPrintLanguage": "Lingua biglietto di cucina",
     "kotPrintLanguageHint": "I biglietti di cucina seguono la lingua del negozio a meno che non sia scelta una lingua fissa.",
@@ -2228,6 +2240,13 @@
     "paperSize58": "2,5\" (58mm)",
     "paperSize80": "3,5\" (80mm)",
     "paperWidth": "Colonne stampabili",
+    "printerAutoCut": "Taglierina automatica",
+    "printerAutoCutHint": "Disattiva se la stampante non ha una taglierina.",
+    "noCutterMode": "Senza taglierina",
+    "noCutterModeAll": "Stampa tutto insieme",
+    "noCutterModeAllHint": "Comande e conto si stampano insieme, separati da una linea Tagliare qui.",
+    "noCutterModeParts": "Stampa a parti",
+    "noCutterModePartsHint": "La prima parte si stampa subito. Tocca Stampa successiva nel banner per ogni parte.",
     "paperWidth58": "2,5\" (58mm, 32 col)",
     "paperWidth58Wide": "Rotolo stretto (36 col)",
     "paperWidth80": "3,5\" (80mm, 48 col - largo)",

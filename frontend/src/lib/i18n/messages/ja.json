@@ -1228,7 +1228,15 @@
     "dayCloseBlockedByOpenShiftHint": "この営業日を締める前に、開始中のシフト #{id}（{name}）を閉じてください。",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# 件の未会計注文が次のシフトに引き継がれます} other {# 件の未会計注文が次のシフトに引き継がれます}}",
     "shiftCloseUnpaidWarningHint": "これらの注文は次のシフトに引き継がれます。このシフトの精算では、このシフト中に受け取った現金支払いのみを集計します。",
-    "shiftCloseUnpaidMoreCount": "他 +{count} 件の未会計注文"
+    "shiftCloseUnpaidMoreCount": "他 +{count} 件の未会計注文",
+    "printPartsPrinted": "{total} 件中 {printed} 件を印刷",
+    "printPartsNext": "次: {part}",
+    "printPartsPrintNext": "次を印刷",
+    "printPartsKitchen": "キッチン伝票 ({station})",
+    "printPartsBill": "会計伝票",
+    "printPartsOther": "印刷",
+    "printPartsSkip": "残りをスキップ",
+    "printPartsFailed": "印刷できませんでした。プリンターを確認して再試行してください。"
   },
   "printTest": {
     "amt": "金額",
@@ -1361,7 +1369,8 @@
       "columns": "列数",
       "wrapHint": "次の行が折り返される場合は、列数を小さくしてください。",
       "success": "この行を読めれば、プリンターは正常に動作しています！"
-    }
+    },
+    "cutHere": "ここで切り取り"
   },
   "products": {
     "includeDescriptions": "説明を含める",
@@ -2134,6 +2143,9 @@
     "kdsViewSaved": "既定の表示を保存しました",
     "kitchenStations": "キッチンステーション",
     "kitchenStationsHint": "カテゴリをキッチンステーションに割り当て、プリンターを選び、KDSでその商品を見るシェフを指定します。",
+    "kotPrintUnassigned": "ステーションのない商品を印刷",
+    "kotPrintUnassignedHint": "オン: どのステーションにも属さないカテゴリの商品を別のキッチン伝票に印刷します。オフ: 印刷しません。",
+    "stationUnassignedNotPrinted": "印刷しない",
     "kitchenWorkflowBothOffNote": "キッチンディスプレイとKOT印刷がどちらもオフです。キッチン商品はどこにも表示・印刷されないため、カウンターで直接提供済みにする必要があります。",
     "kotPrintLanguage": "キッチン伝票の言語",
     "kotPrintLanguageHint": "キッチン伝票は店舗の言語に従いますが、固定言語を選択することもできます。",
@@ -2228,6 +2240,13 @@
     "paperSize58": "2.5インチ（58mm）",
     "paperSize80": "3.5インチ（80mm）",
     "paperWidth": "印刷可能な列数",
+    "printerAutoCut": "オートカッター",
+    "printerAutoCutHint": "プリンターに用紙カッターがない場合はオフにしてください。",
+    "noCutterMode": "カッターなしの場合",
+    "noCutterModeAll": "まとめて印刷",
+    "noCutterModeAllHint": "伝票と会計を続けて印刷し、間に「ここで切り取り」の線を入れます。",
+    "noCutterModeParts": "分けて印刷",
+    "noCutterModePartsHint": "最初の部分はすぐに印刷されます。次の部分はバナーの「次を印刷」をタップします。",
     "paperWidth58": "2.5インチ（58mm、32列）",
     "paperWidth58Wide": "細幅ロール（36列）",
     "paperWidth80": "3.5インチ（80mm、48列 - ワイド）",

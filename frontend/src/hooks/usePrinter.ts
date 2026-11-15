@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePrintPartsStore, type PrintPartsState } from '@/store/print-parts';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import {
@@ -330,7 +331,10 @@ export const usePrinterStore = create<PrinterState>()(
           const hw = get().hardwarePrinter;
           if (hw && get().printMethod === 'escpos') {
             try {
-              const response = await api.post<{ warnings?: PrintWarning[] }>(
+              const response = await api.post<{
+                warnings?: PrintWarning[];
+                print_parts?: PrintPartsState;
+              }>(
                 '/printers/print-bill',
                 {
                   billId: bill.id,
@@ -341,6 +345,7 @@ export const usePrinterStore = create<PrinterState>()(
               );
               if (reservedWindow && !reservedWindow.closed) reservedWindow.close();
               windowTransferred = true;
+              usePrintPartsStore.getState().setParts(response.data.print_parts);
               return response.data.warnings || [];
             } catch (err: unknown) {
               const e = err as {
@@ -671,7 +676,10 @@ export const usePrinterStore = create<PrinterState>()(
           const hw = get().hardwarePrinter;
           if (hw && get().printMethod === 'escpos') {
             try {
-              const response = await api.post<{ warnings?: PrintWarning[] }>(
+              const response = await api.post<{
+                warnings?: PrintWarning[];
+                print_parts?: PrintPartsState;
+              }>(
                 '/printers/print-kot',
                 {
                   orderId: order.id,
@@ -681,6 +689,7 @@ export const usePrinterStore = create<PrinterState>()(
                   arabicShaping: printerArabicShaping,
                 },
               );
+              usePrintPartsStore.getState().setParts(response.data.print_parts);
               return response.data.warnings || [];
             } catch (err: unknown) {
               const e = err as {

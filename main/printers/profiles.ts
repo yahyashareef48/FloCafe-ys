@@ -6,7 +6,8 @@ import {
 } from '../../shared/print/thermal-capabilities';
 
 export type PrinterCommandSet = 'escpos';
-export type PrinterCutMode = 'full' | 'partial';
+/** `none` is a printer without a cutter: a printed tear line replaces the cut command. */
+export type PrinterCutMode = 'full' | 'partial' | 'none';
 
 export interface SupportedPrinterProfile {
   id: string;
@@ -153,6 +154,11 @@ export function resolvePrinterProfile(printer: any): SupportedPrinterProfile {
   return String(paperWidth || '').startsWith('58mm')
     ? SUPPORTED_PRINTER_PROFILES.find((p) => p.id === 'generic-escpos-58')!
     : SUPPORTED_PRINTER_PROFILES.find((p) => p.id === 'generic-escpos-80')!;
+}
+
+/** The configured printer's cut mode: its profile's cutter unless the printer has none. */
+export function printerCutMode(printer: any, profile: SupportedPrinterProfile): PrinterCutMode {
+  return printer?.auto_cut === 0 ? 'none' : profile.cutMode;
 }
 
 export function getPrinterCapabilities(
