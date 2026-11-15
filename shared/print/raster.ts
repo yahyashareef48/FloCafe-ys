@@ -225,7 +225,7 @@ export type MixedPrintPart =
 export function encodeMixedPrintParts(
   parts: readonly MixedPrintPart[],
   capabilities: ThermalPrinterCapabilities,
-  cutMode: 'full' | 'partial',
+  cutMode: 'full' | 'partial' | 'none',
 ): Uint8Array {
   const encoded: Uint8Array[] = [];
   for (const part of parts) {
@@ -235,12 +235,12 @@ export function encodeMixedPrintParts(
   return concatBytes(encoded);
 }
 
-/** Standard trailing feed and profile-selected cut used by all raw paths. */
-export function encodeRasterFeedAndCut(cutMode: 'full' | 'partial', feedLines = 5): Uint8Array {
+/** Standard trailing feed and profile-selected cut used by all raw paths; `none` only feeds. */
+export function encodeRasterFeedAndCut(cutMode: 'full' | 'partial' | 'none', feedLines = 5): Uint8Array {
   if (!Number.isSafeInteger(feedLines) || feedLines < 0 || feedLines > 255) throw new Error('Invalid raster feed count');
   return new Uint8Array([
     0x1B, 0x64, feedLines,
-    ...(cutMode === 'partial' ? [0x1D, 0x56, 0x42, 0x00] : [0x1D, 0x56, 0x00]),
+    ...(cutMode === 'none' ? [] : cutMode === 'partial' ? [0x1D, 0x56, 0x42, 0x00] : [0x1D, 0x56, 0x00]),
   ]);
 }
 

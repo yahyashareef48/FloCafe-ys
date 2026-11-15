@@ -1361,7 +1361,8 @@
       "columns": "Colonnes",
       "wrapHint": "Si la ligne suivante passe à la ligne, choisissez un nombre de colonnes inférieur.",
       "success": "Si vous pouvez lire ceci, votre imprimante fonctionne !"
-    }
+    },
+    "cutHere": "Couper ici"
   },
   "products": {
     "includeDescriptions": "Inclure les descriptions",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "Colonnes imprimables",
+    "printerAutoCut": "Massicot automatique",
+    "printerAutoCutHint": "Désactivez cette option si l’imprimante n’a pas de massicot. Chaque ticket se termine alors par une ligne pointillée Couper ici pour le déchirer.",
     "paperWidth58": "2.5\" (58mm, 32 cols)",
     "paperWidth58Wide": "Rouleau étroit (36 colonnes)",
     "paperWidth80": "3.5\" (80mm, 48 cols - wide)",

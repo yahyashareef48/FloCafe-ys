@@ -1361,7 +1361,8 @@
       "columns": "欄位數",
       "wrapHint": "如果下一行換行，請選擇較小的欄位數值。",
       "success": "如果能讀到這行字，說明印表機工作正常！"
-    }
+    },
+    "cutHere": "從此處撕下"
   },
   "products": {
     "includeDescriptions": "包含描述",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "可列印列數",
+    "printerAutoCut": "自動裁紙刀",
+    "printerAutoCutHint": "如果印表機沒有裁紙刀，請關閉此選項。每張單據結尾會印出一條「從此處撕下」虛線，沿線撕下即可。",
     "paperWidth58": "2.5\" (58mm, 32 列)",
     "paperWidth58Wide": "窄卷（36 列）",
     "paperWidth80": "3.5\" (80mm, 48 列 - 寬)",

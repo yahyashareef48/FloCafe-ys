@@ -13,6 +13,7 @@ import {
   SupportedPrinterProfile,
   dotsForPaperWidth,
   capabilitiesForPrinter,
+  printerCutMode,
 } from './profiles';
 import {
   getCountryByCode,
@@ -1494,7 +1495,8 @@ export function resolvePrinterContext(
   printer: any,
   arabicShapingOverride?: boolean,
 ): PrinterContext {
-  const profile = resolvePrinterProfile(printer);
+  const resolvedProfile = resolvePrinterProfile(printer);
+  const profile = { ...resolvedProfile, cutMode: printerCutMode(printer, resolvedProfile) };
   const columns = getColumnsForPrinter(printer, profile);
   const capabilities = capabilitiesForPrinter(
     profile,
@@ -3073,7 +3075,9 @@ export function buildTestPage(
   return Buffer.concat([
     textData,
     Buffer.from(rasterData),
-    Buffer.from(encodeRasterFeedAndCut(cutMode)),
+    cutMode === 'none'
+      ? buildEscPos(['{CUT}'], false, { cutMode, language: lang, capabilities, columns: width })
+      : Buffer.from(encodeRasterFeedAndCut(cutMode)),
   ]);
 }
 

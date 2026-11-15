@@ -1361,7 +1361,8 @@
       "columns": "Columnas",
       "wrapHint": "Si la siguiente línea se corta, elija un valor de columnas menor.",
       "success": "¡Si puede leer esto, su impresora funciona!"
-    }
+    },
+    "cutHere": "Cortar aquí"
   },
   "products": {
     "includeDescriptions": "Incluir descripciones",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "Columnas imprimibles",
+    "printerAutoCut": "Cortador automático",
+    "printerAutoCutHint": "Desactívalo si la impresora no tiene cortador de papel. Cada ticket terminará con una línea discontinua de Cortar aquí para rasgarlo.",
     "paperWidth58": "2.5\" (58mm, 32 cols)",
     "paperWidth58Wide": "Rollo estrecho (36 cols)",
     "paperWidth80": "3.5\" (80mm, 48 cols - ancho)",

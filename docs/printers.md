@@ -26,6 +26,12 @@ Enable **Open cash drawer on checkout** on a receipt printer only when a till is
 printer's drawer-kick port. When enabled, Al Baik POS appends the standard ESC/POS drawer pulse to
 printed receipt jobs for that printer, and only for payment methods on the drawer's allowlist.
 
+Turn off **Auto-cutter** on a network or USB printer that has no paper cutter, such as a pocket
+Bluetooth printer. Every job for that printer then ends with a dashed **Cut here** line, fed past
+the tear bar, instead of the cut command, so consecutive kitchen tickets and bills can be torn apart.
+The label prints in the job's language when the printer can encode it, and in English otherwise.
+The setting is not offered for WebUSB printers.
+
 ## Receipt logos
 
 Upload a PNG, JPEG, or WebP image under **Settings > General > Store Logo**. The source file can be
@@ -131,6 +137,12 @@ the station list, and print on the default kitchen printer.
 
 KOT printing can be disabled for the business. When it is disabled, neither automatic nor manual KOT
 print requests are sent.
+
+On the backend thermal path, item names print bold at double width and height, wrapped to half the
+paper's columns. When **Big token number** is on for bills, the ticket also prints the token large under
+its banner: the bill's token once the order has a bill, otherwise the trailing counter of the order
+number. Order and bill numbers count separately, so a ticket printed before billing can show a
+different number from the bill printed later.
 
 ## Troubleshooting
 

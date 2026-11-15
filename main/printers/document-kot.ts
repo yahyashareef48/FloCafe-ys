@@ -9,6 +9,7 @@ import type { RasterSemanticLineGroup } from '../../shared/print/raster';
 import {
   buildEscPos,
   formatVariantItemHeading,
+  normalizeThermalText,
   parseVariantSelection,
   pushWrapped,
   truncate,
@@ -17,6 +18,7 @@ import {
 } from './formatting-helpers';
 import {
   GENERIC_THERMAL_CAPABILITIES,
+  hasArabicScript,
   isThermalTextRepresentable,
   mergeThermalCapabilities,
   shouldUseOrderTypeFallback,
@@ -56,6 +58,7 @@ export function buildKotPrintData(order: any, items: any[], stationName: string)
         [order?.special_instructions, order?.order_notes, order?.orderNotes, order?.notes]
           .find((val: unknown) => typeof val === 'string' && val.trim().length > 0)
           ?.trim() ?? '',
+      token: String(order?.kot_token ?? '').trim(),
     },
     items: ticketItems.map((item: any) => ({
       productName: formatVariantItemHeading(
@@ -277,6 +280,20 @@ function kotHeaderLines(
   );
   sourceLines?.push(labelOf(header.banner));
   sourceControlLines?.push(lines.at(-1) ?? '');
+  if (header.token) {
+    lines.push(
+      '{CENTER}{BOLD}{DOUBLE_HEIGHT}{DOUBLE_WIDTH}' +
+        truncate(
+          header.token.text,
+          Math.max(1, Math.floor(cols / 2)),
+          options.language,
+          options.capabilities,
+        ) +
+        '{/DOUBLE_WIDTH}{/DOUBLE_HEIGHT}{/BOLD}{/CENTER}',
+    );
+    sourceLines?.push(header.token.text);
+    sourceControlLines?.push(lines.at(-1) ?? '');
+  }
   lines.push('');
   sourceLines?.push('');
   sourceControlLines?.push('');
@@ -390,27 +407,44 @@ function kotHeaderLines(
   return lines;
 }
 
-function kotItemLines(
+const KOT_ITEM_OPEN = '{BOLD}{DOUBLE_HEIGHT}{DOUBLE_WIDTH}';
+const KOT_ITEM_CLOSE = '{/DOUBLE_WIDTH}{/DOUBLE_HEIGHT}{/BOLD}';
+
+/** Item heading at double width and height, wrapped so glyphs keep their shape. */
+function kotItemHeadingLines(
   row: KotItemsBlock['rows'][number],
   cols: number,
   arabicShaping: boolean,
   language: string,
   capabilities?: ThermalPrinterCapabilities,
 ): string[] {
-  const lines: string[] = [];
-  const itemPrefix = row.quantity + 'x  ';
-  lines.push(
-    '{DOUBLE_HEIGHT}{BOLD}' +
-      itemPrefix +
-      truncateShapedLine(
-        row.name.text,
-        Math.max(1, cols - displayCellWidth(itemPrefix)),
-        arabicShaping,
-        language,
-        capabilities,
-      ) +
-      '{/BOLD}{/DOUBLE_HEIGHT}',
+  const itemPrefix = row.quantity + 'x ';
+  const prefixWidth = displayCellWidth(itemPrefix);
+  const nameWidth = Math.max(1, Math.floor(cols / 2) - prefixWidth);
+  const name = normalizeThermalText(row.name.text, capabilities);
+  const wrapped: string[] = [];
+  if (arabicShaping && hasArabicScript(name)) {
+    wrapped.push(
+      truncateShapedLine(name, Math.max(1, cols - prefixWidth), arabicShaping, language, capabilities),
+    );
+  } else {
+    pushWrapped(wrapped, name, nameWidth, language, capabilities);
+  }
+  const indent = ' '.repeat(prefixWidth);
+  return (wrapped.length > 0 ? wrapped : ['']).map(
+    (text, index) => KOT_ITEM_OPEN + (index === 0 ? itemPrefix : indent) + text + KOT_ITEM_CLOSE,
   );
+}
+
+function kotItemLines(
+  row: KotItemsBlock['rows'][number],
+  cols: number,
+  arabicShaping: boolean,
+  language: string,
+  capabilities?: ThermalPrinterCapabilities,
+): { lines: string[]; headingLineCount: number } {
+  const lines = kotItemHeadingLines(row, cols, arabicShaping, language, capabilities);
+  const headingLineCount = lines.length;
   for (const addon of row.addons) {
     const quantity = addon.quantity ?? 1;
     const quantitySuffix = quantity > 1 ? ` x${quantity}` : '';
@@ -434,7 +468,7 @@ function kotItemLines(
         ),
     );
   }
-  return lines;
+  return { lines, headingLineCount };
 }
 
 function addonName(addon: DirectionalText): string {
@@ -451,7 +485,7 @@ export function renderKotDocumentToLines(
   const header = kotBlock(document, 'kot-header');
   const items = kotBlock(document, 'kot-items');
   const cols = options.columns;
-  const bar = '='.repeat(cols);
+  const bar = '-'.repeat(cols);
 
   lines.push('{INIT}');
   if (header) {
@@ -473,7 +507,7 @@ export function renderKotDocumentToLines(
   if (items) {
     for (const [rowIndex, row] of items.rows.entries()) {
       const rowStart = lines.length;
-      const rowLines = kotItemLines(
+      const { lines: rowLines, headingLineCount } = kotItemLines(
         row,
         cols,
         options.arabicShaping,
@@ -481,9 +515,9 @@ export function renderKotDocumentToLines(
         options.capabilities,
       );
       lines.push(...rowLines);
-      const sourceLines = [`${row.quantity}x  ${row.name.text}`];
+      const sourceLines = [`${row.quantity}x ${row.name.text}`];
       const sourceControlLines = [rowLines[0] ?? ''];
-      let rowLineOffset = 1;
+      let rowLineOffset = headingLineCount;
       for (const addon of row.addons) {
         const quantitySuffix = (addon.quantity ?? 1) > 1 ? ` x${addon.quantity}` : '';
         sourceLines.push(`  + ${addon.text}${quantitySuffix}`);

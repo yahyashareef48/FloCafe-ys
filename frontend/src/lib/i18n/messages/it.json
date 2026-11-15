@@ -1361,7 +1361,8 @@
       "columns": "Colonne",
       "wrapHint": "Se la riga successiva va a capo, scegli un valore di colonne inferiore.",
       "success": "Se riesci a leggere questo, la stampante funziona!"
-    }
+    },
+    "cutHere": "Tagliare qui"
   },
   "products": {
     "includeDescriptions": "Includi descrizioni",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2,5\" (58mm)",
     "paperSize80": "3,5\" (80mm)",
     "paperWidth": "Colonne stampabili",
+    "printerAutoCut": "Taglierina automatica",
+    "printerAutoCutHint": "Disattiva se la stampante non ha una taglierina. Ogni scontrino terminerà con una linea tratteggiata Tagliare qui per strapparlo.",
     "paperWidth58": "2,5\" (58mm, 32 col)",
     "paperWidth58Wide": "Rotolo stretto (36 col)",
     "paperWidth80": "3,5\" (80mm, 48 col - largo)",

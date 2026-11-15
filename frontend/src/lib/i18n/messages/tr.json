@@ -1361,7 +1361,8 @@
       "columns": "Sütun Genişliği",
       "wrapHint": "Bir sonraki satır taşarsa daha küçük bir sütun değeri seçin.",
       "success": "Bu metni okuyabiliyorsanız yazıcınız başarıyla çalışıyor!"
-    }
+    },
+    "cutHere": "Buradan kesin"
   },
   "products": {
     "includeDescriptions": "Açıklamaları dahil et",
@@ -2228,6 +2229,8 @@
     "paperSize58": "58 mm",
     "paperSize80": "80 mm",
     "paperWidth": "Kağıt Genişliği",
+    "printerAutoCut": "Otomatik kesici",
+    "printerAutoCutHint": "Yazıcıda kağıt kesici yoksa bunu kapatın. Her fiş, yırtmak için kesikli bir Buradan kesin çizgisiyle biter.",
     "paperWidth58": "58 mm (32 Sütun)",
     "paperWidth58Wide": "58 mm Geniş (36 Sütun)",
     "paperWidth80": "80 mm (48 Sütun)",

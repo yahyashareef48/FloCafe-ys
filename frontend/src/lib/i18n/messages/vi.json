@@ -1361,7 +1361,8 @@
       "columns": "Số cột",
       "wrapHint": "Nếu dòng tiếp theo xuống dòng, hãy chọn số cột nhỏ hơn.",
       "success": "Nếu bạn đọc được nội dung này, máy in đang hoạt động!"
-    }
+    },
+    "cutHere": "Cắt tại đây"
   },
   "products": {
     "includeDescriptions": "Bao gồm mô tả",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "Số cột có thể in",
+    "printerAutoCut": "Dao cắt tự động",
+    "printerAutoCutHint": "Tắt mục này nếu máy in không có dao cắt giấy. Khi đó mỗi phiếu sẽ kết thúc bằng một đường nét đứt Cắt tại đây để xé.",
     "paperWidth58": "2.5\" (58mm, 32 cột)",
     "paperWidth58Wide": "Cuộn hẹp (36 cột)",
     "paperWidth80": "3.5\" (80mm, 48 cột - rộng)",

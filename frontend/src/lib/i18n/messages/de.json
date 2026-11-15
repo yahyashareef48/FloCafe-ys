@@ -1361,7 +1361,8 @@
       "columns": "Spalten",
       "wrapHint": "Wenn die nächste Zeile umbricht, wählen Sie eine kleinere Spaltenanzahl.",
       "success": "Wenn Sie dies lesen können, funktioniert Ihr Drucker!"
-    }
+    },
+    "cutHere": "Hier abtrennen"
   },
   "products": {
     "includeDescriptions": "Beschreibungen einschließen",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2,5\" (58mm)",
     "paperSize80": "3,5\" (80mm)",
     "paperWidth": "Druckbare Spalten",
+    "printerAutoCut": "Automatischer Abschneider",
+    "printerAutoCutHint": "Ausschalten, wenn der Drucker keinen Papierabschneider hat. Jeder Bon endet dann mit einer gestrichelten Hier-abtrennen-Linie zum Abreißen.",
     "paperWidth58": "2,5\" (58mm, 32 Spalten)",
     "paperWidth58Wide": "Schmale Rolle (36 Spalten)",
     "paperWidth80": "3,5\" (80mm, 48 Spalten - breit)",

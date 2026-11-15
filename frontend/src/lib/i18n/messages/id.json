@@ -1361,7 +1361,8 @@
       "columns": "Kolom",
       "wrapHint": "Jika baris berikutnya terpotong, pilih nilai kolom yang lebih kecil.",
       "success": "Jika Anda dapat membaca ini, printer Anda berfungsi!"
-    }
+    },
+    "cutHere": "Potong di sini"
   },
   "products": {
     "includeDescriptions": "Sertakan deskripsi",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "Kolom Cetak",
+    "printerAutoCut": "Pemotong otomatis",
+    "printerAutoCutHint": "Matikan jika printer tidak punya pemotong kertas. Setiap tiket lalu diakhiri garis putus-putus Potong di sini sebagai tempat menyobek.",
     "paperWidth58": "2.5\" (58mm, 32 kolom)",
     "paperWidth58Wide": "Gulungan sempit (36 kolom)",
     "paperWidth80": "3.5\" (80mm, 48 kolom - lebar)",

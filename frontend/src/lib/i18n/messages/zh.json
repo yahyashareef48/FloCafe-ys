@@ -1361,7 +1361,8 @@
       "columns": "列数",
       "wrapHint": "如果下一行换行，请选择更小的列数值。",
       "success": "如果能读到这行字，说明打印机工作正常！"
-    }
+    },
+    "cutHere": "从此处撕下"
   },
   "products": {
     "includeDescriptions": "包含描述",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "可打印列数",
+    "printerAutoCut": "自动切纸刀",
+    "printerAutoCutHint": "如果打印机没有切纸刀，请关闭此选项。每张单据末尾会打印一条“从此处撕下”虚线，沿线撕下即可。",
     "paperWidth58": "2.5\" (58mm, 32 列)",
     "paperWidth58Wide": "窄卷（36 列）",
     "paperWidth80": "3.5\" (80mm, 48 列 - 宽)",

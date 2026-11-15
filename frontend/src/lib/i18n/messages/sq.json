@@ -1361,7 +1361,8 @@
       "columns": "Kolonat",
       "wrapHint": "Nëse rreshti tjetër thyhet, zgjidhni një vlerë më të vogël kolonash.",
       "success": "Nëse mund ta lexoni këtë, printeri juaj funksionon!"
-    }
+    },
+    "cutHere": "Prisni këtu"
   },
   "products": {
     "includeDescriptions": "Përfshi përshkrimet",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2.5\" (58 mm)",
     "paperSize80": "3,5\" (80 mm)",
     "paperWidth": "Kolona të printueshme",
+    "printerAutoCut": "Prerës automatik",
+    "printerAutoCutHint": "Çaktivizojeni nëse printeri nuk ka prerës letre. Çdo biletë do të përfundojë me një vijë me ndërprerje Prisni këtu për ta grisur.",
     "paperWidth58": "2,5\" (58 mm, 32 kolona)",
     "paperWidth58Wide": "Rrotull i ngushtë (36 pika)",
     "paperWidth80": "3,5\" (80 mm, 48 kolona - gjerësi)",

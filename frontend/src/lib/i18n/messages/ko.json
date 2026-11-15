@@ -1361,7 +1361,8 @@
       "columns": "열",
       "wrapHint": "다음 줄이 줄바꿈되면 더 작은 열 값을 선택하세요.",
       "success": "이 글이 보인다면 프린터가 정상 작동하고 있습니다!"
-    }
+    },
+    "cutHere": "여기를 자르세요"
   },
   "products": {
     "includeDescriptions": "설명 포함",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "인쇄 가능 열 수",
+    "printerAutoCut": "자동 커터",
+    "printerAutoCutHint": "프린터에 용지 커터가 없으면 끄세요. 각 티켓 끝에 여기를 자르세요 점선이 인쇄되어 그 선을 따라 찢으면 됩니다.",
     "paperWidth58": "2.5\" (58mm, 32열)",
     "paperWidth58Wide": "좁은 롤 (36열)",
     "paperWidth80": "3.5\" (80mm, 48열 - 와이드)",

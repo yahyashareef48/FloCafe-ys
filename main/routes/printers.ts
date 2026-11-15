@@ -41,11 +41,13 @@ import {
   type KotLanguagePolicy,
   type ReceiptLanguagePolicy,
   isKotItemPending,
+  tokenOf,
 } from '../../shared/print';
 import {
   getSupportedPrinterProfiles,
   resolvePrinterProfile,
   capabilitiesForPrinter,
+  printerCutMode,
 } from '../printers/profiles';
 import { hasPermission, requirePermission, requireAnyPermission } from '../services/authorization';
 import { getOpenSession } from '../services/shift-session-gate';
@@ -100,6 +102,9 @@ function validatePrinterFields(body: any, existing?: any): string | null {
     typeof body.cash_drawer_pulse_enabled !== 'boolean'
   ) {
     return 'cash_drawer_pulse_enabled must be a boolean';
+  }
+  if (body.auto_cut !== undefined && typeof body.auto_cut !== 'boolean') {
+    return 'auto_cut must be a boolean';
   }
   if (body.paper_width !== undefined && !PRINTER_COLUMN_WIDTHS.includes(body.paper_width)) {
     return 'paper_width must be cols-32, cols-36, cols-40, cols-42, cols-44, or cols-48';
@@ -161,6 +166,7 @@ function printerShape(printer: any) {
     port: printer.port,
     is_default: printer.is_default,
     cash_drawer_pulse_enabled: printer.cash_drawer_pulse_enabled,
+    auto_cut: printer.auto_cut === 0 ? 0 : 1,
     paper_width: printer.paper_width,
     created_at: printer.created_at,
     updated_at: printer.updated_at,
@@ -280,6 +286,7 @@ router.post('/', requirePermission('printers.manage'), (req: Request, res: Respo
       paper_width,
       is_default,
       cash_drawer_pulse_enabled,
+      auto_cut,
     } = req.body;
     // Trim accidental whitespace so the name matches the OS print queue exactly.
     const name = typeof req.body.name === 'string' ? req.body.name.trim() : req.body.name;
@@ -312,8 +319,8 @@ router.post('/', requirePermission('printers.manage'), (req: Request, res: Respo
       const shouldBeDefault = Boolean(is_default) || isFirstPrinter;
       if (shouldBeDefault) db.prepare('UPDATE printers SET is_default = 0').run();
       db.prepare(`
-        INSERT INTO printers (id, name, connection_type, ip_address, port, paper_width, is_default, cash_drawer_pulse_enabled, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO printers (id, name, connection_type, ip_address, port, paper_width, is_default, cash_drawer_pulse_enabled, auto_cut, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         id,
         name,
@@ -323,6 +330,7 @@ router.post('/', requirePermission('printers.manage'), (req: Request, res: Respo
         paper_width ?? 'cols-42',
         shouldBeDefault ? 1 : 0,
         cash_drawer_pulse_enabled === true ? 1 : 0,
+        auto_cut === false ? 0 : 1,
         now(),
         now(),
       );
@@ -351,6 +359,7 @@ router.put('/:id', requirePermission('printers.manage'), (req: Request, res: Res
       paper_width,
       is_default,
       cash_drawer_pulse_enabled,
+      auto_cut,
     } = req.body;
     const name = typeof req.body.name === 'string' ? req.body.name.trim() : req.body.name;
 
@@ -365,7 +374,7 @@ router.put('/:id', requirePermission('printers.manage'), (req: Request, res: Res
       db.prepare(`
         UPDATE printers SET
           name = ?, connection_type = ?, ip_address = ?, port = ?,
-          paper_width = ?, is_default = ?, cash_drawer_pulse_enabled = ?, updated_at = ?
+          paper_width = ?, is_default = ?, cash_drawer_pulse_enabled = ?, auto_cut = ?, updated_at = ?
         WHERE id = ?
       `).run(
         name !== undefined ? name : existing.name,
@@ -379,6 +388,7 @@ router.put('/:id', requirePermission('printers.manage'), (req: Request, res: Res
             ? 1
             : 0
           : existing.cash_drawer_pulse_enabled,
+        auto_cut !== undefined ? (auto_cut ? 1 : 0) : existing.auto_cut,
         now(),
         req.params.id,
       );
@@ -492,7 +502,7 @@ router.post(
       );
       const testData = buildTestPage(
         printer.paper_width || profile.defaultPaperWidth,
-        profile.cutMode,
+        printerCutMode(printer, profile),
         tenantLanguage(db),
         timezone,
         req.body?.rasterProbe === true ? capabilities : undefined,
@@ -612,7 +622,7 @@ router.post(
       const profile = resolvePrinterProfile(printer);
       const testData = buildTestPage(
         printer.paper_width || profile.defaultPaperWidth,
-        profile.cutMode,
+        printerCutMode(printer, profile),
         tenantLanguage(db),
         timezone,
       );
@@ -1284,6 +1294,7 @@ router.post(
           .get(order.customer_id) as { name: string } | null;
         if (customer) order.customer = { name: customer.name };
       }
+      order.kot_token = kotToken(db, order);
 
       // Specific station prints one ticket; unassigned item overrides route by station.
       let success = true;
@@ -1513,6 +1524,15 @@ export function tenantLanguage(db: ReturnType<typeof getDatabase>): string {
   } catch {
     return 'en';
   }
+}
+
+/** The bill's token when the order is billed, else the order number's counter; empty when tokens are off. */
+function kotToken(db: ReturnType<typeof getDatabase>, order: any): string {
+  if (tenantSettingValue(db, 'bill_highlight_token') !== 'true') return '';
+  const bill = db
+    .prepare('SELECT bill_number FROM bills WHERE order_id = ? ORDER BY id DESC LIMIT 1')
+    .get(order.id) as { bill_number?: string } | undefined;
+  return tokenOf(String(bill?.bill_number || order.order_number || ''));
 }
 
 function tenantSettingValue(db: ReturnType<typeof getDatabase>, key: string): string | undefined {

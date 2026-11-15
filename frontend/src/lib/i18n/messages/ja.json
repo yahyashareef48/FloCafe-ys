@@ -1361,7 +1361,8 @@
       "columns": "列数",
       "wrapHint": "次の行が折り返される場合は、列数を小さくしてください。",
       "success": "この行を読めれば、プリンターは正常に動作しています！"
-    }
+    },
+    "cutHere": "ここで切り取り"
   },
   "products": {
     "includeDescriptions": "説明を含める",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2.5インチ（58mm）",
     "paperSize80": "3.5インチ（80mm）",
     "paperWidth": "印刷可能な列数",
+    "printerAutoCut": "オートカッター",
+    "printerAutoCutHint": "プリンターに用紙カッターがない場合はオフにしてください。各伝票の最後に「ここで切り取り」の点線が印刷されます。",
     "paperWidth58": "2.5インチ（58mm、32列）",
     "paperWidth58Wide": "細幅ロール（36列）",
     "paperWidth80": "3.5インチ（80mm、48列 - ワイド）",

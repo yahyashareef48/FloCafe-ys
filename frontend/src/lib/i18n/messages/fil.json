@@ -1361,7 +1361,8 @@
       "columns": "Mga Column",
       "wrapHint": "Kung may lumampas na linya, pumili ng mas mababang bilang ng column.",
       "success": "Gumagana nang maayos ang iyong printer!"
-    }
+    },
+    "cutHere": "Gupitin dito"
   },
   "products": {
     "includeDescriptions": "Isama ang mga paglalarawan",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "Mga Napi-print na Column",
+    "printerAutoCut": "Awtomatikong pamutol",
+    "printerAutoCutHint": "I-off ito kung walang paper cutter ang printer. Matatapos ang bawat ticket sa putol-putol na linyang Gupitin dito para doon punitin.",
     "paperWidth58": "2.5\" (58mm, 32 cols)",
     "paperWidth58Wide": "Makitid na roll (36 cols)",
     "paperWidth80": "3.5\" (80mm, 48 cols - wide)",

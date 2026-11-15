@@ -1361,7 +1361,8 @@
       "columns": "Kolommen",
       "wrapHint": "Als de volgende regel wordt afgebroken, kiest u een kleinere kolomwaarde.",
       "success": "Als u dit kunt lezen, werkt uw printer!"
-    }
+    },
+    "cutHere": "Hier afscheuren"
   },
   "products": {
     "includeDescriptions": "Beschrijvingen opnemen",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2,5\" (58 mm)",
     "paperSize80": "3,5\" (80 mm)",
     "paperWidth": "Afdrukbare kolommen",
+    "printerAutoCut": "Automatische snijder",
+    "printerAutoCutHint": "Zet dit uit als de printer geen papiersnijder heeft. Elk bonnetje eindigt dan met een gestippelde Hier afscheuren-lijn.",
     "paperWidth58": "2,5\" (58 mm, 32 kolommen)",
     "paperWidth58Wide": "Smalle rol (36 kolommen)",
     "paperWidth80": "3,5\" (80 mm, 48 kolommen - breed)",

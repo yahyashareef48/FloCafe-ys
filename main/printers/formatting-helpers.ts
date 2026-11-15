@@ -24,7 +24,7 @@ import {
   rasterCapabilityEnabled,
   type RasterSemanticUnit,
 } from '../../shared/print/raster';
-import { isGeneratedPrintLanguage } from '../print/print-labels.generated';
+import { isGeneratedPrintLanguage, printLabel } from '../print/print-labels.generated';
 import { isExcludedFromBillReceipt } from '../../shared/order-item-status';
 import type { PrinterCutMode } from './profiles';
 
@@ -398,6 +398,26 @@ export function appendCashDrawerPulse(data: Buffer): Buffer {
   return Buffer.concat([data, Buffer.from([0x1b, 0x70, 0x00, 0x19, 0xfa])]);
 }
 
+/** Dashed `- - Cut here - -` line printed where a printer without a cutter should be torn. */
+export function tearLineText(
+  columns: number | undefined,
+  language: string | undefined,
+  capabilities: ThermalPrinterCapabilities,
+): string {
+  const width = Number.isInteger(columns) && (columns as number) > 0 ? (columns as number) : 32;
+  const localized = normalizeThermalTextByCapabilities(
+    printLabel(normalizePrintLanguage(language), 'print.cutHere'),
+    capabilities,
+  );
+  const label =
+    !hasArabicScript(localized) && selectThermalCodePage(localized, capabilities)
+      ? localized
+      : printLabel('en', 'print.cutHere');
+  const side = Math.max(2, Math.floor((width - displayCellWidth(label) - 2) / 2));
+  const dashes = '-'.repeat(side);
+  return truncateToDisplayCells(`${dashes} ${label} ${dashes}`, width);
+}
+
 export interface RasterLineUnit {
   readonly lineIndex: number;
   readonly lineCount?: number;
@@ -543,6 +563,19 @@ export function buildEscPos(
     }
 
     if (line.trim() === '{CUT}') {
+      if (options.cutMode === 'none') {
+        const tearLine = tearLineText(options.columns, options.language, capabilities);
+        const codePage = selectThermalCodePage(tearLine, capabilities);
+        resetAllStyles();
+        buf.push(0x1b, 0x64, 0x01, 0x1b, 0x61, 0x01);
+        if (codePage && codePage !== activeCodePage && !useLegacyUnicode) {
+          buf.push(0x1b, 0x74, escPosCodePageId(codePage));
+          activeCodePage = codePage;
+        }
+        buf.push(...CodepageEncoder.encode(tearLine, codePage ?? 'ascii'), 0x0a);
+        buf.push(0x1b, 0x61, 0x00, 0x1b, 0x64, 0x04);
+        continue;
+      }
       buf.push(0x1b, 0x64, 0x05);
       if (options.cutMode === 'partial') {
         buf.push(0x1d, 0x56, 0x42, 0x00);

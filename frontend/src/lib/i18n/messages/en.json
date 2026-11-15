@@ -1361,7 +1361,8 @@
       "columns": "Columns",
       "wrapHint": "If the next line wraps, choose a smaller column value.",
       "success": "If you can read this, your printer is working!"
-    }
+    },
+    "cutHere": "Cut here"
   },
   "products": {
     "includeDescriptions": "Include descriptions",
@@ -2228,6 +2229,8 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "Printable Columns",
+    "printerAutoCut": "Auto-cutter",
+    "printerAutoCutHint": "Turn this off if the printer has no paper cutter. Each ticket then ends with a dashed Cut here line to tear along.",
     "paperWidth58": "2.5\" (58mm, 32 cols)",
     "paperWidth58Wide": "Narrow roll (36 cols)",
     "paperWidth80": "3.5\" (80mm, 48 cols - wide)",
