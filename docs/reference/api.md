@@ -505,9 +505,9 @@ by default, validated as `name@handle`) and the business name, as the NPCI link
 `upi://pay?pa=<upi_id>&pn=<name>&am=<amount>&cu=INR`. It answers `409 upi_not_configured` without a UPI
 ID and `409 upi_requires_inr` when the store currency is not INR. `GET /` reports `upi_qr_enabled` when
 both hold. Only then do both checkout dialogs show **Show UPI QR** under a method named UPI; it stays
-disabled until that method has an amount. On screens 768 px wide or more, prepaid checkout
-fills the right half of the screen and shows the QR in the left half; elsewhere the QR opens over the
-dialog. The QR does not report payment: the cashier confirms the money arrived before completing the
+disabled until that method has an amount. On screens 768 px wide or more, prepaid checkout keeps the
+payment amounts, keypad and Confirm in the right third of the screen (half in portrait) and shows the
+bill summary on the left, with the QR below it while shown; elsewhere the QR opens over the dialog. The QR does not report payment: the cashier confirms the money arrived before completing the
 sale.
 
 ### Cash sessions

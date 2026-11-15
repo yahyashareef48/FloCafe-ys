@@ -111,25 +111,6 @@ type AmountTarget =
   | { kind: 'discount' }
   | null;
 
-type CheckoutLayout = 'half' | 'third' | 'full-split' | 'full-3col' | 'tender' | 'centered';
-
-/** Layout trial: picked per device from localStorage `flo-checkout-layout`. */
-function readCheckoutLayout(): CheckoutLayout {
-  try {
-    const value =
-      typeof window === 'undefined' ? null : window.localStorage.getItem('flo-checkout-layout');
-    return value === 'third' ||
-      value === 'full-split' ||
-      value === 'full-3col' ||
-      value === 'tender' ||
-      value === 'centered'
-      ? value
-      : 'half';
-  } catch {
-    return 'half';
-  }
-}
-
 export default function PrepaidCheckoutModal({
   initialCardTransactionIdRequired,
   initialDiscount = null,
@@ -167,7 +148,6 @@ export default function PrepaidCheckoutModal({
   const [walletAmount, setWalletAmount] = useState('');
   const [processing, setProcessing] = useState(false);
   const isNarrowScreen = useIsMobile();
-  const [layout] = useState<CheckoutLayout>(readCheckoutLayout);
   const [customMethods, setCustomMethods] = useState<CustomPaymentMethod[]>([]);
   const [cardTransactionIdRequired, setCardTransactionIdRequired] = useState(
     Boolean(initialCardTransactionIdRequired),
@@ -722,7 +702,7 @@ export default function PrepaidCheckoutModal({
     toStoredUnit,
   ]);
 
-  // Checkout pieces, arranged differently by each layout below.
+  // Checkout pieces, arranged by the wide- and narrow-screen layouts below.
   const titleRow = (
     <>
       <div className="flex items-start justify-between gap-3">
@@ -1135,11 +1115,10 @@ export default function PrepaidCheckoutModal({
       )}
     </>
   );
-  const renderPad = (large = false) => (
+  const renderPad = () => (
     <>
       {padTarget && (
         <CurrencyTouchNumberPad
-          large={large}
           value={activeAmountValue}
           onChange={updateActiveAmount}
           ariaLabel={t('numericKeypad')}
@@ -1229,179 +1208,9 @@ export default function PrepaidCheckoutModal({
     </>
   );
 
-  const upiPayment = payments.find((payment) => {
-    const method = customMethods.find((candidate) => candidate.id === payment.payment_method_id);
-    return Boolean(method && isUpiMethodName(method.name));
-  });
-  const upiAmountStored = upiPayment ? toStoredUnit(parseFloat(upiPayment.amount) || 0) : 0;
-  const cashPaymentIndex = payments.findIndex(
-    (payment) => payment.method === 'cash' && payment.payment_method_id === undefined,
-  );
-  const dueDisplay = toDisplayUnit(remaining);
-  const quickCashNotes = Array.from(
-    new Set([1, 50, 100, 200, 500, 2000].map((step) => Math.ceil(dueDisplay / step) * step)),
-  )
-    .filter((value) => value >= dueDisplay)
-    .slice(0, 6);
-  const quickCashPanel = cashPaymentIndex >= 0 && dueDisplay > 0 && (
-    <div className="grid grid-cols-3 gap-2" data-testid="quick-cash">
-      {quickCashNotes.map((value) => (
-        <button
-          key={value}
-          type="button"
-          onClick={() => {
-            setAmountTarget({ kind: 'payment', index: cashPaymentIndex });
-            updatePaymentAmount(cashPaymentIndex, String(value));
-          }}
-          className="touch-target min-h-14 rounded-xl border border-border bg-card text-lg font-bold tabular-nums text-foreground active:bg-muted"
-        >
-          {currencyFmt(toStoredUnit(value))}
-        </button>
-      ))}
-    </div>
-  );
-  const qrPanel =
-    upiQrAmount !== null ? (
-      <UpiQrPanel key={upiQrAmount} amount={upiQrAmount} onClose={() => setUpiQrAmount(null)} />
-    ) : null;
-  const closeButtonOnly = (
-    <button
-      onClick={onClose}
-      className="touch-target rounded-full bg-muted text-muted-foreground hover:text-foreground"
-      aria-label={t('close')}
-    >
-      <X size={16} />
-    </button>
-  );
-
-  if (!isNarrowScreen && layout === 'full-split') {
-    return (
-      <div
-        ref={modalRef}
-        data-testid="prepaid-checkout-modal"
-        className="fixed inset-0 z-50 flex bg-card"
-      >
-        <div className="flex w-1/2 min-h-0 flex-col border-e border-border">
-          <div className="shrink-0 border-b border-border px-6 pb-3 pt-4">
-            {titleRow}
-            {summaryBlock}
-            {discountToggle}
-          </div>
-          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-6 py-3">
-            {discountEditor}
-            {paymentRows}
-            {walletBlock}
-            {changeBlock}
-          </div>
-        </div>
-        <div className="flex w-1/2 min-h-0 flex-col">
-          <div className="min-h-0 flex-1 px-6 py-4">
-            {qrPanel ? (
-              <div className="flex h-full items-center justify-center">{qrPanel}</div>
-            ) : (
-              renderPad(true)
-            )}
-          </div>
-          <div className="shrink-0 border-t border-border px-6 pb-4 pt-3">{confirmButton}</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isNarrowScreen && layout === 'full-3col') {
-    return (
-      <div
-        ref={modalRef}
-        data-testid="prepaid-checkout-modal"
-        className="fixed inset-0 z-50 flex bg-card"
-      >
-        <div className="flex w-1/3 min-h-0 flex-col border-e border-border bg-muted/30">
-          {qrPanel ? (
-            <div className="flex h-full items-center justify-center p-4">{qrPanel}</div>
-          ) : (
-            <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-3 pt-4">
-              {titleRow}
-              {summaryBlock}
-              {discountToggle}
-              <div className="mt-3">{discountEditor}</div>
-            </div>
-          )}
-        </div>
-        <div className="flex w-1/3 min-h-0 flex-col border-e border-border">
-          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-5 pt-4">
-            {paymentRows}
-            {walletBlock}
-          </div>
-          <div className="shrink-0 space-y-2 border-t border-border px-5 pb-4 pt-3">
-            {changeBlock}
-            {confirmButton}
-          </div>
-        </div>
-        <div className="flex w-1/3 min-h-0 flex-col px-5 py-4">{renderPad(true)}</div>
-      </div>
-    );
-  }
-
-  if (!isNarrowScreen && layout === 'tender') {
-    return (
-      <div
-        ref={modalRef}
-        data-testid="prepaid-checkout-modal"
-        className="fixed inset-0 z-50 flex flex-col bg-card"
-      >
-        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-border px-6 py-3">
-          <div className="min-w-0">
-            <h2 className="text-lg font-bold text-foreground">{t('checkout')}</h2>
-            <p className="text-xs text-muted-foreground">
-              {t(ORDER_TYPE_SUFFIX_KEYS[cart.orderType])}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-end">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                {t('totalDue')}
-              </p>
-              <p className="text-3xl font-bold tabular-nums text-foreground">
-                {currencyFmt(remaining)}
-              </p>
-            </div>
-            {closeButtonOnly}
-          </div>
-        </div>
-        <div className="flex min-h-0 flex-1">
-          <div className="flex w-3/5 min-h-0 gap-4 border-e border-border px-6 py-4">
-            <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-y-auto">
-              <div>{discountToggle}</div>
-              {discountEditor}
-              {paymentRows}
-              {walletBlock}
-            </div>
-            <div className="flex w-[44%] shrink-0 flex-col items-center gap-2 overflow-y-auto">
-              {upiAmountStored > 0 ? (
-                <UpiQrPanel
-                  compact
-                  key={upiAmountStored}
-                  amount={upiAmountStored}
-                  onClose={() => updatePaymentAmount(payments.indexOf(upiPayment!), '')}
-                />
-              ) : (
-                <div className="w-full">{quickCashPanel}</div>
-              )}
-            </div>
-          </div>
-          <div className="flex w-2/5 min-h-0 flex-col">
-            <div className="min-h-0 flex-1 px-6 pt-4">{renderPad(true)}</div>
-            <div className="shrink-0 space-y-2 border-t border-border px-6 pb-4 pt-3">
-              {changeBlock}
-              {confirmButton}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isNarrowScreen && layout === 'third') {
+  // Wide screens: the checkout takes the right third (half in portrait); the left side shows the
+  // bill summary, with the UPI QR below it while shown.
+  if (!isNarrowScreen) {
     return (
       <div
         ref={modalRef}
@@ -1441,87 +1250,32 @@ export default function PrepaidCheckoutModal({
     );
   }
 
-  if (!isNarrowScreen && layout === 'centered') {
-    return (
-      <div
-        ref={modalRef}
-        data-testid="prepaid-checkout-modal"
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-      >
-        <div className="flex max-h-full w-full max-w-5xl overflow-hidden rounded-2xl bg-card shadow-2xl">
-          <div className="flex w-1/2 min-h-0 flex-col border-e border-border">
-            <div className="shrink-0 border-b border-border px-5 pb-3 pt-4">
-              {titleRow}
-              {summaryBlock}
-              {discountToggle}
-            </div>
-            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-5 py-3">
-              {discountEditor}
-              {paymentRows}
-              {walletBlock}
-            </div>
-          </div>
-          <div className="flex w-1/2 min-h-0 flex-col">
-            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-5 pt-4">
-              {/* While the QR is shown it takes the keypad's place; Done brings the keypad back. */}
-              {upiQrAmount !== null ? (
-                <div className="flex justify-center">
-                  <UpiQrPanel
-                    compact
-                    key={upiQrAmount}
-                    amount={upiQrAmount}
-                    onClose={() => setUpiQrAmount(null)}
-                  />
-                </div>
-              ) : (
-                renderPad()
-              )}
-              {changeBlock}
-            </div>
-            <div className="shrink-0 border-t border-border px-5 pb-4 pt-3">{confirmButton}</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Narrow screens: one sheet, with the UPI QR opening over it.
   return (
     <div
       ref={modalRef}
       data-testid="prepaid-checkout-modal"
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 md:items-stretch md:p-0"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
     >
-      {upiQrAmount !== null && isNarrowScreen && (
+      {upiQrAmount !== null && (
         <UpiQrDialog amount={upiQrAmount} onClose={() => setUpiQrAmount(null)} />
       )}
-      {/* On wide screens the checkout docks right; the free side holds the UPI QR. */}
-      <div
-        className={`hidden md:flex items-center justify-center p-6 ${layout === 'third' ? 'md:w-2/3' : 'md:w-1/2'}`}
-      >
-        {upiQrAmount !== null && !isNarrowScreen && (
-          <UpiQrPanel key={upiQrAmount} amount={upiQrAmount} onClose={() => setUpiQrAmount(null)} />
-        )}
-      </div>
-      <div
-        className={`bg-card flex max-h-[95vh] w-full flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-w-md sm:rounded-2xl md:h-full md:max-h-none md:max-w-none md:rounded-e-none ${layout === 'third' ? 'md:w-1/3' : 'md:w-1/2'}`}
-      >
-        <div className="shrink-0 border-b border-border px-5 pb-3 pt-4 md:pb-2 md:pt-3">
+      <div className="bg-card flex max-h-[95vh] w-full flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-w-md sm:rounded-2xl">
+        <div className="shrink-0 border-b border-border px-5 pb-3 pt-4">
           {titleRow}
           {summaryBlock}
           {discountToggle}
         </div>
-        <div className="min-h-0 space-y-3 overflow-y-auto px-5 py-3 md:flex-1 md:space-y-2 md:py-2">
+        <div className="min-h-0 space-y-3 overflow-y-auto px-5 py-3">
           {discountEditor}
           {paymentRows}
           {walletBlock}
         </div>
-        <div className="shrink-0 space-y-2 px-5 pb-2 md:pb-1">
+        <div className="shrink-0 space-y-2 px-5 pb-2">
           {renderPad()}
           {changeBlock}
         </div>
-        <div className="shrink-0 border-t border-border px-5 pb-6 pt-3 md:pb-3 md:pt-2">
-          {confirmButton}
-        </div>
+        <div className="shrink-0 border-t border-border px-5 pb-6 pt-3">{confirmButton}</div>
       </div>
     </div>
   );

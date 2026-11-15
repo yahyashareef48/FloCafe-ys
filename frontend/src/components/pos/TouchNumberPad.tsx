@@ -2,11 +2,7 @@
 
 import { Delete, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  allowCurrencyDecimalKey,
-  type CurrencyAmountTarget,
-  type CurrencyDiscountType,
-} from '@/lib/currency-input';
+import { allowCurrencyDecimalKey, type CurrencyAmountTarget, type CurrencyDiscountType } from '@/lib/currency-input';
 
 interface QuickValue {
   label: string;
@@ -23,8 +19,6 @@ interface Props {
   max?: number;
   quickValues?: QuickValue[];
   className?: string;
-  /** Taller keys for full-screen checkout layouts. */
-  large?: boolean;
 }
 
 function clampValue(value: string, max?: number) {
@@ -53,22 +47,13 @@ export default function TouchNumberPad({
   max,
   quickValues = [],
   className,
-  large = false,
 }: Props) {
-  const keyHeight = large ? 'min-h-16 text-2xl' : 'text-lg';
   const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', allowDecimal ? '.' : '', '0'];
 
   return (
-    <div
-      className={cn(
-        'rounded-xl border border-border bg-muted/40 p-2',
-        large && 'flex h-full flex-col',
-        className,
-      )}
-      aria-label={ariaLabel}
-    >
+    <div className={cn('rounded-xl border border-border bg-muted/40 p-2', className)} aria-label={ariaLabel}>
       {/* Quick amounts and Clear share one row above the digits. */}
-      <div className="mb-2 flex shrink-0 gap-2">
+      <div className="mb-2 flex gap-2">
         {quickValues.map((quick) => (
           <button
             key={`${quick.label}-${quick.value}`}
@@ -88,31 +73,23 @@ export default function TouchNumberPad({
           {clearLabel}
         </button>
       </div>
-      <div className={cn('grid grid-cols-3 gap-2', large && 'min-h-0 flex-1 grid-rows-4')}>
-        {keys.map((key, index) =>
-          key ? (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onChange(appendDigit(value, key, allowDecimal, max))}
-              className={cn(
-                'touch-target rounded-lg border border-border bg-card font-bold tabular-nums text-foreground transition-colors active:bg-muted',
-                keyHeight,
-              )}
-            >
-              {key}
-            </button>
-          ) : (
-            <span key={`blank-${index}`} aria-hidden="true" />
-          ),
-        )}
+      <div className="grid grid-cols-3 gap-2">
+        {keys.map((key, index) => key ? (
+          <button
+            key={key}
+            type="button"
+            onClick={() => onChange(appendDigit(value, key, allowDecimal, max))}
+            className="touch-target rounded-lg border border-border bg-card text-lg font-bold tabular-nums text-foreground transition-colors active:bg-muted"
+          >
+            {key}
+          </button>
+        ) : (
+          <span key={`blank-${index}`} aria-hidden="true" />
+        ))}
         <button
           type="button"
           onClick={() => onChange(value.slice(0, -1))}
-          className={cn(
-            'touch-target rounded-lg border border-border bg-card text-muted-foreground transition-colors active:bg-muted',
-            large && 'min-h-16',
-          )}
+          className="touch-target rounded-lg border border-border bg-card text-muted-foreground transition-colors active:bg-muted"
           aria-label={backspaceLabel}
           title={backspaceLabel}
         >
@@ -129,12 +106,7 @@ interface CurrencyTouchNumberPadProps extends Omit<Props, 'allowDecimal'> {
   discountType: CurrencyDiscountType;
 }
 
-export function CurrencyTouchNumberPad({
-  currencyMaxDecimals,
-  amountTarget,
-  discountType,
-  ...props
-}: CurrencyTouchNumberPadProps) {
+export function CurrencyTouchNumberPad({ currencyMaxDecimals, amountTarget, discountType, ...props }: CurrencyTouchNumberPadProps) {
   return (
     <TouchNumberPad
       {...props}
