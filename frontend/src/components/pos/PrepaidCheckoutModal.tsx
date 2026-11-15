@@ -723,7 +723,7 @@ export default function PrepaidCheckoutModal({
       </div>
       <div className="bg-card flex max-h-[95vh] w-full flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-w-md sm:rounded-2xl md:h-full md:max-h-none md:w-1/2 md:max-w-none md:rounded-e-none">
         {/* Compact header and bill summary share one block to preserve vertical space. */}
-        <div className="shrink-0 border-b border-border px-5 pb-3 pt-4">
+        <div className="shrink-0 border-b border-border px-5 pb-3 pt-4 md:pb-2 md:pt-3">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 className="text-lg font-bold text-foreground">{t('checkout')}</h2>
@@ -745,7 +745,7 @@ export default function PrepaidCheckoutModal({
             <div className="mt-3 h-24 animate-pulse rounded-xl bg-muted" />
           ) : (
             <div
-              className="mt-3 space-y-1 text-sm tabular-nums"
+              className="mt-3 space-y-1 text-sm tabular-nums md:mt-2"
               data-testid="prepaid-checkout-summary"
             >
               <div className="flex justify-between text-foreground">
@@ -868,7 +868,7 @@ export default function PrepaidCheckoutModal({
           )}
         </div>
 
-        <div className="min-h-0 space-y-3 overflow-y-auto px-5 py-3 md:flex-1">
+        <div className="min-h-0 space-y-3 overflow-y-auto px-5 py-3 md:flex-1 md:space-y-2 md:py-2">
           {/* Cart-level discount editor. */}
           {discountOpen && discountModeLoaded && discountMode !== 'none' && (
             <div className="overflow-hidden rounded-xl border border-purple-200 dark:border-purple-800/40 bg-purple-50 dark:bg-purple-950/40 p-3 space-y-2">
@@ -989,7 +989,7 @@ export default function PrepaidCheckoutModal({
                   }
                   className="space-y-1"
                 >
-                  <div className="flex min-h-12">
+                  <div className="flex min-h-12 md:min-h-11">
                     <button
                       type="button"
                       title={label}
@@ -1131,6 +1131,12 @@ export default function PrepaidCheckoutModal({
               </div>
             </div>
           )}
+
+        </div>
+
+        {/* Pay Button */}
+        {/* The number pad stays pinned above Confirm so it is never scrolled out of view. */}
+        <div className="shrink-0 space-y-2 px-5 pb-2 md:pb-1">
           {padTarget && (
             <CurrencyTouchNumberPad
               value={activeAmountValue}
@@ -1146,7 +1152,6 @@ export default function PrepaidCheckoutModal({
               quickValues={activeAmountQuickValues}
             />
           )}
-
           {/* Change stays at the bottom of all payment controls. */}
           {hasCash && (
             <div
@@ -1188,9 +1193,7 @@ export default function PrepaidCheckoutModal({
             </div>
           )}
         </div>
-
-        {/* Pay Button */}
-        <div className="shrink-0 border-t border-border px-5 pb-6 pt-3">
+        <div className="shrink-0 border-t border-border px-5 pb-6 pt-3 md:pb-3 md:pt-2">
           <Button
             onClick={() => handleConfirm()}
             disabled={
