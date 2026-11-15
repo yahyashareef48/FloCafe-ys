@@ -111,14 +111,15 @@ type AmountTarget =
   | { kind: 'discount' }
   | null;
 
-type CheckoutLayout = 'half' | 'full-split' | 'full-3col' | 'tender' | 'centered';
+type CheckoutLayout = 'half' | 'third' | 'full-split' | 'full-3col' | 'tender' | 'centered';
 
 /** Layout trial: picked per device from localStorage `flo-checkout-layout`. */
 function readCheckoutLayout(): CheckoutLayout {
   try {
     const value =
       typeof window === 'undefined' ? null : window.localStorage.getItem('flo-checkout-layout');
-    return value === 'full-split' ||
+    return value === 'third' ||
+      value === 'full-split' ||
       value === 'full-3col' ||
       value === 'tender' ||
       value === 'centered'
@@ -1336,9 +1337,7 @@ export default function PrepaidCheckoutModal({
             {confirmButton}
           </div>
         </div>
-        <div className="flex w-1/3 min-h-0 flex-col px-5 py-4">
-          {renderPad(true)}
-        </div>
+        <div className="flex w-1/3 min-h-0 flex-col px-5 py-4">{renderPad(true)}</div>
       </div>
     );
   }
@@ -1409,9 +1408,6 @@ export default function PrepaidCheckoutModal({
         data-testid="prepaid-checkout-modal"
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       >
-        {upiQrAmount !== null && (
-          <UpiQrDialog amount={upiQrAmount} onClose={() => setUpiQrAmount(null)} />
-        )}
         <div className="flex max-h-full w-full max-w-5xl overflow-hidden rounded-2xl bg-card shadow-2xl">
           <div className="flex w-1/2 min-h-0 flex-col border-e border-border">
             <div className="shrink-0 border-b border-border px-5 pb-3 pt-4">
@@ -1427,7 +1423,19 @@ export default function PrepaidCheckoutModal({
           </div>
           <div className="flex w-1/2 min-h-0 flex-col">
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-5 pt-4">
-              {renderPad()}
+              {/* While the QR is shown it takes the keypad's place; Done brings the keypad back. */}
+              {upiQrAmount !== null ? (
+                <div className="flex justify-center">
+                  <UpiQrPanel
+                    compact
+                    key={upiQrAmount}
+                    amount={upiQrAmount}
+                    onClose={() => setUpiQrAmount(null)}
+                  />
+                </div>
+              ) : (
+                renderPad()
+              )}
               {changeBlock}
             </div>
             <div className="shrink-0 border-t border-border px-5 pb-4 pt-3">{confirmButton}</div>
@@ -1446,13 +1454,17 @@ export default function PrepaidCheckoutModal({
       {upiQrAmount !== null && isNarrowScreen && (
         <UpiQrDialog amount={upiQrAmount} onClose={() => setUpiQrAmount(null)} />
       )}
-      {/* On wide screens the checkout takes the right half; the left half holds the UPI QR. */}
-      <div className="hidden md:flex md:w-1/2 items-center justify-center p-6">
+      {/* On wide screens the checkout docks right; the free side holds the UPI QR. */}
+      <div
+        className={`hidden md:flex items-center justify-center p-6 ${layout === 'third' ? 'md:w-2/3' : 'md:w-1/2'}`}
+      >
         {upiQrAmount !== null && !isNarrowScreen && (
           <UpiQrPanel key={upiQrAmount} amount={upiQrAmount} onClose={() => setUpiQrAmount(null)} />
         )}
       </div>
-      <div className="bg-card flex max-h-[95vh] w-full flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-w-md sm:rounded-2xl md:h-full md:max-h-none md:w-1/2 md:max-w-none md:rounded-e-none">
+      <div
+        className={`bg-card flex max-h-[95vh] w-full flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-w-md sm:rounded-2xl md:h-full md:max-h-none md:max-w-none md:rounded-e-none ${layout === 'third' ? 'md:w-1/3' : 'md:w-1/2'}`}
+      >
         <div className="shrink-0 border-b border-border px-5 pb-3 pt-4 md:pb-2 md:pt-3">
           {titleRow}
           {summaryBlock}
