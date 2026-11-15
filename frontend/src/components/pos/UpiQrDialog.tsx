@@ -52,7 +52,7 @@ export function UpiQrPanel({
   return (
     <div
       data-testid="upi-qr-panel"
-      className={`relative w-full rounded-2xl bg-card text-center ${compact ? 'max-w-xs border border-border p-3' : 'max-w-sm p-5 shadow-2xl'}`}
+      className={`relative w-full rounded-2xl bg-card text-center ${compact ? 'max-w-xs border border-border p-3 shadow-2xl' : 'max-w-sm p-5 shadow-2xl'}`}
       onClick={(event) => event.stopPropagation()}
     >
       <button

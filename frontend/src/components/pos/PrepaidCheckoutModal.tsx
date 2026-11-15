@@ -1401,6 +1401,46 @@ export default function PrepaidCheckoutModal({
     );
   }
 
+  if (!isNarrowScreen && layout === 'third') {
+    return (
+      <div
+        ref={modalRef}
+        data-testid="prepaid-checkout-modal"
+        className="fixed inset-0 z-50 flex bg-black/60 backdrop-blur-sm"
+      >
+        {/* Left two thirds: the bill summary, with the UPI QR below it while shown. */}
+        <div className="flex w-2/3 min-h-0 flex-col items-center gap-4 overflow-y-auto p-6 portrait:w-1/2">
+          <div className="w-full max-w-md rounded-2xl bg-card p-5 shadow-2xl">
+            {summaryBlock}
+            {discountToggle}
+            {discountOpen && <div className="mt-3">{discountEditor}</div>}
+          </div>
+          {upiQrAmount !== null && (
+            <UpiQrPanel
+              compact
+              key={upiQrAmount}
+              amount={upiQrAmount}
+              onClose={() => setUpiQrAmount(null)}
+            />
+          )}
+        </div>
+        {/* Right third: payment amounts, keypad and Confirm. */}
+        <div className="flex w-1/3 min-h-0 flex-col bg-card shadow-2xl portrait:w-1/2">
+          <div className="shrink-0 border-b border-border px-5 pb-2 pt-3">{titleRow}</div>
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-5 py-2">
+            {paymentRows}
+            {walletBlock}
+          </div>
+          <div className="shrink-0 space-y-2 px-5 pb-1">
+            {renderPad()}
+            {changeBlock}
+          </div>
+          <div className="shrink-0 border-t border-border px-5 pb-3 pt-2">{confirmButton}</div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isNarrowScreen && layout === 'centered') {
     return (
       <div
