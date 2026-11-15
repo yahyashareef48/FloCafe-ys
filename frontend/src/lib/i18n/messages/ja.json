@@ -1242,7 +1242,15 @@
     "printPartsBill": "会計伝票",
     "printPartsOther": "印刷",
     "printPartsSkip": "残りをスキップ",
-    "printPartsFailed": "印刷できませんでした。プリンターを確認して再試行してください。"
+    "printPartsFailed": "印刷できませんでした。プリンターを確認して再試行してください。",
+    "upiQrShow": "UPI QRを表示",
+    "upiQrTitle": "スキャンしてUPIで支払い",
+    "upiQrHint": "お客様が任意のUPIアプリで読み取り、PINを入力します。会計を完了する前に入金を確認してください。",
+    "upiQrNotConfigured": "QRを表示するには、設定 → 支払いでUPI IDを登録してください。",
+    "upiQrNotInr": "UPI QRは店舗の通貨がINRの場合のみ使えます。",
+    "upiQrFailed": "QRを作成できませんでした。もう一度お試しください。",
+    "upiQrDone": "完了",
+    "upiQrClose": "閉じる"
   },
   "printTest": {
     "amt": "金額",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "クラウド同期、Google Drive バックアップ、WhatsApp、アップデート確認、利用状況の分析、Web からの画像取り込みなど、任意のインターネット接続をすべて停止します。注文、会計、印刷、ローカルネットワーク上のデバイスは引き続き動作します。",
     "offlineModeFailed": "オフラインモードを変更できませんでした",
     "offlineModeReadFailed": "現在のオフラインモード設定を読み込めませんでした。",
-    "offlineModeRetry": "再試行"
+    "offlineModeRetry": "再試行",
+    "upiQrSettingTitle": "会計時のUPI QR",
+    "upiQrSettingHint": "会計画面で正確な金額のQRを表示できます。お客様は任意のUPIアプリで読み取り、PINを入力するだけです。代金はこのUPI IDに入金されます。",
+    "upiIdLabel": "UPI ID（受取先）",
+    "upiIdInvalid": "shopname@bank のようなUPI IDを入力してください。",
+    "upiIdSaved": "UPI IDを保存しました"
   },
   "setup": {
     "alreadyCompleted": "このインストールではセットアップが完了しています。ログインへ移動します…",

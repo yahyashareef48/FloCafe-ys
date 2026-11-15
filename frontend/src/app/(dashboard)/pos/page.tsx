@@ -1267,6 +1267,7 @@ export default function POSPage() {
       }
       matchingAttempt = await reconcilePrepaidAttempt(matchingAttempt);
       setPrepaidModalAttempt(matchingAttempt);
+      setMobileCartOpen(false);
       setShowPrepaidCheckout(true);
       return;
     }

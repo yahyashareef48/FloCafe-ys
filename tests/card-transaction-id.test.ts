@@ -190,6 +190,8 @@ function verifyPrepaidCheckoutModalDiscountPreservation(): void {
     },
     '@/components/pos/TaxBreakdown': { __esModule: true, default: () => null },
     '@/components/pos/TouchNumberPad': { CurrencyTouchNumberPad: () => null },
+    '@/components/pos/UpiQrDialog': { __esModule: true, default: () => null, UpiQrPanel: () => null },
+    '@/hooks/use-mobile': { useIsMobile: () => false },
     '@/components/ApproverSelect': { ApproverSelect: () => null },
     '@/hooks/useManagerApprovers': {
       useManagerApprovers: () => ({

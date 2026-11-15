@@ -1242,7 +1242,15 @@
     "printPartsBill": "Addition",
     "printPartsOther": "Impression",
     "printPartsSkip": "Ignorer le reste",
-    "printPartsFailed": "Impression impossible. Vérifiez l’imprimante et réessayez."
+    "printPartsFailed": "Impression impossible. Vérifiez l’imprimante et réessayez.",
+    "upiQrShow": "Afficher le QR UPI",
+    "upiQrTitle": "Scannez pour payer par UPI",
+    "upiQrHint": "Le client le scanne avec une appli UPI et saisit son code. Vérifiez que le paiement est arrivé avant de terminer la vente.",
+    "upiQrNotConfigured": "Ajoutez votre identifiant UPI dans Paramètres → Paiements pour afficher un QR.",
+    "upiQrNotInr": "Le QR UPI ne fonctionne que si la devise du magasin est l’INR.",
+    "upiQrFailed": "Impossible de créer le QR. Réessayez.",
+    "upiQrDone": "Terminé",
+    "upiQrClose": "Fermer"
   },
   "printTest": {
     "amt": "Montant",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "Coupe toute connexion facultative à internet : synchronisation cloud, sauvegardes Google Drive, WhatsApp, recherche de mises à jour, statistiques d'usage et import d'images depuis le web. Les commandes, la facturation, l'impression et les appareils de votre réseau local continuent de fonctionner.",
     "offlineModeFailed": "Impossible de modifier le mode hors ligne",
     "offlineModeReadFailed": "Impossible de lire le réglage actuel du mode hors ligne.",
-    "offlineModeRetry": "Réessayer"
+    "offlineModeRetry": "Réessayer",
+    "upiQrSettingTitle": "QR UPI à l’encaissement",
+    "upiQrSettingHint": "L’encaissement peut afficher un QR avec le montant exact. Le client le scanne avec une appli UPI et saisit seulement son code. L’argent arrive sur cet identifiant UPI.",
+    "upiIdLabel": "Identifiant UPI",
+    "upiIdInvalid": "Saisissez un identifiant UPI comme shopname@bank.",
+    "upiIdSaved": "Identifiant UPI enregistré"
   },
   "setup": {
     "alreadyCompleted": "La configuration a déjà été effectuée sur cette installation. Redirection vers la connexion…",

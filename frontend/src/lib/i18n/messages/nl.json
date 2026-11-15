@@ -1242,7 +1242,15 @@
     "printPartsBill": "Rekening",
     "printPartsOther": "Afdruk",
     "printPartsSkip": "Rest overslaan",
-    "printPartsFailed": "Printen mislukt. Controleer de printer en probeer opnieuw."
+    "printPartsFailed": "Printen mislukt. Controleer de printer en probeer opnieuw.",
+    "upiQrShow": "UPI-QR tonen",
+    "upiQrTitle": "Scan om met UPI te betalen",
+    "upiQrHint": "De klant scant dit met een UPI-app en voert de pincode in. Controleer of de betaling binnen is voordat u de verkoop afrondt.",
+    "upiQrNotConfigured": "Voeg uw UPI-ID toe bij Instellingen → Betalingen om een QR te tonen.",
+    "upiQrNotInr": "UPI-QR werkt alleen als de valuta van de winkel INR is.",
+    "upiQrFailed": "QR kon niet worden gemaakt. Probeer het opnieuw.",
+    "upiQrDone": "Klaar",
+    "upiQrClose": "Sluiten"
   },
   "printTest": {
     "amt": "Bedrag",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "Schakelt elke optionele internetverbinding uit: cloudsynchronisatie, Google Drive-back-ups, WhatsApp, updatecontroles, gebruiksanalyse en afbeeldingen importeren van het web. Bestellingen, facturatie, afdrukken en apparaten op je lokale netwerk blijven werken.",
     "offlineModeFailed": "De offlinemodus kon niet worden gewijzigd",
     "offlineModeReadFailed": "De huidige instelling voor de offlinemodus kon niet worden gelezen.",
-    "offlineModeRetry": "Opnieuw proberen"
+    "offlineModeRetry": "Opnieuw proberen",
+    "upiQrSettingTitle": "UPI-QR bij afrekenen",
+    "upiQrSettingHint": "Afrekenen kan een QR met het exacte bedrag tonen. Klanten scannen hem met een UPI-app en voeren alleen hun pincode in. Het geld gaat naar deze UPI-ID.",
+    "upiIdLabel": "UPI-ID",
+    "upiIdInvalid": "Voer een UPI-ID in zoals shopname@bank.",
+    "upiIdSaved": "UPI-ID opgeslagen"
   },
   "setup": {
     "alreadyCompleted": "De installatie is bij deze installatie al voltooid. Omleiden naar inloggen…",

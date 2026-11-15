@@ -1242,7 +1242,15 @@
     "printPartsBill": "Bill",
     "printPartsOther": "Print",
     "printPartsSkip": "Skip the rest",
-    "printPartsFailed": "Could not print. Check the printer and try again."
+    "printPartsFailed": "Could not print. Check the printer and try again.",
+    "upiQrShow": "Show UPI QR",
+    "upiQrTitle": "Scan to pay with UPI",
+    "upiQrHint": "The customer scans this with any UPI app and enters their PIN. Check the payment arrived before you complete the sale.",
+    "upiQrNotConfigured": "Add your UPI ID in Settings → Payments to show a QR.",
+    "upiQrNotInr": "UPI QR works only when the store currency is INR.",
+    "upiQrFailed": "Could not make the QR. Try again.",
+    "upiQrDone": "Done",
+    "upiQrClose": "Close"
   },
   "printTest": {
     "amt": "Amt",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "Turns off every optional internet connection: cloud sync, Google Drive backups, WhatsApp, update checks, usage analytics and image import from the web. Orders, billing, printing and devices on your local network keep working.",
     "offlineModeFailed": "Could not change Offline mode",
     "offlineModeReadFailed": "Could not read the current Offline mode setting.",
-    "offlineModeRetry": "Retry"
+    "offlineModeRetry": "Retry",
+    "upiQrSettingTitle": "UPI QR at checkout",
+    "upiQrSettingHint": "Checkout can show a QR for the exact amount. Customers scan it with any UPI app and only enter their PIN. Money goes to this UPI ID.",
+    "upiIdLabel": "UPI ID",
+    "upiIdInvalid": "Enter a UPI ID like shopname@bank.",
+    "upiIdSaved": "UPI ID saved"
   },
   "setup": {
     "alreadyCompleted": "Setup has already been completed on this install. Redirecting to login…",

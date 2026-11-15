@@ -1242,7 +1242,15 @@
     "printPartsBill": "Rechnung",
     "printPartsOther": "Druck",
     "printPartsSkip": "Rest überspringen",
-    "printPartsFailed": "Drucken fehlgeschlagen. Drucker prüfen und erneut versuchen."
+    "printPartsFailed": "Drucken fehlgeschlagen. Drucker prüfen und erneut versuchen.",
+    "upiQrShow": "UPI-QR zeigen",
+    "upiQrTitle": "Scannen und mit UPI zahlen",
+    "upiQrHint": "Der Kunde scannt dies mit einer UPI-App und gibt seine PIN ein. Prüfen Sie den Zahlungseingang, bevor Sie den Verkauf abschließen.",
+    "upiQrNotConfigured": "Hinterlegen Sie Ihre UPI-ID unter Einstellungen → Zahlungen, um einen QR-Code zu zeigen.",
+    "upiQrNotInr": "UPI-QR funktioniert nur, wenn die Währung INR ist.",
+    "upiQrFailed": "QR-Code konnte nicht erstellt werden. Bitte erneut versuchen.",
+    "upiQrDone": "Fertig",
+    "upiQrClose": "Schließen"
   },
   "printTest": {
     "amt": "Betrag",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "Schaltet jede optionale Internetverbindung ab: Cloud-Sync, Google-Drive-Sicherungen, WhatsApp, Update-Prüfungen, Nutzungsanalysen und den Bildimport aus dem Web. Bestellungen, Abrechnung, Drucken und Geräte im lokalen Netzwerk funktionieren weiter.",
     "offlineModeFailed": "Der Offline-Modus konnte nicht geändert werden",
     "offlineModeReadFailed": "Die aktuelle Offline-Modus-Einstellung konnte nicht gelesen werden.",
-    "offlineModeRetry": "Erneut versuchen"
+    "offlineModeRetry": "Erneut versuchen",
+    "upiQrSettingTitle": "UPI-QR an der Kasse",
+    "upiQrSettingHint": "Die Kasse kann einen QR-Code mit dem genauen Betrag zeigen. Kunden scannen ihn mit einer UPI-App und geben nur ihre PIN ein. Das Geld geht an diese UPI-ID.",
+    "upiIdLabel": "UPI-ID",
+    "upiIdInvalid": "Geben Sie eine UPI-ID wie shopname@bank ein.",
+    "upiIdSaved": "UPI-ID gespeichert"
   },
   "setup": {
     "alreadyCompleted": "Die Ersteinrichtung wurde bereits abgeschlossen. Weiterleitung zur Anmeldung…",

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { CreditCard, Plus, Save, Trash2, Merge } from 'lucide-react';
+import { CreditCard, Plus, QrCode, Save, Trash2, Merge } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
@@ -84,6 +84,31 @@ export function PaymentMethodsSettings({ isAdmin }: { isAdmin: boolean }) {
     // oxlint-disable-next-line react-hooks/set-state-in-effect
     void load().catch(() => toast.error(t('loadFailed')));
   }, []); // oxlint-disable-line react-hooks/exhaustive-deps
+
+  const [upiId, setUpiId] = useState('');
+  const [savedUpiId, setSavedUpiId] = useState('');
+  useEffect(() => {
+    api
+      .get('/settings/upi_id')
+      .then((res) => {
+        const value = String(res.data?.setting?.value ?? '');
+        setUpiId(value);
+        setSavedUpiId(value);
+      })
+      .catch(() => undefined);
+  }, []);
+  const upiIdValid = upiId.trim() === '' || /^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9]{1,63}$/.test(upiId.trim());
+  const saveUpiId = async () => {
+    const value = upiId.trim();
+    try {
+      await api.put('/settings/upi_id', { value });
+      setUpiId(value);
+      setSavedUpiId(value);
+      toast.success(t('upiIdSaved'));
+    } catch {
+      toast.error(t('saveFailed'));
+    }
+  };
 
   const add = async () => {
     if (!newName.trim()) return;
@@ -261,6 +286,39 @@ export function PaymentMethodsSettings({ isAdmin }: { isAdmin: boolean }) {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-center gap-2 mb-2">
+          <QrCode size={20} className="text-muted-foreground" />
+          <h2 className="font-semibold text-foreground">{t('upiQrSettingTitle')}</h2>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">{t('upiQrSettingHint')}</p>
+        <label htmlFor="upi-id" className="block text-xs text-muted-foreground mb-1">
+          {t('upiIdLabel')}
+        </label>
+        <div className="flex gap-2">
+          <input
+            id="upi-id"
+            data-testid="upi-id-input"
+            disabled={!isAdmin}
+            value={upiId}
+            onChange={(e) => setUpiId(e.target.value)}
+            placeholder="shopname@bank"
+            autoComplete="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            className="flex-1 px-3 py-2 text-sm border rounded-lg"
+          />
+          <Button
+            onClick={saveUpiId}
+            disabled={!isAdmin || !upiIdValid || upiId.trim() === savedUpiId}
+          >
+            <Save size={14} className="me-1" />
+            {tCommon('save')}
+          </Button>
+        </div>
+        {!upiIdValid && <p className="mt-1 text-xs text-red-600">{t('upiIdInvalid')}</p>}
       </div>
 
       <div className="bg-card rounded-xl border border-border p-6 flex items-center justify-between gap-4">

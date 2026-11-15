@@ -9,7 +9,10 @@ import {
   Percent,
   Wallet,
   ChevronDown,
+  QrCode,
 } from 'lucide-react';
+import UpiQrDialog, { UpiQrPanel } from '@/components/pos/UpiQrDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import api from '@/lib/api';
 import { useCartStore } from '@/store/cart';
@@ -23,6 +26,7 @@ import {
   PAYMENT_METHODS,
   checkoutPaymentMethods,
   customPaymentMethodIcon,
+  isUpiMethodName,
   type CustomPaymentMethod,
 } from '@/lib/payment-methods';
 import { useFormatCurrency } from '@/hooks/useFormatCurrency';
@@ -143,6 +147,7 @@ export default function PrepaidCheckoutModal({
   const [walletLoadFailed, setWalletLoadFailed] = useState(false);
   const [walletAmount, setWalletAmount] = useState('');
   const [processing, setProcessing] = useState(false);
+  const isNarrowScreen = useIsMobile();
   const [customMethods, setCustomMethods] = useState<CustomPaymentMethod[]>([]);
   const [cardTransactionIdRequired, setCardTransactionIdRequired] = useState(
     Boolean(initialCardTransactionIdRequired),
@@ -170,6 +175,8 @@ export default function PrepaidCheckoutModal({
   const [discountPin, setDiscountPin] = useState('');
   const [discountApproverId, setDiscountApproverId] = useState<string | null>(null);
   const [amountTarget, setAmountTarget] = useState<AmountTarget>(null);
+  const [upiQrAmount, setUpiQrAmount] = useState<number | null>(null);
+  const [upiQrEnabled, setUpiQrEnabled] = useState(false);
 
   const previewDiscount = useMemo(() => {
     const rawValue = Number.parseFloat(discountValue);
@@ -283,6 +290,7 @@ export default function PrepaidCheckoutModal({
       .then((res) => {
         const methods: CustomPaymentMethod[] = res.data.payment_methods || [];
         setCustomMethods(methods);
+        setUpiQrEnabled(res.data.upi_qr_enabled === true);
         setPayments((current) => [
           ...checkoutPaymentMethods(res.data.card_enabled === true).map(
             (method) =>
@@ -411,22 +419,29 @@ export default function PrepaidCheckoutModal({
       ? (totalPaymentMinor - remainingMinor) / minorFactor
       : 0;
 
+  // The number pad stays on screen; until a field is chosen it types into Cash.
+  const cashIndex = payments.findIndex(
+    (payment) => payment.method === 'cash' && payment.payment_method_id === undefined,
+  );
+  const padTarget: AmountTarget =
+    amountTarget ?? (cashIndex >= 0 ? { kind: 'payment', index: cashIndex } : null);
+
   const activeAmountValue =
-    amountTarget?.kind === 'payment'
-      ? payments[amountTarget.index]?.amount || ''
-      : amountTarget?.kind === 'wallet'
+    padTarget?.kind === 'payment'
+      ? payments[padTarget.index]?.amount || ''
+      : padTarget?.kind === 'wallet'
         ? walletAmount
-        : amountTarget?.kind === 'discount'
+        : padTarget?.kind === 'discount'
           ? discountValue
           : '';
 
   const updateActiveAmount = (value: string) => {
-    if (!amountTarget) return;
-    if (amountTarget.kind === 'payment') {
-      updatePaymentAmount(amountTarget.index, value);
+    if (!padTarget) return;
+    if (padTarget.kind === 'payment') {
+      updatePaymentAmount(padTarget.index, value);
       return;
     }
-    if (amountTarget.kind === 'wallet') {
+    if (padTarget.kind === 'wallet') {
       const maxWalletCurrencyStored = Math.floor((walletBalance || 0) / LOYALTY_REDEMPTION_RATE);
       const maxDisplay = toDisplayUnit(Math.min(maxWalletCurrencyStored, remaining));
       const clamped = parseFloat(value) > maxDisplay ? String(maxDisplay) : value;
@@ -438,29 +453,29 @@ export default function PrepaidCheckoutModal({
   };
 
   const activeAmountMax =
-    amountTarget?.kind === 'discount'
+    padTarget?.kind === 'discount'
       ? discountType === 'percentage'
         ? 100
         : preview
           ? toDisplayUnit(preview.subtotal)
           : undefined
-      : amountTarget?.kind === 'wallet'
+      : padTarget?.kind === 'wallet'
         ? toDisplayUnit(
             Math.min(Math.floor((walletBalance || 0) / LOYALTY_REDEMPTION_RATE), remaining),
           )
         : undefined;
 
   const activeAmountQuickValues = (() => {
-    if (amountTarget?.kind === 'payment') {
+    if (padTarget?.kind === 'payment') {
       const allocatedElsewhere = payments.reduce(
         (sum, payment, index) =>
-          index === amountTarget.index ? sum : sum + toStoredUnit(parseFloat(payment.amount) || 0),
+          index === padTarget.index ? sum : sum + toStoredUnit(parseFloat(payment.amount) || 0),
         walletAmt,
       );
       const dueDisplay = toDisplayUnit(Math.max(0, remaining - allocatedElsewhere));
       return dueDisplay > 0 ? [{ label: t('exactAmount'), value: String(dueDisplay) }] : [];
     }
-    if (amountTarget?.kind === 'wallet') {
+    if (padTarget?.kind === 'wallet') {
       const allocatedElsewhere = payments.reduce(
         (sum, payment) => sum + toStoredUnit(parseFloat(payment.amount) || 0),
         0,
@@ -691,11 +706,24 @@ export default function PrepaidCheckoutModal({
     <div
       ref={modalRef}
       data-testid="prepaid-checkout-modal"
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 md:items-stretch md:p-0"
     >
-      <div className="bg-card flex max-h-[95vh] w-full flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-w-md sm:rounded-2xl">
+      {upiQrAmount !== null && isNarrowScreen && (
+        <UpiQrDialog amount={upiQrAmount} onClose={() => setUpiQrAmount(null)} />
+      )}
+      {/* On wide screens the checkout takes the right half; the left half holds the UPI QR. */}
+      <div className="hidden md:flex md:w-1/2 items-center justify-center p-6">
+        {upiQrAmount !== null && !isNarrowScreen && (
+          <UpiQrPanel
+            key={upiQrAmount}
+            amount={upiQrAmount}
+            onClose={() => setUpiQrAmount(null)}
+          />
+        )}
+      </div>
+      <div className="bg-card flex max-h-[95vh] w-full flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-w-md sm:rounded-2xl md:h-full md:max-h-none md:w-1/2 md:max-w-none md:rounded-e-none">
         {/* Compact header and bill summary share one block to preserve vertical space. */}
-        <div className="shrink-0 border-b border-border px-5 pb-3 pt-4">
+        <div className="shrink-0 border-b border-border px-5 pb-3 pt-4 md:pb-2 md:pt-3">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 className="text-lg font-bold text-foreground">{t('checkout')}</h2>
@@ -717,7 +745,7 @@ export default function PrepaidCheckoutModal({
             <div className="mt-3 h-24 animate-pulse rounded-xl bg-muted" />
           ) : (
             <div
-              className="mt-3 space-y-1 text-sm tabular-nums"
+              className="mt-3 space-y-1 text-sm tabular-nums md:mt-2"
               data-testid="prepaid-checkout-summary"
             >
               <div className="flex justify-between text-foreground">
@@ -840,7 +868,7 @@ export default function PrepaidCheckoutModal({
           )}
         </div>
 
-        <div className="min-h-0 space-y-3 overflow-y-auto px-5 py-3">
+        <div className="min-h-0 space-y-3 overflow-y-auto px-5 py-3 md:flex-1 md:space-y-2 md:py-2">
           {/* Cart-level discount editor. */}
           {discountOpen && discountModeLoaded && discountMode !== 'none' && (
             <div className="overflow-hidden rounded-xl border border-purple-200 dark:border-purple-800/40 bg-purple-50 dark:bg-purple-950/40 p-3 space-y-2">
@@ -882,7 +910,7 @@ export default function PrepaidCheckoutModal({
                         : undefined
                   }
                   step={getDiscountInputStep(unitAdapter.maxDecimals, discountType)}
-                  inputMode={discountType === 'percentage' ? 'numeric' : 'decimal'}
+                  inputMode="none"
                   className="w-full min-h-11 ps-8 pe-3 py-2 text-sm border border-purple-200 dark:border-purple-800/40 rounded-lg outline-none focus:ring-2 focus:ring-purple-400 bg-card"
                 />
               </div>
@@ -961,7 +989,7 @@ export default function PrepaidCheckoutModal({
                   }
                   className="space-y-1"
                 >
-                  <div className="flex min-h-12">
+                  <div className="flex min-h-12 md:min-h-11">
                     <button
                       type="button"
                       title={label}
@@ -984,13 +1012,25 @@ export default function PrepaidCheckoutModal({
                         onFocus={() => setAmountTarget({ kind: 'payment', index: idx })}
                         onChange={(e) => updatePaymentAmount(idx, e.target.value)}
                         placeholder="0.00"
-                        inputMode="decimal"
+                        inputMode="none"
                         className="min-w-0 flex-1 px-2 py-2 text-end text-base font-semibold outline-none rounded-e-xl"
                         step={inputCurrencyStep}
                         min="0"
                       />
                     </div>
                   </div>
+                  {custom && isUpiMethodName(custom.name) && upiQrEnabled && (
+                    <button
+                      type="button"
+                      data-testid="show-upi-qr"
+                      disabled={!active}
+                      onClick={() => setUpiQrAmount(toStoredUnit(parseFloat(payment.amount) || 0))}
+                      className="flex w-full min-h-11 items-center justify-center gap-2 rounded-xl border border-brand px-3 py-2 text-sm font-semibold text-brand hover:bg-brand/10 disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted"
+                    >
+                      <QrCode size={16} />
+                      {t('upiQrShow')}
+                    </button>
+                  )}
                   {needsTransactionId(payment) && active && (
                     <input
                       type="text"
@@ -1053,7 +1093,7 @@ export default function PrepaidCheckoutModal({
                     }}
                     placeholder="0.00"
                     disabled={walletBalance <= 0}
-                    inputMode="decimal"
+                    inputMode="none"
                     className="min-w-0 flex-1 px-2 py-2 text-end text-base font-semibold outline-none rounded-e-xl disabled:bg-muted"
                     step={inputCurrencyStep}
                     min="0"
@@ -1091,7 +1131,13 @@ export default function PrepaidCheckoutModal({
               </div>
             </div>
           )}
-          {amountTarget && (
+
+        </div>
+
+        {/* Pay Button */}
+        {/* The number pad stays pinned above Confirm so it is never scrolled out of view. */}
+        <div className="shrink-0 space-y-2 px-5 pb-2 md:pb-1">
+          {padTarget && (
             <CurrencyTouchNumberPad
               value={activeAmountValue}
               onChange={updateActiveAmount}
@@ -1100,13 +1146,12 @@ export default function PrepaidCheckoutModal({
               backspaceLabel={t('backspaceAmount')}
               // Percentage discounts are dimensionless rates, so they retain decimal input for zero-decimal currencies.
               currencyMaxDecimals={unitAdapter.maxDecimals}
-              amountTarget={amountTarget.kind}
+              amountTarget={padTarget.kind}
               discountType={discountType}
               max={activeAmountMax}
               quickValues={activeAmountQuickValues}
             />
           )}
-
           {/* Change stays at the bottom of all payment controls. */}
           {hasCash && (
             <div
@@ -1148,9 +1193,7 @@ export default function PrepaidCheckoutModal({
             </div>
           )}
         </div>
-
-        {/* Pay Button */}
-        <div className="shrink-0 border-t border-border px-5 pb-6 pt-3">
+        <div className="shrink-0 border-t border-border px-5 pb-6 pt-3 md:pb-3 md:pt-2">
           <Button
             onClick={() => handleConfirm()}
             disabled={

@@ -1242,7 +1242,15 @@
     "printPartsBill": "बिल",
     "printPartsOther": "प्रिंट",
     "printPartsSkip": "बाकी छोड़ें",
-    "printPartsFailed": "प्रिंट नहीं हो सका। प्रिंटर जाँचें और फिर कोशिश करें।"
+    "printPartsFailed": "प्रिंट नहीं हो सका। प्रिंटर जाँचें और फिर कोशिश करें।",
+    "upiQrShow": "UPI QR दिखाएँ",
+    "upiQrTitle": "UPI से भुगतान के लिए स्कैन करें",
+    "upiQrHint": "ग्राहक इसे किसी भी UPI ऐप से स्कैन करके अपना पिन डालेगा। बिक्री पूरी करने से पहले भुगतान आया है या नहीं, देख लें।",
+    "upiQrNotConfigured": "QR दिखाने के लिए सेटिंग्स → भुगतान में अपनी UPI आईडी जोड़ें।",
+    "upiQrNotInr": "UPI QR केवल तब काम करता है जब स्टोर की मुद्रा INR हो।",
+    "upiQrFailed": "QR नहीं बन सका। फिर से कोशिश करें।",
+    "upiQrDone": "हो गया",
+    "upiQrClose": "बंद करें"
   },
   "printTest": {
     "amt": "राशि",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "इंटरनेट के सभी वैकल्पिक कनेक्शन बंद कर देता है: क्लाउड सिंक, Google Drive बैकअप, WhatsApp, अपडेट जाँच, उपयोग विश्लेषण और वेब से छवि आयात। ऑर्डर, बिलिंग, प्रिंटिंग और आपके लोकल नेटवर्क के डिवाइस चलते रहते हैं।",
     "offlineModeFailed": "ऑफ़लाइन मोड बदला नहीं जा सका",
     "offlineModeReadFailed": "वर्तमान ऑफ़लाइन मोड सेटिंग पढ़ी नहीं जा सकी।",
-    "offlineModeRetry": "फिर कोशिश करें"
+    "offlineModeRetry": "फिर कोशिश करें",
+    "upiQrSettingTitle": "चेकआउट पर UPI QR",
+    "upiQrSettingHint": "चेकआउट पर सही राशि का QR दिखाया जा सकता है। ग्राहक किसी भी UPI ऐप से स्कैन करके सिर्फ पिन डालते हैं। पैसा इस UPI आईडी में आता है।",
+    "upiIdLabel": "UPI आईडी",
+    "upiIdInvalid": "shopname@bank जैसी UPI आईडी डालें।",
+    "upiIdSaved": "UPI आईडी सेव हो गई"
   },
   "setup": {
     "alreadyCompleted": "इस इंस्टाल पर सेटअप पहले ही पूरा हो चुका है. लॉगिन करने के लिए पुनः निर्देशित किया जा रहा है...",

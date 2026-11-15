@@ -1242,7 +1242,15 @@
     "printPartsBill": "บิล",
     "printPartsOther": "งานพิมพ์",
     "printPartsSkip": "ข้ามที่เหลือ",
-    "printPartsFailed": "พิมพ์ไม่สำเร็จ ตรวจสอบเครื่องพิมพ์แล้วลองอีกครั้ง"
+    "printPartsFailed": "พิมพ์ไม่สำเร็จ ตรวจสอบเครื่องพิมพ์แล้วลองอีกครั้ง",
+    "upiQrShow": "แสดง QR UPI",
+    "upiQrTitle": "สแกนเพื่อจ่ายด้วย UPI",
+    "upiQrHint": "ลูกค้าสแกนด้วยแอป UPI ใดก็ได้แล้วใส่ PIN ตรวจสอบว่าเงินเข้าแล้วก่อนปิดการขาย",
+    "upiQrNotConfigured": "เพิ่ม UPI ID ในการตั้งค่า → การชำระเงิน เพื่อแสดง QR",
+    "upiQrNotInr": "QR UPI ใช้ได้เฉพาะเมื่อสกุลเงินของร้านเป็น INR",
+    "upiQrFailed": "สร้าง QR ไม่สำเร็จ ลองอีกครั้ง",
+    "upiQrDone": "เสร็จสิ้น",
+    "upiQrClose": "ปิด"
   },
   "printTest": {
     "amt": "จำนวนเงิน",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "ปิดการเชื่อมต่ออินเทอร์เน็ตที่เป็นตัวเลือกทั้งหมด ได้แก่ การซิงก์คลาวด์ การสำรองข้อมูล Google Drive, WhatsApp, การตรวจสอบอัปเดต การวิเคราะห์การใช้งาน และการนำเข้ารูปภาพจากเว็บ ออเดอร์ การเรียกเก็บเงิน การพิมพ์ และอุปกรณ์ในเครือข่ายภายในของคุณยังทำงานต่อได้",
     "offlineModeFailed": "ไม่สามารถเปลี่ยนโหมดออฟไลน์ได้",
     "offlineModeReadFailed": "ไม่สามารถอ่านการตั้งค่าโหมดออฟไลน์ปัจจุบันได้",
-    "offlineModeRetry": "ลองอีกครั้ง"
+    "offlineModeRetry": "ลองอีกครั้ง",
+    "upiQrSettingTitle": "QR UPI ตอนชำระเงิน",
+    "upiQrSettingHint": "หน้าชำระเงินแสดง QR ตามยอดที่ต้องจ่ายได้ ลูกค้าสแกนด้วยแอป UPI และใส่แค่ PIN เงินจะเข้า UPI ID นี้",
+    "upiIdLabel": "UPI ID ของร้าน",
+    "upiIdInvalid": "ใส่ UPI ID เช่น shopname@bank",
+    "upiIdSaved": "บันทึก UPI ID แล้ว"
   },
   "setup": {
     "alreadyCompleted": "ตั้งค่าการติดตั้งนี้เสร็จสมบูรณ์แล้ว กำลังกลับไปหน้าเข้าสู่ระบบ…",

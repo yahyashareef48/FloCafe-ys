@@ -12,7 +12,9 @@ import {
   Send,
   ChevronDown,
   Users,
+  QrCode,
 } from 'lucide-react';
+import UpiQrDialog from '@/components/pos/UpiQrDialog';
 import { Button } from '@/components/ui/button';
 import api, {
   captureClientOperationFailure,
@@ -35,6 +37,7 @@ import {
   PAYMENT_METHODS,
   checkoutPaymentMethods,
   customPaymentMethodIcon,
+  isUpiMethodName,
   type CustomPaymentMethod,
 } from '@/lib/payment-methods';
 import { useFormatCurrency } from '@/hooks/useFormatCurrency';
@@ -229,6 +232,8 @@ export default function PaymentModal({
   const [applyingDiscount, setApplyingDiscount] = useState(false);
   const [loyaltySettings, setLoyaltySettings] = useState<{ loyalty_enabled: boolean } | null>(null);
   const [amountTarget, setAmountTarget] = useState<AmountTarget>(null);
+  const [upiQrAmount, setUpiQrAmount] = useState<number | null>(null);
+  const [upiQrEnabled, setUpiQrEnabled] = useState(false);
 
   // An attempt whose outcome is unknown keeps its key and its exact request:
   // its retry must replay the same bill, lines and customer, so the draft that
@@ -592,6 +597,7 @@ export default function PaymentModal({
       .then((res) => {
         const methods: CustomPaymentMethod[] = res.data.payment_methods || [];
         setCustomMethods(methods);
+        setUpiQrEnabled(res.data.upi_qr_enabled === true);
         setPayments((current) => [
           ...checkoutPaymentMethods(res.data.card_enabled === true).map(
             (method) =>
@@ -763,22 +769,29 @@ export default function PaymentModal({
     );
   };
 
+  // The number pad stays on screen; until a field is chosen it types into Cash.
+  const cashIndex = payments.findIndex(
+    (payment) => payment.method === 'cash' && payment.payment_method_id === undefined,
+  );
+  const padTarget: AmountTarget =
+    amountTarget ?? (cashIndex >= 0 ? { kind: 'payment', index: cashIndex } : null);
+
   const activeAmountValue =
-    amountTarget?.kind === 'payment'
-      ? payments[amountTarget.index]?.amount || ''
-      : amountTarget?.kind === 'wallet'
+    padTarget?.kind === 'payment'
+      ? payments[padTarget.index]?.amount || ''
+      : padTarget?.kind === 'wallet'
         ? walletAmount
-        : amountTarget?.kind === 'discount'
+        : padTarget?.kind === 'discount'
           ? discountValue
           : '';
 
   const updateActiveAmount = (value: string) => {
-    if (!amountTarget || attemptLocked) return;
-    if (amountTarget.kind === 'payment') {
-      updatePaymentAmount(amountTarget.index, value);
+    if (!padTarget || attemptLocked) return;
+    if (padTarget.kind === 'payment') {
+      updatePaymentAmount(padTarget.index, value);
       return;
     }
-    if (amountTarget.kind === 'wallet') {
+    if (padTarget.kind === 'wallet') {
       const maxWalletCurrencyStored = Math.floor((walletBalance || 0) / LOYALTY_REDEMPTION_RATE);
       const maxDisplay = toDisplayUnit(Math.min(maxWalletCurrencyStored, remaining));
       const clamped = parseFloat(value) > maxDisplay ? String(maxDisplay) : value;
@@ -790,27 +803,27 @@ export default function PaymentModal({
   };
 
   const activeAmountMax =
-    amountTarget?.kind === 'discount'
+    padTarget?.kind === 'discount'
       ? discountType === 'percentage'
         ? 100
         : toDisplayUnit(Number(bill.subtotal))
-      : amountTarget?.kind === 'wallet'
+      : padTarget?.kind === 'wallet'
         ? toDisplayUnit(
             Math.min(Math.floor((walletBalance || 0) / LOYALTY_REDEMPTION_RATE), remaining),
           )
         : undefined;
 
   const activeAmountQuickValues = (() => {
-    if (amountTarget?.kind === 'payment') {
+    if (padTarget?.kind === 'payment') {
       const allocatedElsewhere = payments.reduce(
         (sum, payment, index) =>
-          index === amountTarget.index ? sum : sum + toStoredUnit(parseFloat(payment.amount) || 0),
+          index === padTarget.index ? sum : sum + toStoredUnit(parseFloat(payment.amount) || 0),
         walletAmt,
       );
       const dueDisplay = toDisplayUnit(Math.max(0, remaining - allocatedElsewhere));
       return dueDisplay > 0 ? [{ label: t('exactAmount'), value: String(dueDisplay) }] : [];
     }
-    if (amountTarget?.kind === 'wallet') {
+    if (padTarget?.kind === 'wallet') {
       const allocatedElsewhere = payments.reduce(
         (sum, payment) => sum + toStoredUnit(parseFloat(payment.amount) || 0),
         0,
@@ -1501,6 +1514,9 @@ export default function PaymentModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      {upiQrAmount !== null && (
+        <UpiQrDialog amount={upiQrAmount} onClose={() => setUpiQrAmount(null)} />
+      )}
       <div className="bg-card w-full sm:max-w-4xl sm:max-h-[95vh] sm:flex sm:flex-col rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border">
@@ -1812,7 +1828,7 @@ export default function PaymentModal({
                           discountType === 'percentage' ? 100 : toDisplayUnit(Number(bill.subtotal))
                         }
                         step={getDiscountInputStep(unitAdapter.maxDecimals, discountType)}
-                        inputMode={discountType === 'percentage' ? 'numeric' : 'decimal'}
+                        inputMode="none"
                         className="w-full min-h-11 ps-8 pe-3 py-2 text-sm border border-purple-200 dark:border-purple-800/40 rounded-lg outline-none focus:ring-2 focus:ring-purple-400 bg-card"
                       />
                     </div>
@@ -2084,13 +2100,25 @@ export default function PaymentModal({
                           onFocus={() => setAmountTarget({ kind: 'payment', index: idx })}
                           onChange={(e) => updatePaymentAmount(idx, e.target.value)}
                           placeholder="0.00"
-                          inputMode="decimal"
+                          inputMode="none"
                           className="min-w-0 flex-1 px-2 py-2 text-end text-base font-semibold outline-none rounded-e-xl"
                           step={inputCurrencyStep}
                           min="0"
                         />
                       </div>
                     </div>
+                    {custom && isUpiMethodName(custom.name) && upiQrEnabled && (
+                      <button
+                        type="button"
+                        data-testid="show-upi-qr"
+                        disabled={!active}
+                        onClick={() => setUpiQrAmount(toStoredUnit(parseFloat(payment.amount) || 0))}
+                        className="flex w-full min-h-11 items-center justify-center gap-2 rounded-xl border border-brand px-3 py-2 text-sm font-semibold text-brand hover:bg-brand/10 disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted"
+                      >
+                        <QrCode size={16} />
+                        {t('upiQrShow')}
+                      </button>
+                    )}
                     {needsTransactionId(payment) && active && (
                       <input
                         type="text"
@@ -2204,7 +2232,7 @@ export default function PaymentModal({
                       }}
                       placeholder="0.00"
                       disabled={processing || attemptLocked || walletBalance <= 0}
-                      inputMode="decimal"
+                      inputMode="none"
                       className="min-w-0 flex-1 px-2 py-2 text-end text-base font-semibold outline-none rounded-e-xl disabled:bg-muted"
                       step={inputCurrencyStep}
                       min="0"
@@ -2224,7 +2252,7 @@ export default function PaymentModal({
                 </p>
               </div>
             )}
-            {amountTarget && !processing && !attemptLocked && (
+            {padTarget && !processing && !attemptLocked && (
               <CurrencyTouchNumberPad
                 value={activeAmountValue}
                 onChange={updateActiveAmount}
@@ -2233,7 +2261,7 @@ export default function PaymentModal({
                 backspaceLabel={t('backspaceAmount')}
                 // Percentage discounts are dimensionless rates, so they retain decimal input for zero-decimal currencies.
                 currencyMaxDecimals={unitAdapter.maxDecimals}
-                amountTarget={amountTarget.kind}
+                amountTarget={padTarget.kind}
                 discountType={discountType}
                 max={activeAmountMax}
                 quickValues={activeAmountQuickValues}
