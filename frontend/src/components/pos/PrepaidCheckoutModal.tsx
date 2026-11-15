@@ -11,7 +11,8 @@ import {
   ChevronDown,
   QrCode,
 } from 'lucide-react';
-import UpiQrDialog from '@/components/pos/UpiQrDialog';
+import UpiQrDialog, { UpiQrPanel } from '@/components/pos/UpiQrDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import api from '@/lib/api';
 import { useCartStore } from '@/store/cart';
@@ -147,6 +148,7 @@ export default function PrepaidCheckoutModal({
   const [walletAmount, setWalletAmount] = useState('');
   const [processing, setProcessing] = useState(false);
   const [upiQrAmount, setUpiQrAmount] = useState<number | null>(null);
+  const isNarrowScreen = useIsMobile();
   const [customMethods, setCustomMethods] = useState<CustomPaymentMethod[]>([]);
   const [cardTransactionIdRequired, setCardTransactionIdRequired] = useState(
     Boolean(initialCardTransactionIdRequired),
@@ -695,12 +697,22 @@ export default function PrepaidCheckoutModal({
     <div
       ref={modalRef}
       data-testid="prepaid-checkout-modal"
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 md:items-stretch md:p-0"
     >
-      {upiQrAmount !== null && (
+      {upiQrAmount !== null && isNarrowScreen && (
         <UpiQrDialog amount={upiQrAmount} onClose={() => setUpiQrAmount(null)} />
       )}
-      <div className="bg-card flex max-h-[95vh] w-full flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-w-md sm:rounded-2xl">
+      {/* On wide screens the checkout takes the right half; the left half holds the UPI QR. */}
+      <div className="hidden md:flex md:w-1/2 items-center justify-center p-6">
+        {upiQrAmount !== null && !isNarrowScreen && (
+          <UpiQrPanel
+            key={upiQrAmount}
+            amount={upiQrAmount}
+            onClose={() => setUpiQrAmount(null)}
+          />
+        )}
+      </div>
+      <div className="bg-card flex max-h-[95vh] w-full flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-w-md sm:rounded-2xl md:h-full md:max-h-none md:w-1/2 md:max-w-none md:rounded-e-none">
         {/* Compact header and bill summary share one block to preserve vertical space. */}
         <div className="shrink-0 border-b border-border px-5 pb-3 pt-4">
           <div className="flex items-start justify-between gap-3">
@@ -847,7 +859,7 @@ export default function PrepaidCheckoutModal({
           )}
         </div>
 
-        <div className="min-h-0 space-y-3 overflow-y-auto px-5 py-3">
+        <div className="min-h-0 space-y-3 overflow-y-auto px-5 py-3 md:flex-1">
           {/* Cart-level discount editor. */}
           {discountOpen && discountModeLoaded && discountMode !== 'none' && (
             <div className="overflow-hidden rounded-xl border border-purple-200 dark:border-purple-800/40 bg-purple-50 dark:bg-purple-950/40 p-3 space-y-2">
@@ -889,7 +901,7 @@ export default function PrepaidCheckoutModal({
                         : undefined
                   }
                   step={getDiscountInputStep(unitAdapter.maxDecimals, discountType)}
-                  inputMode={discountType === 'percentage' ? 'numeric' : 'decimal'}
+                  inputMode="none"
                   className="w-full min-h-11 ps-8 pe-3 py-2 text-sm border border-purple-200 dark:border-purple-800/40 rounded-lg outline-none focus:ring-2 focus:ring-purple-400 bg-card"
                 />
               </div>
@@ -991,7 +1003,7 @@ export default function PrepaidCheckoutModal({
                         onFocus={() => setAmountTarget({ kind: 'payment', index: idx })}
                         onChange={(e) => updatePaymentAmount(idx, e.target.value)}
                         placeholder="0.00"
-                        inputMode="decimal"
+                        inputMode="none"
                         className="min-w-0 flex-1 px-2 py-2 text-end text-base font-semibold outline-none rounded-e-xl"
                         step={inputCurrencyStep}
                         min="0"
@@ -1071,7 +1083,7 @@ export default function PrepaidCheckoutModal({
                     }}
                     placeholder="0.00"
                     disabled={walletBalance <= 0}
-                    inputMode="decimal"
+                    inputMode="none"
                     className="min-w-0 flex-1 px-2 py-2 text-end text-base font-semibold outline-none rounded-e-xl disabled:bg-muted"
                     step={inputCurrencyStep}
                     min="0"

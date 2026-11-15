@@ -1819,7 +1819,7 @@ export default function PaymentModal({
                           discountType === 'percentage' ? 100 : toDisplayUnit(Number(bill.subtotal))
                         }
                         step={getDiscountInputStep(unitAdapter.maxDecimals, discountType)}
-                        inputMode={discountType === 'percentage' ? 'numeric' : 'decimal'}
+                        inputMode="none"
                         className="w-full min-h-11 ps-8 pe-3 py-2 text-sm border border-purple-200 dark:border-purple-800/40 rounded-lg outline-none focus:ring-2 focus:ring-purple-400 bg-card"
                       />
                     </div>
@@ -2091,7 +2091,7 @@ export default function PaymentModal({
                           onFocus={() => setAmountTarget({ kind: 'payment', index: idx })}
                           onChange={(e) => updatePaymentAmount(idx, e.target.value)}
                           placeholder="0.00"
-                          inputMode="decimal"
+                          inputMode="none"
                           className="min-w-0 flex-1 px-2 py-2 text-end text-base font-semibold outline-none rounded-e-xl"
                           step={inputCurrencyStep}
                           min="0"
@@ -2222,7 +2222,7 @@ export default function PaymentModal({
                       }}
                       placeholder="0.00"
                       disabled={processing || attemptLocked || walletBalance <= 0}
-                      inputMode="decimal"
+                      inputMode="none"
                       className="min-w-0 flex-1 px-2 py-2 text-end text-base font-semibold outline-none rounded-e-xl disabled:bg-muted"
                       step={inputCurrencyStep}
                       min="0"
