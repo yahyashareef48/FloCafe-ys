@@ -78,6 +78,7 @@ import {
   validateLanguagePolicySetting,
 } from '../lib/print-language-settings';
 import { isThemeMode } from '../title-bar-theme';
+import { isValidUpiId } from '../lib/upi-qr';
 import {
   ChargeValidationError,
   CUSTOM_CHARGES_SETTING_KEY,
@@ -168,6 +169,7 @@ const OPTIONAL_SETTING_DEFAULTS: Record<string, string> = {
   split_checks_enabled: 'false',
   card_transaction_id_required: 'false',
   card_payments_enabled: 'false',
+  upi_id: '',
   // Print language policies (#441) — inherit store language, no second
   // language. Defaults preserve pre-policy behavior for existing tenants.
   [BILL_LANGUAGE_POLICY_KEY]: defaultLanguagePolicySettingJson(),
@@ -1740,6 +1742,7 @@ const ALLOWED_WILDCARD_KEYS = new Set([
   'split_checks_enabled',
   'card_transaction_id_required',
   'card_payments_enabled',
+  'upi_id',
   BILL_LANGUAGE_POLICY_KEY,
   KOT_LANGUAGE_POLICY_KEY,
   Z_REPORT_LANGUAGE_POLICY_KEY,
@@ -2011,6 +2014,12 @@ router.put(
       // Upgrades legacy string values to canonical structured JSON on save.
       if (req.params.key === 'bill_template' && !isAvailableBillTemplate(value)) {
         return res.status(400).json({ error: 'Unsupported bill template' });
+      }
+      if (
+        req.params.key === 'upi_id' &&
+        !(value === '' || (typeof value === 'string' && isValidUpiId(value)))
+      ) {
+        return res.status(400).json({ error: 'upi_id must look like name@bank' });
       }
       if (req.params.key === 'kot_print_unassigned_items' && value !== 'true' && value !== 'false') {
         return res.status(400).json({ error: "kot_print_unassigned_items must be 'true' or 'false'" });

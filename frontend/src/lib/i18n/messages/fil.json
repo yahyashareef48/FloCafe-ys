@@ -1242,7 +1242,15 @@
     "printPartsBill": "Resibo",
     "printPartsOther": "Pag-print",
     "printPartsSkip": "Laktawan ang natitira",
-    "printPartsFailed": "Hindi ma-print. Tingnan ang printer at subukang muli."
+    "printPartsFailed": "Hindi ma-print. Tingnan ang printer at subukang muli.",
+    "upiQrShow": "Ipakita ang UPI QR",
+    "upiQrTitle": "I-scan para magbayad gamit ang UPI",
+    "upiQrHint": "I-scan ito ng customer gamit ang anumang UPI app at ilagay ang PIN. Tiyaking dumating ang bayad bago tapusin ang benta.",
+    "upiQrNotConfigured": "Idagdag ang iyong UPI ID sa Settings → Mga Bayad para makita ang QR.",
+    "upiQrNotInr": "Gumagana lang ang UPI QR kapag INR ang currency ng tindahan.",
+    "upiQrFailed": "Hindi magawa ang QR. Subukang muli.",
+    "upiQrDone": "Tapos",
+    "upiQrClose": "Isara"
   },
   "printTest": {
     "amt": "Halaga",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "Pinapatay nito ang bawat opsyonal na koneksyon sa internet: cloud sync, backup sa Google Drive, WhatsApp, pag-check ng update, usage analytics at pag-import ng larawan mula sa web. Patuloy na gumagana ang mga order, billing, pag-print at mga device sa iyong local network.",
     "offlineModeFailed": "Hindi mabago ang Offline mode",
     "offlineModeReadFailed": "Hindi mabasa ang kasalukuyang setting ng Offline mode.",
-    "offlineModeRetry": "Subukan muli"
+    "offlineModeRetry": "Subukan muli",
+    "upiQrSettingTitle": "UPI QR sa checkout",
+    "upiQrSettingHint": "Makakapagpakita ang checkout ng QR para sa eksaktong halaga. I-scan ito ng customer gamit ang anumang UPI app at PIN lang ang ilalagay. Sa UPI ID na ito papasok ang pera.",
+    "upiIdLabel": "Iyong UPI ID",
+    "upiIdInvalid": "Maglagay ng UPI ID gaya ng shopname@bank.",
+    "upiIdSaved": "Na-save ang UPI ID"
   },
   "setup": {
     "alreadyCompleted": "Nakumpleto na ang setup sa installation na ito. Nireredirect sa pag-login…",

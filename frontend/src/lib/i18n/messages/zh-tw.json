@@ -1242,7 +1242,15 @@
     "printPartsBill": "帳單",
     "printPartsOther": "列印",
     "printPartsSkip": "略過其餘",
-    "printPartsFailed": "無法列印。請檢查印表機後再試一次。"
+    "printPartsFailed": "無法列印。請檢查印表機後再試一次。",
+    "upiQrShow": "顯示 UPI 條碼",
+    "upiQrTitle": "掃描以 UPI 付款",
+    "upiQrHint": "顧客用任一 UPI 應用程式掃描並輸入 PIN。完成銷售前請確認款項已入帳。",
+    "upiQrNotConfigured": "請在設定 → 付款中新增 UPI ID 以顯示條碼。",
+    "upiQrNotInr": "僅在商店幣別為 INR 時可使用 UPI 條碼。",
+    "upiQrFailed": "無法產生條碼，請再試一次。",
+    "upiQrDone": "完成",
+    "upiQrClose": "關閉"
   },
   "printTest": {
     "amt": "金額",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "關閉所有選用的網際網路連線：雲端同步、Google Drive 備份、WhatsApp、更新檢查、使用分析與從網路匯入圖片。訂單、結帳、列印與區域網路中的裝置仍可正常運作。",
     "offlineModeFailed": "無法變更離線模式",
     "offlineModeReadFailed": "無法讀取目前的離線模式設定。",
-    "offlineModeRetry": "重試"
+    "offlineModeRetry": "重試",
+    "upiQrSettingTitle": "結帳時顯示 UPI 條碼",
+    "upiQrSettingHint": "結帳畫面可顯示金額精確的條碼。顧客用任一 UPI 應用程式掃描，只需輸入 PIN。款項會進入此 UPI ID。",
+    "upiIdLabel": "UPI 收款 ID",
+    "upiIdInvalid": "請輸入如 shopname@bank 的 UPI ID。",
+    "upiIdSaved": "已儲存 UPI ID"
   },
   "setup": {
     "alreadyCompleted": "此安裝已完成設定。正在跳轉到登入…",

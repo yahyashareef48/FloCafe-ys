@@ -12,7 +12,9 @@ import {
   Send,
   ChevronDown,
   Users,
+  QrCode,
 } from 'lucide-react';
+import UpiQrDialog from '@/components/pos/UpiQrDialog';
 import { Button } from '@/components/ui/button';
 import api, {
   captureClientOperationFailure,
@@ -35,6 +37,7 @@ import {
   PAYMENT_METHODS,
   checkoutPaymentMethods,
   customPaymentMethodIcon,
+  isUpiMethodName,
   type CustomPaymentMethod,
 } from '@/lib/payment-methods';
 import { useFormatCurrency } from '@/hooks/useFormatCurrency';
@@ -192,6 +195,7 @@ export default function PaymentModal({
   // auto-rescaling payment splits (e.g. on discount edits) so we don't clobber their entry.
   const [paymentsTouched, setPaymentsTouched] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [upiQrAmount, setUpiQrAmount] = useState<number | null>(null);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [walletAmount, setWalletAmount] = useState('');
   const [customMethods, setCustomMethods] = useState<CustomPaymentMethod[]>([]);
@@ -1501,6 +1505,9 @@ export default function PaymentModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      {upiQrAmount !== null && (
+        <UpiQrDialog amount={upiQrAmount} onClose={() => setUpiQrAmount(null)} />
+      )}
       <div className="bg-card w-full sm:max-w-4xl sm:max-h-[95vh] sm:flex sm:flex-col rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border">
@@ -2091,6 +2098,17 @@ export default function PaymentModal({
                         />
                       </div>
                     </div>
+                    {custom && isUpiMethodName(custom.name) && active && (
+                      <button
+                        type="button"
+                        data-testid="show-upi-qr"
+                        onClick={() => setUpiQrAmount(toStoredUnit(parseFloat(payment.amount) || 0))}
+                        className="flex w-full min-h-11 items-center justify-center gap-2 rounded-xl border border-brand px-3 py-2 text-sm font-semibold text-brand hover:bg-brand/10"
+                      >
+                        <QrCode size={16} />
+                        {t('upiQrShow')}
+                      </button>
+                    )}
                     {needsTransactionId(payment) && active && (
                       <input
                         type="text"

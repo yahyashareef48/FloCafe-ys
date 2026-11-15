@@ -1242,7 +1242,15 @@
     "printPartsBill": "بل",
     "printPartsOther": "پرنٹ",
     "printPartsSkip": "باقی چھوڑ دیں",
-    "printPartsFailed": "پرنٹ نہیں ہو سکا۔ پرنٹر چیک کر کے دوبارہ کوشش کریں۔"
+    "printPartsFailed": "پرنٹ نہیں ہو سکا۔ پرنٹر چیک کر کے دوبارہ کوشش کریں۔",
+    "upiQrShow": "UPI QR دکھائیں",
+    "upiQrTitle": "UPI سے ادائیگی کے لیے اسکین کریں",
+    "upiQrHint": "گاہک کسی بھی UPI ایپ سے اسکین کر کے اپنا پن ڈالے گا۔ فروخت مکمل کرنے سے پہلے ادائیگی آنے کی تصدیق کریں۔",
+    "upiQrNotConfigured": "QR دکھانے کے لیے سیٹنگز ← ادائیگیاں میں اپنی UPI آئی ڈی شامل کریں۔",
+    "upiQrNotInr": "UPI QR صرف تب کام کرتا ہے جب اسٹور کی کرنسی INR ہو۔",
+    "upiQrFailed": "QR نہیں بن سکا۔ دوبارہ کوشش کریں۔",
+    "upiQrDone": "ہو گیا",
+    "upiQrClose": "بند کریں"
   },
   "printTest": {
     "amt": "رقم",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "انٹرنیٹ کے تمام اختیاری کنکشن بند کر دیتا ہے: کلاؤڈ سنک، Google Drive بیک اپ، واٹس ایپ، اپ ڈیٹ کی جانچ، استعمال کا تجزیہ اور ویب سے تصاویر درآمد کرنا۔ آرڈرز، بلنگ، پرنٹنگ اور آپ کے مقامی نیٹ ورک کے آلات کام کرتے رہتے ہیں۔",
     "offlineModeFailed": "آف لائن موڈ تبدیل نہیں ہو سکا",
     "offlineModeReadFailed": "آف لائن موڈ کی موجودہ ترتیب نہیں پڑھی جا سکی۔",
-    "offlineModeRetry": "دوبارہ کوشش کریں"
+    "offlineModeRetry": "دوبارہ کوشش کریں",
+    "upiQrSettingTitle": "چیک آؤٹ پر UPI QR",
+    "upiQrSettingHint": "چیک آؤٹ پر درست رقم کا QR دکھایا جا سکتا ہے۔ گاہک کسی بھی UPI ایپ سے اسکین کر کے صرف پن ڈالتا ہے۔ رقم اس UPI آئی ڈی میں آتی ہے۔",
+    "upiIdLabel": "UPI آئی ڈی",
+    "upiIdInvalid": "shopname@bank جیسی UPI آئی ڈی درج کریں۔",
+    "upiIdSaved": "UPI آئی ڈی محفوظ ہو گئی"
   },
   "setup": {
     "alreadyCompleted": "اس انسٹال کا سیٹ اپ پہلے ہی مکمل ہو چکا ہے۔ سائن ان پر بھیج رہا ہے…",

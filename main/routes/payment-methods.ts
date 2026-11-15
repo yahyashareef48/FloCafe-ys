@@ -1,5 +1,8 @@
 import { Router, Request, Response } from 'express';
+import QRCode from 'qrcode';
 import { getDatabase, getSettingValue, now, withTxn } from '../db';
+import { asyncHandler } from '../middleware/async-handler';
+import { buildUpiPaymentLink, isValidUpiId } from '../lib/upi-qr';
 import { requirePermission, hasPermission } from '../services/authorization';
 import { sendEvent } from '../services/telemetry';
 
@@ -30,6 +33,33 @@ function list(includeInactive = false) {
   const rows = getDatabase().prepare(`SELECT * FROM payment_methods ${includeInactive ? '' : 'WHERE is_active = 1'} ORDER BY sort_order, id`).all() as any[];
   return rows.map((row) => ({ ...row, is_active: Boolean(row.is_active), ...(includeInactive ? { usage_count: countUsage(row.id) } : {}) }));
 }
+
+// A UPI QR for the exact amount being paid, addressed to the store's UPI ID.
+router.post(
+  '/upi-qr',
+  requirePermission('payments.take'),
+  asyncHandler(async (req: Request, res: Response) => {
+    const upiId = getSettingValue('upi_id') ?? '';
+    if (!isValidUpiId(upiId)) return res.status(409).json({ error: 'upi_not_configured' });
+    if (String(getSettingValue('currency') ?? 'INR').toUpperCase() !== 'INR') {
+      return res.status(409).json({ error: 'upi_requires_inr' });
+    }
+    const amount = Number(req.body?.amount);
+    let link: string;
+    try {
+      link = buildUpiPaymentLink({
+        upiId,
+        payeeName: getSettingValue('business_name') ?? '',
+        amount,
+        note: typeof req.body?.note === 'string' ? req.body.note : undefined,
+      });
+    } catch {
+      return res.status(400).json({ error: 'amount must be a positive number' });
+    }
+    const qrDataUrl = await QRCode.toDataURL(link, { errorCorrectionLevel: 'M', width: 512, margin: 2 });
+    res.json({ upi_id: upiId.trim(), payee_name: getSettingValue('business_name') ?? '', amount: Number(amount.toFixed(2)), link, qr_data_url: qrDataUrl });
+  }),
+);
 
 router.get('/merge-history', requirePermission('payment-methods.manage'), (_req, res) => {
   res.json({ merges: getDatabase().prepare('SELECT * FROM payment_method_merges ORDER BY merged_at DESC, id DESC LIMIT 30').all() });

@@ -1242,7 +1242,15 @@
     "printPartsBill": "Hóa đơn",
     "printPartsOther": "Bản in",
     "printPartsSkip": "Bỏ qua phần còn lại",
-    "printPartsFailed": "Không in được. Kiểm tra máy in rồi thử lại."
+    "printPartsFailed": "Không in được. Kiểm tra máy in rồi thử lại.",
+    "upiQrShow": "Hiện mã QR UPI",
+    "upiQrTitle": "Quét để thanh toán bằng UPI",
+    "upiQrHint": "Khách quét mã bằng ứng dụng UPI bất kỳ và nhập mã PIN. Kiểm tra tiền đã về trước khi hoàn tất bán hàng.",
+    "upiQrNotConfigured": "Thêm ID UPI trong Cài đặt → Thanh toán để hiện mã QR.",
+    "upiQrNotInr": "QR UPI chỉ dùng được khi tiền tệ của cửa hàng là INR.",
+    "upiQrFailed": "Không tạo được mã QR. Hãy thử lại.",
+    "upiQrDone": "Xong",
+    "upiQrClose": "Đóng"
   },
   "printTest": {
     "amt": "Số tiền",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "Tắt mọi kết nối internet tùy chọn: đồng bộ đám mây, sao lưu Google Drive, WhatsApp, kiểm tra cập nhật, phân tích mức sử dụng và nhập ảnh từ web. Đơn hàng, thanh toán, in ấn và các thiết bị trong mạng cục bộ vẫn hoạt động.",
     "offlineModeFailed": "Không thể thay đổi chế độ ngoại tuyến",
     "offlineModeReadFailed": "Không đọc được cài đặt chế độ ngoại tuyến hiện tại.",
-    "offlineModeRetry": "Thử lại"
+    "offlineModeRetry": "Thử lại",
+    "upiQrSettingTitle": "QR UPI khi thanh toán",
+    "upiQrSettingHint": "Màn hình thanh toán có thể hiện mã QR đúng số tiền. Khách quét bằng ứng dụng UPI bất kỳ và chỉ nhập PIN. Tiền về ID UPI này.",
+    "upiIdLabel": "ID UPI",
+    "upiIdInvalid": "Nhập ID UPI dạng shopname@bank.",
+    "upiIdSaved": "Đã lưu ID UPI"
   },
   "setup": {
     "alreadyCompleted": "Bản cài đặt này đã hoàn tất thiết lập. Đang chuyển đến đăng nhập…",

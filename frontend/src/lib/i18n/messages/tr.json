@@ -1242,7 +1242,15 @@
     "printPartsBill": "Hesap",
     "printPartsOther": "Çıktı",
     "printPartsSkip": "Kalanları atla",
-    "printPartsFailed": "Yazdırılamadı. Yazıcıyı kontrol edip tekrar deneyin."
+    "printPartsFailed": "Yazdırılamadı. Yazıcıyı kontrol edip tekrar deneyin.",
+    "upiQrShow": "UPI QR göster",
+    "upiQrTitle": "UPI ile ödemek için tarayın",
+    "upiQrHint": "Müşteri bunu herhangi bir UPI uygulamasıyla tarar ve PIN girer. Satışı tamamlamadan önce ödemenin geldiğini kontrol edin.",
+    "upiQrNotConfigured": "QR göstermek için Ayarlar → Ödemeler bölümüne UPI kimliğinizi ekleyin.",
+    "upiQrNotInr": "UPI QR yalnızca mağaza para birimi INR olduğunda çalışır.",
+    "upiQrFailed": "QR oluşturulamadı. Tekrar deneyin.",
+    "upiQrDone": "Tamam",
+    "upiQrClose": "Kapat"
   },
   "printTest": {
     "amt": "Tutar",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "Tüm isteğe bağlı internet bağlantılarını kapatır: bulut eşitleme, Google Drive yedekleri, WhatsApp, güncelleme denetimi, kullanım analizi ve web'den görsel içe aktarma. Siparişler, faturalama, yazdırma ve yerel ağınızdaki cihazlar çalışmaya devam eder.",
     "offlineModeFailed": "Çevrimdışı mod değiştirilemedi",
     "offlineModeReadFailed": "Geçerli çevrimdışı mod ayarı okunamadı.",
-    "offlineModeRetry": "Yeniden dene"
+    "offlineModeRetry": "Yeniden dene",
+    "upiQrSettingTitle": "Ödemede UPI QR",
+    "upiQrSettingHint": "Ödeme ekranı tam tutar için QR gösterebilir. Müşteri herhangi bir UPI uygulamasıyla tarar ve yalnızca PIN girer. Para bu UPI kimliğine gelir.",
+    "upiIdLabel": "UPI kimliği",
+    "upiIdInvalid": "shopname@bank gibi bir UPI kimliği girin.",
+    "upiIdSaved": "UPI kimliği kaydedildi"
   },
   "setup": {
     "alreadyCompleted": "Kurulum bu cihazda zaten tamamlandı. Giriş ekranına yönlendiriliyorsunuz…",

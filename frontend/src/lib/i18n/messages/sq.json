@@ -1242,7 +1242,15 @@
     "printPartsBill": "Fatura",
     "printPartsOther": "Printim",
     "printPartsSkip": "Kapërce të tjerat",
-    "printPartsFailed": "Printimi dështoi. Kontrolloni printerin dhe provoni sërish."
+    "printPartsFailed": "Printimi dështoi. Kontrolloni printerin dhe provoni sërish.",
+    "upiQrShow": "Shfaq QR-në UPI",
+    "upiQrTitle": "Skanoni për të paguar me UPI",
+    "upiQrHint": "Klienti e skanon me çdo aplikacion UPI dhe fut PIN-in. Kontrolloni që pagesa ka ardhur para se të mbyllni shitjen.",
+    "upiQrNotConfigured": "Shtoni ID-në tuaj UPI te Cilësimet → Pagesat për të shfaqur QR-në.",
+    "upiQrNotInr": "QR-ja UPI funksionon vetëm kur monedha e dyqanit është INR.",
+    "upiQrFailed": "QR-ja nuk u krijua. Provoni sërish.",
+    "upiQrDone": "U krye",
+    "upiQrClose": "Mbyll"
   },
   "printTest": {
     "amt": "Shuma",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "Çaktivizon çdo lidhje opsionale me internetin: sinkronizimin në re, kopjet rezervë në Google Drive, WhatsApp, kontrollin e përditësimeve, analizat e përdorimit dhe importimin e imazheve nga uebi. Porositë, faturimi, printimi dhe pajisjet në rrjetin tuaj lokal vazhdojnë të punojnë.",
     "offlineModeFailed": "Modaliteti pa internet nuk u ndryshua dot",
     "offlineModeReadFailed": "Cilësimi aktual i modalitetit pa internet nuk u lexua dot.",
-    "offlineModeRetry": "Provo përsëri"
+    "offlineModeRetry": "Provo përsëri",
+    "upiQrSettingTitle": "QR UPI në arkë",
+    "upiQrSettingHint": "Arka mund të shfaqë një QR me shumën e saktë. Klienti e skanon me çdo aplikacion UPI dhe fut vetëm PIN-in. Paratë shkojnë te ky ID UPI.",
+    "upiIdLabel": "ID-ja UPI",
+    "upiIdInvalid": "Shkruani një ID UPI si shopname@bank.",
+    "upiIdSaved": "ID-ja UPI u ruajt"
   },
   "setup": {
     "alreadyCompleted": "Konfigurimi në këtë instalim është përfunduar. Po ridrejtohemi te hyrja...",

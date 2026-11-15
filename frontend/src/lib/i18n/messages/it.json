@@ -1242,7 +1242,15 @@
     "printPartsBill": "Conto",
     "printPartsOther": "Stampa",
     "printPartsSkip": "Salta il resto",
-    "printPartsFailed": "Impossibile stampare. Controlla la stampante e riprova."
+    "printPartsFailed": "Impossibile stampare. Controlla la stampante e riprova.",
+    "upiQrShow": "Mostra QR UPI",
+    "upiQrTitle": "Scansiona per pagare con UPI",
+    "upiQrHint": "Il cliente lo scansiona con un’app UPI e inserisce il PIN. Verifica che il pagamento sia arrivato prima di chiudere la vendita.",
+    "upiQrNotConfigured": "Aggiungi il tuo ID UPI in Impostazioni → Pagamenti per mostrare un QR.",
+    "upiQrNotInr": "Il QR UPI funziona solo se la valuta del negozio è INR.",
+    "upiQrFailed": "Impossibile creare il QR. Riprova.",
+    "upiQrDone": "Fatto",
+    "upiQrClose": "Chiudi"
   },
   "printTest": {
     "amt": "Importo",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "Disattiva ogni connessione a internet facoltativa: sincronizzazione cloud, backup su Google Drive, WhatsApp, controllo aggiornamenti, analisi d'uso e importazione di immagini dal web. Ordini, fatturazione, stampa e dispositivi della rete locale continuano a funzionare.",
     "offlineModeFailed": "Impossibile cambiare la modalità offline",
     "offlineModeReadFailed": "Impossibile leggere l'impostazione attuale della modalità offline.",
-    "offlineModeRetry": "Riprova"
+    "offlineModeRetry": "Riprova",
+    "upiQrSettingTitle": "QR UPI alla cassa",
+    "upiQrSettingHint": "La cassa può mostrare un QR con l’importo esatto. Il cliente lo scansiona con un’app UPI e inserisce solo il PIN. I soldi arrivano a questo ID UPI.",
+    "upiIdLabel": "ID UPI",
+    "upiIdInvalid": "Inserisci un ID UPI come shopname@bank.",
+    "upiIdSaved": "ID UPI salvato"
   },
   "setup": {
     "alreadyCompleted": "La configurazione è già stata completata su questa installazione. Reindirizzamento all'accesso…",

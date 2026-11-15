@@ -1242,7 +1242,15 @@
     "printPartsBill": "Conta",
     "printPartsOther": "Impressão",
     "printPartsSkip": "Ignorar o resto",
-    "printPartsFailed": "Não foi possível imprimir. Verifique a impressora e tente de novo."
+    "printPartsFailed": "Não foi possível imprimir. Verifique a impressora e tente de novo.",
+    "upiQrShow": "Mostrar QR UPI",
+    "upiQrTitle": "Leia para pagar com UPI",
+    "upiQrHint": "O cliente lê este código com uma app UPI e introduz o PIN. Confirme que o pagamento chegou antes de concluir a venda.",
+    "upiQrNotConfigured": "Adicione o seu ID UPI em Definições → Pagamentos para mostrar um QR.",
+    "upiQrNotInr": "O QR UPI só funciona quando a moeda da loja é INR.",
+    "upiQrFailed": "Não foi possível criar o QR. Tente de novo.",
+    "upiQrDone": "Concluído",
+    "upiQrClose": "Fechar"
   },
   "printTest": {
     "amt": "Total",
@@ -2620,7 +2628,12 @@
     "offlineModeDescription": "Desativa toda conexão opcional com a internet: sincronização na nuvem, backups no Google Drive, WhatsApp, verificação de atualizações, análises de uso e importação de imagens da web. Pedidos, faturação, impressão e dispositivos da sua rede local continuam a funcionar.",
     "offlineModeFailed": "Não foi possível alterar o modo offline",
     "offlineModeReadFailed": "Não foi possível ler a definição atual do modo offline.",
-    "offlineModeRetry": "Tentar novamente"
+    "offlineModeRetry": "Tentar novamente",
+    "upiQrSettingTitle": "QR UPI no pagamento",
+    "upiQrSettingHint": "O pagamento pode mostrar um QR com o valor exato. O cliente lê-o com uma app UPI e só introduz o PIN. O dinheiro vai para este ID UPI.",
+    "upiIdLabel": "ID UPI",
+    "upiIdInvalid": "Introduza um ID UPI como shopname@bank.",
+    "upiIdSaved": "ID UPI guardado"
   },
   "setup": {
     "alreadyCompleted": "A configuração já foi concluída nesta instalação. Redirecionando para o login…",
