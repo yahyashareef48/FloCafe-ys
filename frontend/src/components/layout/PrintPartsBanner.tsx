@@ -16,7 +16,7 @@ export default function PrintPartsBanner() {
 
   useEffect(() => {
     api
-      .get<{ print_parts?: PrintPartsState }>('/printers/print-parts')
+      .get<{ print_parts?: PrintPartsState }>('/printers/parts-queue')
       .then((response) => setParts(response.data.print_parts))
       .catch(() => undefined);
   }, [setParts]);
@@ -35,12 +35,12 @@ export default function PrintPartsBanner() {
     setBusy(true);
     try {
       const response = await api.post<{ print_parts?: PrintPartsState }>(
-        `/printers/print-parts/${path}`,
+        `/printers/parts-queue/${path}`,
       );
       setParts(response.data.print_parts);
     } catch (error: unknown) {
-      const data = (error as { response?: { data?: { print_parts?: PrintPartsState } } })
-        ?.response?.data;
+      const data = (error as { response?: { data?: { print_parts?: PrintPartsState } } })?.response
+        ?.data;
       if (data?.print_parts) setParts(data.print_parts);
       toast.error(t('printPartsFailed'));
     } finally {

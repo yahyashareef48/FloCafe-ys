@@ -1521,7 +1521,7 @@ export function resolvePrinterContext(
 }
 
 async function dispatchPrint(
-  printer: any,
+  printer: Parameters<typeof sendToPrinter>[0],
   data: Buffer,
   signal?: AbortSignal,
   label: PrintPartLabel = { kind: 'other' },

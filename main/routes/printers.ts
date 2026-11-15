@@ -272,9 +272,13 @@ router.get('/supported', requirePermission('printers.manage'), (_req: Request, r
 });
 
 // Parts waiting on a no-cutter printer in "print in parts" mode.
-router.get('/print-parts', requirePermission('printing.execute'), (_req: Request, res: Response) => {
-  res.json({ print_parts: printPartsState() });
-});
+router.get(
+  '/parts-queue',
+  requirePermission('printing.execute'),
+  (_req: Request, res: Response) => {
+    res.json({ print_parts: printPartsState() });
+  },
+);
 
 // GET /api/printers/:id
 router.get('/:id', requirePermission('printers.manage'), (req: Request, res: Response) => {
@@ -1170,7 +1174,11 @@ router.post(
       });
 
       if (result.ok) {
-        res.json({ success: true, warnings: result.warnings || [], print_parts: printPartsState() });
+        res.json({
+          success: true,
+          warnings: result.warnings || [],
+          print_parts: printPartsState(),
+        });
       } else {
         res.status(502).json({
           error: result.detail || 'Print failed. Check printer connection and settings.',
@@ -1192,7 +1200,7 @@ router.post(
 
 // Prints or drops the parts a no-cutter printer in "print in parts" mode is holding.
 router.post(
-  '/print-parts/next',
+  '/parts-queue/next',
   requirePermission('printing.execute'),
   asyncHandler(async (_req: Request, res: Response) => {
     const { result, state } = await printNextPart();
@@ -1207,7 +1215,7 @@ router.post(
 );
 
 router.post(
-  '/print-parts/discard',
+  '/parts-queue/discard',
   requirePermission('printing.execute'),
   (_req: Request, res: Response) => {
     res.json({ success: true, print_parts: discardPrintParts() });
@@ -1568,7 +1576,10 @@ export function tenantLanguage(db: ReturnType<typeof getDatabase>): string {
 }
 
 /** The bill's token when the order is billed, else the order number's counter; empty when tokens are off. */
-function kotToken(db: ReturnType<typeof getDatabase>, order: any): string {
+function kotToken(
+  db: ReturnType<typeof getDatabase>,
+  order: { id?: unknown; order_number?: unknown },
+): string {
   if (tenantSettingValue(db, 'bill_highlight_token') !== 'true') return '';
   const bill = db
     .prepare('SELECT bill_number FROM bills WHERE order_id = ? ORDER BY id DESC LIMIT 1')

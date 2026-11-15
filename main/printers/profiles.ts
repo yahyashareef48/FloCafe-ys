@@ -15,7 +15,17 @@ export interface SupportedPrinterProfile {
   model: string;
   aliases: string[];
   commandSet: PrinterCommandSet;
-  defaultPaperWidth: 'cols-32' | 'cols-36' | 'cols-40' | 'cols-42' | 'cols-44' | 'cols-48' | '58mm' | '58mm-36' | '80mm-42' | '80mm';
+  defaultPaperWidth:
+    | 'cols-32'
+    | 'cols-36'
+    | 'cols-40'
+    | 'cols-42'
+    | 'cols-44'
+    | 'cols-48'
+    | '58mm'
+    | '58mm-36'
+    | '80mm-42'
+    | '80mm';
   defaultPort: number;
   fontAColumns: number;
   fontBColumns: number;
@@ -50,7 +60,8 @@ export const SUPPORTED_PRINTER_PROFILES: SupportedPrinterProfile[] = [
         modes: ['mixed', 'whole-receipt'],
       },
     },
-    notes: '80mm ESC/POS receipt printer. This profile declares 72mm print width and 576 dots/line, which is 48 Font A and 64 Font B columns; vendor listings also give 42/56 for the 512-dot variant, which is what generic-escpos-80 assumes.',
+    notes:
+      '80mm ESC/POS receipt printer. This profile declares 72mm print width and 576 dots/line, which is 48 Font A and 64 Font B columns; vendor listings also give 42/56 for the 512-dot variant, which is what generic-escpos-80 assumes.',
   },
   {
     id: 'epson-tm-series',
@@ -123,17 +134,17 @@ export function getSupportedPrinterProfiles(): SupportedPrinterProfile[] {
   return SUPPORTED_PRINTER_PROFILES;
 }
 
-export function matchSupportedPrinterProfile(...parts: Array<string | null | undefined>): SupportedPrinterProfile | null {
-  const haystack = parts
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase()
-    .replace(/[_]+/g, '-');
+export function matchSupportedPrinterProfile(
+  ...parts: Array<string | null | undefined>
+): SupportedPrinterProfile | null {
+  const haystack = parts.filter(Boolean).join(' ').toLowerCase().replace(/[_]+/g, '-');
 
   if (!haystack) return null;
 
   for (const profile of SUPPORTED_PRINTER_PROFILES) {
-    const tokens = [`${profile.make} ${profile.model}`, profile.model, ...profile.aliases].map((s) => s.toLowerCase());
+    const tokens = [`${profile.make} ${profile.model}`, profile.model, ...profile.aliases].map(
+      (s) => s.toLowerCase(),
+    );
     if (tokens.some((token) => haystack.includes(token))) return profile;
   }
 
@@ -157,21 +168,28 @@ export function resolvePrinterProfile(printer: any): SupportedPrinterProfile {
 }
 
 /** The configured printer's cut mode: its profile's cutter unless the printer has none. */
-export function printerCutMode(printer: any, profile: SupportedPrinterProfile): PrinterCutMode {
-  return printer?.auto_cut === 0 ? 'none' : profile.cutMode;
+export function printerCutMode(printer: unknown, profile: SupportedPrinterProfile): PrinterCutMode {
+  return (printer as { auto_cut?: unknown } | null)?.auto_cut === 0 ? 'none' : profile.cutMode;
 }
 
 export function getPrinterCapabilities(
   profile: SupportedPrinterProfile,
   arabicShapingOverride?: boolean,
 ): ThermalPrinterCapabilities {
-  return mergeThermalCapabilities(profile.capabilities || GENERIC_THERMAL_CAPABILITIES, arabicShapingOverride);
+  return mergeThermalCapabilities(
+    profile.capabilities || GENERIC_THERMAL_CAPABILITIES,
+    arabicShapingOverride,
+  );
 }
 
 /** Maps paper_width string to canonical raster dot width, or null if unrecognized. */
 export function dotsForPaperWidth(paperWidth: string): number | null {
   const colsMatch = String(paperWidth || '').match(/^cols-(3[2-9]|4[0-8])$/);
-  const cols = colsMatch ? Number(colsMatch[1]) : ({ '58mm': 32, '58mm-36': 36, '80mm-42': 42, '80mm': 48 } as Record<string, number>)[paperWidth] ?? null;
+  const cols = colsMatch
+    ? Number(colsMatch[1])
+    : (({ '58mm': 32, '58mm-36': 36, '80mm-42': 42, '80mm': 48 } as Record<string, number>)[
+        paperWidth
+      ] ?? null);
   if (cols === null) return null;
   if (cols <= 32) return 384;
   if (cols <= 36) return 432;
@@ -188,6 +206,7 @@ export function capabilitiesForPrinter(
   const capabilities = getPrinterCapabilities(profile, arabicShapingOverride);
   if (!capabilities.raster.enabled || !capabilities.raster.widthDots) return capabilities;
   const configuredDots = dotsForPaperWidth(String(paperWidth || ''));
-  if (configuredDots === null || configuredDots >= capabilities.raster.widthDots) return capabilities;
+  if (configuredDots === null || configuredDots >= capabilities.raster.widthDots)
+    return capabilities;
   return { ...capabilities, raster: { ...capabilities.raster, widthDots: configuredDots } };
 }

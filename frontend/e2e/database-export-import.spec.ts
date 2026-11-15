@@ -208,10 +208,16 @@ test.describe('Database Settings JSON Export and Import', () => {
     const uniqueCustomerName = `E2E Customer ${runId}`;
     const uniquePhone = `+1555019${Math.floor(1000 + Math.random() * 9000)}`;
     const fixtureTimestamp = '2020-01-01 00:00:00';
+    const ownerToken = await page.evaluate(() => localStorage.getItem('token'));
+    const exportRes = await page.request.get(`${BASE}/api/db/export`, {
+      headers: { Authorization: `Bearer ${ownerToken}` },
+    });
+    expect(exportRes.ok()).toBeTruthy();
+    const { schema_version: currentSchemaVersion } = await exportRes.json();
 
     const contaminatedPayload = {
       app: 'FloDesktop',
-      schema_version: '117',
+      schema_version: currentSchemaVersion,
       data: {
         settings: [],
         categories: [],
