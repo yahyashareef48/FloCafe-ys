@@ -421,7 +421,7 @@ export function tearLineText(
 /** Paper feed that carries the last printed line past a no-cutter printer's tear bar. */
 export const NO_CUTTER_TAIL_FEED: readonly number[] = [0x1b, 0x64, 0x03];
 
-/** Centred tear line, as bytes, printed between parts joined into one no-cutter job. */
+/** Centred tear line with a blank line above and below, printed between joined no-cutter parts. */
 export function tearLineBytes(
   columns: number | undefined,
   language: string | undefined,
@@ -431,10 +431,12 @@ export function tearLineBytes(
   const tearLine = tearLineText(columns, language, merged);
   const codePage = selectThermalCodePage(tearLine, merged) ?? 'ascii';
   return Buffer.from([
+    0x1b, 0x64, 0x01,
     0x1b, 0x45, 0x00, 0x1b, 0x21, 0x00, 0x1b, 0x61, 0x01,
     0x1b, 0x74, escPosCodePageId(codePage),
     ...CodepageEncoder.encode(tearLine, codePage),
     0x0a, 0x1b, 0x61, 0x00,
+    0x1b, 0x64, 0x01,
   ]);
 }
 

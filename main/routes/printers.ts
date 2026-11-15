@@ -1269,7 +1269,7 @@ export function routeItemsToStations(
   }
 
   const result = Array.from(groups.values());
-  if (unrouted.length > 0) {
+  if (unrouted.length > 0 && tenantSettingValue(db, 'kot_print_unassigned_items') !== 'false') {
     result.push({ stationName: 'Kitchen', printer: null, items: unrouted });
   }
   return result;

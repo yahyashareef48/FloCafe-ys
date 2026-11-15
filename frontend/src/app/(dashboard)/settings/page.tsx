@@ -1740,6 +1740,16 @@ export default function SettingsPage() {
   const [savingServerAppBillPrintingEnabled, setSavingServerAppBillPrintingEnabled] =
     useState(false);
   const [kotPrintingEnabledSetting, setKotPrintingEnabledSetting] = useState(true);
+  const [printUnassignedItems, setPrintUnassignedItems] = useState(true);
+  const savePrintUnassignedItems = async (value: boolean) => {
+    setPrintUnassignedItems(value);
+    try {
+      await api.put('/settings/kot_print_unassigned_items', { value: value ? 'true' : 'false' });
+    } catch {
+      setPrintUnassignedItems(!value);
+      toast.error(t('actionFailed'));
+    }
+  };
 
   const [savedOrderNumberForm, setSavedOrderNumberForm] = useState<OrderNumberForm>({
     prefix: 'ORD',
@@ -2608,6 +2618,9 @@ export default function SettingsPage() {
         const { data } = await get('/settings/kds_enabled');
         if (!active()) return;
         applyHydratedKitchenSetting('kdsEnabled', data.setting?.value !== 'false');
+        const unassigned = await readOptional('/settings/kot_print_unassigned_items');
+        if (!active()) return;
+        setPrintUnassignedItems(unassigned?.data.setting?.value !== 'false');
 
         const [stationsLoaded, categoriesLoaded, staffLoaded, printersLoaded] = await Promise.all([
           fetchStations(signal),
@@ -4483,8 +4496,24 @@ export default function SettingsPage() {
                         {defaultStationCategories.length > 0
                           ? defaultStationCategories.map((category) => category.name).join(', ')
                           : t('stationNoDefaultCategories')}
+                        {!printUnassignedItems && ` · ${t('stationUnassignedNotPrinted')}`}
                       </p>
                     </div>
+                  </div>
+                  <div className="flex items-center justify-between gap-4 p-3 border border-border rounded-lg">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        {t('kotPrintUnassigned')}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {t('kotPrintUnassignedHint')}
+                      </p>
+                    </div>
+                    <Toggle
+                      value={printUnassignedItems}
+                      label={t('kotPrintUnassigned')}
+                      onChange={(value) => void savePrintUnassignedItems(value)}
+                    />
                   </div>
 
                   {stations.length === 0 ? (

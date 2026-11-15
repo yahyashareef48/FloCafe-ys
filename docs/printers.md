@@ -31,7 +31,7 @@ Bluetooth printer, then choose how it prints several parts, such as the kitchen 
 one checkout. The setting is not offered for WebUSB printers.
 
 - **Print all at once:** parts that reach the printer within three seconds of each other print as
-  one strip, with a dashed **Cut here** line between them. The paper feeds once the printer has been
+  one strip, with a dashed **Cut here** line between them and a blank line on each side of it. The paper feeds once the printer has been
   idle for three seconds, so the last part can be torn off; it has no Cut here line.
 - **Print in parts:** the first part prints and feeds at once. Each further part of the same action
   waits, and a banner shows how many have printed and names the next one. **Print next** prints it;
@@ -142,7 +142,10 @@ can be linked to one or more stations from the Staff form. A chef created withou
 unrestricted by station.
 
 Items in categories without a station use the read-only **DEFAULT > Printer Name** route shown with
-the station list, and print on the default kitchen printer.
+the station list, and print on the default kitchen printer as a separate **Kitchen** ticket. Turn off
+**Print items without a station** under the station list to leave those items off kitchen tickets.
+The switch applies only while at least one active station has categories and a printer; with none,
+every item still prints on one Kitchen ticket.
 
 KOT printing can be disabled for the business. When it is disabled, neither automatic nor manual KOT
 print requests are sent.

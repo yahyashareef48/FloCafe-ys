@@ -160,6 +160,12 @@ function escPosChecks(): void {
     '----- Cut here -----',
     'the tear line between parts is a dashed Cut here line',
   );
+  const tear = tearLineBytes(32, 'en');
+  assertOrThrow(
+    tear.subarray(0, 3).equals(Buffer.from([0x1b, 0x64, 0x01])) &&
+      tear.subarray(-3).equals(Buffer.from([0x1b, 0x64, 0x01])),
+    'the tear line has a blank line above and below it',
+  );
 
   const english = tearLineText(32, 'en', GENERIC_THERMAL_CAPABILITIES);
   assertEqualOrThrow(english.length, 32, 'the tear line spans the paper width');
@@ -381,6 +387,33 @@ async function routeChecks(): Promise<void> {
     const discarded = await request(app).post('/api/printers/print-parts/discard');
     assertEqualOrThrow(discarded.body.print_parts.pending.length, 0, 'skip the rest clears waiting parts');
     resetNoCutterJobs();
+
+    console.log('\n--- Items without a station ---');
+    const { routeItemsToStations } = require('../main/routes/printers');
+    db.prepare("INSERT INTO categories (id, name) VALUES ('cat-shawarma', 'Shawarma'), ('cat-drinks', 'Drinks')").run();
+    db.prepare(
+      "INSERT INTO products (id, category_id, name, price) VALUES ('p-roll', 'cat-shawarma', 'Roll', 40), ('p-cola', 'cat-drinks', 'Cola', 20)",
+    ).run();
+    db.prepare(
+      `INSERT INTO kitchen_stations (id, name, category_ids, printer_id, is_active) VALUES ('st-1', 'Shawarma', '["cat-shawarma"]', ?, 1)`,
+    ).run(id);
+    const orderItems = [
+      { product_id: 'p-roll', product_name: 'Roll', quantity: 1 },
+      { product_id: 'p-cola', product_name: 'Cola', quantity: 1 },
+    ];
+    const stationNames = () =>
+      routeItemsToStations(db, orderItems)
+        .map((group: { stationName: string; items: unknown[] }) => `${group.stationName}:${group.items.length}`)
+        .join(',');
+    assertEqualOrThrow(stationNames(), 'Shawarma:1,Kitchen:1', 'by default unassigned items get a Kitchen ticket');
+    setSetting('kot_print_unassigned_items', 'false');
+    assertEqualOrThrow(stationNames(), 'Shawarma:1', 'with the toggle off they are not printed');
+    db.prepare("UPDATE kitchen_stations SET is_active = 0 WHERE id = 'st-1'").run();
+    assertEqualOrThrow(
+      stationNames(),
+      'Kitchen:2',
+      'with no active station, everything still prints on one Kitchen ticket',
+    );
   } finally {
     await capture.close();
   }
