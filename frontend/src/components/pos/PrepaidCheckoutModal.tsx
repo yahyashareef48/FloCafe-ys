@@ -1458,7 +1458,7 @@ export default function PrepaidCheckoutModal({
       <div
         className={`hidden md:flex items-center justify-center p-6 ${layout === 'third' ? 'md:w-2/3' : 'md:w-1/2'}`}
       >
-        {upiQrAmount !== null && !isNarrowScreen && layout !== 'third' && (
+        {upiQrAmount !== null && !isNarrowScreen && (
           <UpiQrPanel key={upiQrAmount} amount={upiQrAmount} onClose={() => setUpiQrAmount(null)} />
         )}
       </div>
@@ -1466,21 +1466,9 @@ export default function PrepaidCheckoutModal({
         className={`bg-card flex max-h-[95vh] w-full flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-w-md sm:rounded-2xl md:h-full md:max-h-none md:max-w-none md:rounded-e-none ${layout === 'third' ? 'md:w-1/3' : 'md:w-1/2'}`}
       >
         <div className="shrink-0 border-b border-border px-5 pb-3 pt-4 md:pb-2 md:pt-3">
-          {/* In the one-third panel the QR takes the summary's place while shown. */}
-          {layout === 'third' && upiQrAmount !== null && !isNarrowScreen ? (
-            <UpiQrPanel
-              inline
-              key={upiQrAmount}
-              amount={upiQrAmount}
-              onClose={() => setUpiQrAmount(null)}
-            />
-          ) : (
-            <>
-              {titleRow}
-              {summaryBlock}
-              {discountToggle}
-            </>
-          )}
+          {titleRow}
+          {summaryBlock}
+          {discountToggle}
         </div>
         <div className="min-h-0 space-y-3 overflow-y-auto px-5 py-3 md:flex-1 md:space-y-2 md:py-2">
           {discountEditor}

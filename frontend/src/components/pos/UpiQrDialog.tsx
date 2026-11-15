@@ -18,13 +18,10 @@ export function UpiQrPanel({
   amount,
   onClose,
   compact = false,
-  inline = false,
 }: {
   amount: number;
   onClose: () => void;
   compact?: boolean;
-  /** Short side-by-side card that fits where the checkout summary sits. */
-  inline?: boolean;
 }) {
   const t = useTranslations('pos');
   const formatCurrency = useFormatCurrency();
@@ -51,64 +48,6 @@ export function UpiQrPanel({
       active = false;
     };
   }, [amount]);
-
-  const errorText =
-    error === 'not_configured'
-      ? t('upiQrNotConfigured')
-      : error === 'not_inr'
-        ? t('upiQrNotInr')
-        : t('upiQrFailed');
-
-  if (inline) {
-    return (
-      <div data-testid="upi-qr-panel" className="flex items-center gap-3">
-        {qr ? (
-          // eslint-disable-next-line @next/next/no-img-element -- a data: URL drawn locally
-          <img
-            src={qr.qr_data_url}
-            alt={t('upiQrTitle')}
-            className="aspect-square w-40 shrink-0 rounded-lg bg-white p-1.5"
-          />
-        ) : (
-          <div className="flex aspect-square w-40 shrink-0 items-center justify-center rounded-lg bg-muted">
-            {error ? null : <Loader2 className="animate-spin text-muted-foreground" />}
-          </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-            <QrCode size={14} className="shrink-0 text-brand" />
-            {t('upiQrTitle')}
-          </p>
-          <p className="mt-1 text-2xl font-bold text-foreground" data-testid="upi-qr-amount">
-            {formatCurrency(amount)}
-          </p>
-          {error ? (
-            <p className="mt-1 text-xs text-red-600" role="alert">
-              {errorText}
-            </p>
-          ) : (
-            qr && (
-              <>
-                {qr.payee_name && (
-                  <p className="mt-1 truncate text-xs font-medium text-foreground">
-                    {qr.payee_name}
-                  </p>
-                )}
-                <p className="truncate text-[11px] text-muted-foreground">{qr.upi_id}</p>
-              </>
-            )
-          )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="mt-2 w-full rounded-lg bg-brand py-2 text-sm font-semibold text-white hover:opacity-90"
-          >
-            {t('upiQrDone')}
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
