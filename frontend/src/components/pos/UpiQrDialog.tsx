@@ -14,7 +14,15 @@ interface UpiQr {
 }
 
 /** The UPI QR for one exact amount; any UPI app that scans it opens with the amount filled in. */
-export function UpiQrPanel({ amount, onClose }: { amount: number; onClose: () => void }) {
+export function UpiQrPanel({
+  amount,
+  onClose,
+  compact = false,
+}: {
+  amount: number;
+  onClose: () => void;
+  compact?: boolean;
+}) {
   const t = useTranslations('pos');
   const formatCurrency = useFormatCurrency();
   const [qr, setQr] = useState<UpiQr | null>(null);
@@ -44,7 +52,7 @@ export function UpiQrPanel({ amount, onClose }: { amount: number; onClose: () =>
   return (
     <div
       data-testid="upi-qr-panel"
-      className="relative w-full max-w-sm rounded-2xl bg-card p-5 text-center shadow-2xl"
+      className={`relative w-full rounded-2xl bg-card text-center ${compact ? 'max-w-xs border border-border p-3 shadow-2xl' : 'max-w-sm p-5 shadow-2xl'}`}
       onClick={(event) => event.stopPropagation()}
     >
       <button
@@ -68,11 +76,11 @@ export function UpiQrPanel({ amount, onClose }: { amount: number; onClose: () =>
           <img
             src={qr.qr_data_url}
             alt={t('upiQrTitle')}
-            className="mx-auto my-4 aspect-square w-full max-w-[280px] rounded-lg bg-white p-2"
+            className={`mx-auto aspect-square w-full rounded-lg bg-white p-2 ${compact ? 'my-2 max-w-[220px]' : 'my-4 max-w-[280px]'}`}
           />
           {qr.payee_name && <p className="text-sm font-medium text-foreground">{qr.payee_name}</p>}
           <p className="text-xs text-muted-foreground">{qr.upi_id}</p>
-          <p className="mt-3 text-xs text-muted-foreground">{t('upiQrHint')}</p>
+          {!compact && <p className="mt-3 text-xs text-muted-foreground">{t('upiQrHint')}</p>}
         </>
       ) : error ? (
         <p className="my-8 text-sm text-red-600" role="alert">
