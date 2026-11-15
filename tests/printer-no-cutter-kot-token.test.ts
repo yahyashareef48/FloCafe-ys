@@ -4,7 +4,7 @@
  * - Migration v119 adds printers.auto_cut (default on) without touching existing rows.
  * - The printers API stores auto_cut and no_cutter_mode. Without a cutter, `all` joins
  *   back-to-back jobs with a "Cut here" line and feeds once idle; `parts` prints the
- *   first part and holds the rest until /print-parts/next.
+ *   first part and holds the rest until /parts-queue/next.
  * - /api/printers/print-kot prints the bill's token (or the order number's counter
  *   before billing) large under the banner when the store prints tokens.
  * - Item headings print bold at the ticket's normal text size, wrapped under their
@@ -369,22 +369,22 @@ async function routeChecks(): Promise<void> {
     await postKot();
     await new Promise((resolve) => setTimeout(resolve, 200));
     assertEqualOrThrow(capture.jobs.length, jobsAfterFirst, 'waiting parts are not printed');
-    const listed = await request(app).get('/api/printers/print-parts');
+    const listed = await request(app).get('/api/printers/parts-queue');
     assertEqualOrThrow(listed.body.print_parts.pending.length, 2, 'the banner can list waiting parts');
 
-    const next = await request(app).post('/api/printers/print-parts/next');
+    const next = await request(app).post('/api/printers/parts-queue/next');
     assertEqualOrThrow(next.status, 200, 'print next succeeds');
     await waitForJobs(capture.jobs, jobsAfterFirst + 1);
     assertEqualOrThrow(capture.jobs.length, jobsAfterFirst + 1, 'print next prints one part');
     assertEqualOrThrow(next.body.print_parts.printed, 2, 'two parts are printed');
     assertEqualOrThrow(next.body.print_parts.pending.length, 1, 'one part still waits');
-    const last = await request(app).post('/api/printers/print-parts/next');
+    const last = await request(app).post('/api/printers/parts-queue/next');
     assertEqualOrThrow(last.body.print_parts.pending.length, 0, 'nothing waits after the last part');
 
     const fresh = await printKot();
     assertOrThrow(fresh.subarray(-3).equals(TAIL_FEED), 'after the last part, a new print starts at once');
     await postKot();
-    const discarded = await request(app).post('/api/printers/print-parts/discard');
+    const discarded = await request(app).post('/api/printers/parts-queue/discard');
     assertEqualOrThrow(discarded.body.print_parts.pending.length, 0, 'skip the rest clears waiting parts');
     resetNoCutterJobs();
 

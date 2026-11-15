@@ -231,7 +231,7 @@ every backend job, and `buildEscPos()` then emits nothing for `{CUT}`. `dispatch
 jobs to `main/printers/no-cutter-jobs.ts`, which follows the row's `no_cutter_mode`. In `all`, a job
 that reaches a printer while its idle feed is still pending is prefixed with the `print.cutHere`
 tear line, and the feed is sent after `JOIN_WINDOW_MS` without a job. In `parts`, the first job of a
-burst is sent with the feed and later jobs are held in memory until `/print-parts/next`; the
+burst is sent with the feed and later jobs are held in memory until `/parts-queue/next`; the
 `/print-kot` and `/print-bill` responses carry the queue as `print_parts`, which drives the
 renderer's banner. Held parts are lost if the app restarts. Test pages and Z-reports are sent
 directly and are not sequenced.

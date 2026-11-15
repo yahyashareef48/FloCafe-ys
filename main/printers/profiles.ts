@@ -157,8 +157,8 @@ export function resolvePrinterProfile(printer: any): SupportedPrinterProfile {
 }
 
 /** The configured printer's cut mode: its profile's cutter unless the printer has none. */
-export function printerCutMode(printer: any, profile: SupportedPrinterProfile): PrinterCutMode {
-  return printer?.auto_cut === 0 ? 'none' : profile.cutMode;
+export function printerCutMode(printer: unknown, profile: SupportedPrinterProfile): PrinterCutMode {
+  return (printer as { auto_cut?: unknown } | null)?.auto_cut === 0 ? 'none' : profile.cutMode;
 }
 
 export function getPrinterCapabilities(

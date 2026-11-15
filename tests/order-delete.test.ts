@@ -116,7 +116,7 @@ async function main() {
       'completed',
       'paying completed the order',
     );
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
     const topBefore = await api(
       baseUrl,
       `/api/reports/topProducts?start_date=${today}&end_date=${today}`,

@@ -669,9 +669,9 @@ test.describe('POS Keyboard Shortcuts & Rapid Cashier Ergonomics', () => {
       await expect(checkoutModal).toBeVisible({ timeout: 5_000 });
       await expect(checkoutModal.getByText(/Total Due/i)).toBeVisible({ timeout: 5_000 });
 
-      const cardBtn = checkoutModal.getByRole('button', { name: /Card/i }).first();
-      await cardBtn.focus();
-      await expect(cardBtn).toBeFocused();
+      const cashBtn = checkoutModal.getByRole('button', { name: 'Cash', exact: true });
+      await cashBtn.focus();
+      await expect(cashBtn).toBeFocused();
       await page.keyboard.press('Space');
 
       // Modal stays open and no order was prematurely submitted
