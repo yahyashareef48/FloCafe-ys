@@ -52,20 +52,27 @@ export default function TouchNumberPad({
 
   return (
     <div className={cn('rounded-xl border border-border bg-muted/40 p-2', className)} aria-label={ariaLabel}>
-      {quickValues.length > 0 && (
-        <div className="mb-2 grid grid-cols-2 gap-2">
-          {quickValues.map((quick) => (
-            <button
-              key={`${quick.label}-${quick.value}`}
-              type="button"
-              onClick={() => onChange(clampValue(quick.value, max))}
-              className="touch-target rounded-lg border border-border bg-card px-3 text-sm font-semibold text-foreground transition-colors active:bg-muted"
-            >
-              {quick.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Quick amounts and Clear share one row above the digits. */}
+      <div className="mb-2 flex gap-2">
+        {quickValues.map((quick) => (
+          <button
+            key={`${quick.label}-${quick.value}`}
+            type="button"
+            onClick={() => onChange(clampValue(quick.value, max))}
+            className="touch-target flex-1 rounded-lg border border-border bg-card px-3 text-sm font-semibold text-foreground transition-colors active:bg-muted"
+          >
+            {quick.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          className="touch-target flex-1 gap-2 rounded-lg border border-border bg-card px-3 text-sm font-semibold text-muted-foreground transition-colors active:bg-muted"
+        >
+          <RotateCcw size={16} />
+          {clearLabel}
+        </button>
+      </div>
       <div className="grid grid-cols-3 gap-2">
         {keys.map((key, index) => key ? (
           <button
@@ -87,14 +94,6 @@ export default function TouchNumberPad({
           title={backspaceLabel}
         >
           <Delete size={18} />
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange('')}
-          className="touch-target col-span-2 gap-2 rounded-lg border border-border bg-card text-sm font-semibold text-muted-foreground transition-colors active:bg-muted"
-        >
-          <RotateCcw size={16} />
-          {clearLabel}
         </button>
       </div>
     </div>

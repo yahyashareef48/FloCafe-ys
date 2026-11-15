@@ -1184,6 +1184,14 @@ console.log(
       '@/components/pos/TouchNumberPad': {
         CurrencyTouchNumberPad: () => null,
       },
+      '@/components/pos/UpiQrDialog': {
+        __esModule: true,
+        default: () => null,
+        UpiQrPanel: () => null,
+      },
+      '@/hooks/use-mobile': {
+        useIsMobile: () => false,
+      },
       '@/components/ApproverSelect': {
         ApproverSelect: () => null,
       },

@@ -147,7 +147,6 @@ export default function PrepaidCheckoutModal({
   const [walletLoadFailed, setWalletLoadFailed] = useState(false);
   const [walletAmount, setWalletAmount] = useState('');
   const [processing, setProcessing] = useState(false);
-  const [upiQrAmount, setUpiQrAmount] = useState<number | null>(null);
   const isNarrowScreen = useIsMobile();
   const [customMethods, setCustomMethods] = useState<CustomPaymentMethod[]>([]);
   const [cardTransactionIdRequired, setCardTransactionIdRequired] = useState(
@@ -176,6 +175,7 @@ export default function PrepaidCheckoutModal({
   const [discountPin, setDiscountPin] = useState('');
   const [discountApproverId, setDiscountApproverId] = useState<string | null>(null);
   const [amountTarget, setAmountTarget] = useState<AmountTarget>(null);
+  const [upiQrAmount, setUpiQrAmount] = useState<number | null>(null);
 
   const previewDiscount = useMemo(() => {
     const rawValue = Number.parseFloat(discountValue);

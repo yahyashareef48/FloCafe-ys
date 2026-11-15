@@ -195,7 +195,6 @@ export default function PaymentModal({
   // auto-rescaling payment splits (e.g. on discount edits) so we don't clobber their entry.
   const [paymentsTouched, setPaymentsTouched] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [upiQrAmount, setUpiQrAmount] = useState<number | null>(null);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [walletAmount, setWalletAmount] = useState('');
   const [customMethods, setCustomMethods] = useState<CustomPaymentMethod[]>([]);
@@ -233,6 +232,7 @@ export default function PaymentModal({
   const [applyingDiscount, setApplyingDiscount] = useState(false);
   const [loyaltySettings, setLoyaltySettings] = useState<{ loyalty_enabled: boolean } | null>(null);
   const [amountTarget, setAmountTarget] = useState<AmountTarget>(null);
+  const [upiQrAmount, setUpiQrAmount] = useState<number | null>(null);
 
   // An attempt whose outcome is unknown keeps its key and its exact request:
   // its retry must replay the same bill, lines and customer, so the draft that
