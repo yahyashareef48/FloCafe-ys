@@ -6,8 +6,8 @@
  *   line where every other printer sends the ESC/POS cut command.
  * - /api/printers/print-kot prints the bill's token (or the order number's counter
  *   before billing) large under the banner when the store prints tokens.
- * - Item headings print at double width and height, wrapped to half the columns,
- *   so glyphs keep their shape instead of being stretched tall.
+ * - Item headings print bold at the ticket's normal text size, wrapped under their
+ *   quantity; only the token is enlarged, and nothing is stretched to double height.
  *
  * Usage: ts-node --transpile-only -P tests/tsconfig.json tests/printer-no-cutter-kot-token.test.ts
  */
@@ -45,8 +45,15 @@ const {
 } = require('../main/db');
 
 const GS_V = Buffer.from([0x1d, 0x56]);
+const NORMAL_BOLD = Buffer.from([0x1b, 0x21, 0x08]);
 const DOUBLE_WIDTH_HEIGHT_BOLD = Buffer.from([0x1b, 0x21, 0x38]);
 const DOUBLE_HEIGHT_ONLY_BOLD = Buffer.from([0x1b, 0x21, 0x18]);
+
+function countOccurrences(haystack: Buffer, needle: Buffer): number {
+  let count = 0;
+  for (let at = haystack.indexOf(needle); at >= 0; at = haystack.indexOf(needle, at + 1)) count++;
+  return count;
+}
 
 function printerColumns(): string[] {
   return getDatabase()
@@ -171,7 +178,7 @@ function kotLayoutChecks(): void {
     kot_token: '0003',
   };
   const items = [
-    { product_name: 'Mini Shawarma Samoli', quantity: 1, status: 'pending', addons: [{ name: 'Extra garlic' }] },
+    { product_name: 'Mini Shawarma Samoli Platter Large', quantity: 1, status: 'pending', addons: [{ name: 'Extra garlic' }] },
     { product_name: 'Nuggets', quantity: 12, status: 'pending' },
   ];
   const options = {
@@ -193,18 +200,23 @@ function kotLayoutChecks(): void {
     result.lines.indexOf(tokenLine) === result.lines.findIndex((l: string) => l.includes('KITCHEN')) + 1,
     'the token sits right under the banner',
   );
-  const headings = result.lines.filter((line: string) => line.includes('{DOUBLE_WIDTH}') && !line.includes('{CENTER}'));
+  const headings = result.lines.filter((line: string) => line.startsWith('{BOLD}'));
   const plain = (line: string) => line.replace(/\{\/?[A-Z_]+\}/g, '');
   assertEqualOrThrow(
     headings.map(plain).join('|'),
-    '1x Mini Shawarma|   Samoli|12x Nuggets',
-    'item names wrap to half the columns with a hanging indent',
+    '1x Mini Shawarma Samoli Platter|   Large|12x Nuggets',
+    'item names wrap to the full width with a hanging indent',
   );
   assertOrThrow(
     result.lines.some((line: string) => line === '  + Extra garlic'),
     'add-ons follow the wrapped heading',
   );
-  assertOrThrow(result.data.includes(DOUBLE_WIDTH_HEIGHT_BOLD), 'item headings print bold at double width and height');
+  assertOrThrow(result.data.includes(NORMAL_BOLD), 'item headings print bold at the normal size');
+  assertEqualOrThrow(
+    countOccurrences(result.data, DOUBLE_WIDTH_HEIGHT_BOLD),
+    1,
+    'only the token is printed large',
+  );
   assertOrThrow(!result.data.includes(DOUBLE_HEIGHT_ONLY_BOLD), 'no line is stretched to double height alone');
   assertOrThrow(!result.data.includes(GS_V), 'the KOT ends with a tear line on a printer without a cutter');
 

@@ -392,13 +392,13 @@ function kotHeaderLines(
     );
     const noteText = `${noteLabel}: ${header.orderNotes.text.text}`;
     const wrapped: string[] = [];
-    pushWrapped(wrapped, noteText, Math.max(1, cols - 6), options.language, options.capabilities);
+    pushWrapped(wrapped, noteText, Math.max(1, cols - 3), options.language, options.capabilities);
     lines.push('');
     sourceLines?.push('');
     sourceControlLines?.push(lines.at(-1) ?? '');
     wrapped.forEach((text, index) => {
       lines.push(
-        '{DOUBLE_HEIGHT}{BOLD}' + (index === 0 ? '!! ' : '   ') + text + '{/BOLD}{/DOUBLE_HEIGHT}',
+        '{BOLD}' + (index === 0 ? '!! ' : '   ') + text + '{/BOLD}',
       );
       sourceLines?.push((index === 0 ? '!! ' : '   ') + text);
       sourceControlLines?.push(lines.at(-1) ?? '');
@@ -407,10 +407,7 @@ function kotHeaderLines(
   return lines;
 }
 
-const KOT_ITEM_OPEN = '{BOLD}{DOUBLE_HEIGHT}{DOUBLE_WIDTH}';
-const KOT_ITEM_CLOSE = '{/DOUBLE_WIDTH}{/DOUBLE_HEIGHT}{/BOLD}';
-
-/** Item heading at double width and height, wrapped so glyphs keep their shape. */
+/** Bold item heading at the ticket's normal text size, wrapped under its quantity. */
 function kotItemHeadingLines(
   row: KotItemsBlock['rows'][number],
   cols: number,
@@ -420,7 +417,7 @@ function kotItemHeadingLines(
 ): string[] {
   const itemPrefix = row.quantity + 'x ';
   const prefixWidth = displayCellWidth(itemPrefix);
-  const nameWidth = Math.max(1, Math.floor(cols / 2) - prefixWidth);
+  const nameWidth = Math.max(1, cols - prefixWidth);
   const name = normalizeThermalText(row.name.text, capabilities);
   const wrapped: string[] = [];
   if (arabicShaping && hasArabicScript(name)) {
@@ -432,7 +429,7 @@ function kotItemHeadingLines(
   }
   const indent = ' '.repeat(prefixWidth);
   return (wrapped.length > 0 ? wrapped : ['']).map(
-    (text, index) => KOT_ITEM_OPEN + (index === 0 ? itemPrefix : indent) + text + KOT_ITEM_CLOSE,
+    (text, index) => '{BOLD}' + (index === 0 ? itemPrefix : indent) + text + '{/BOLD}',
   );
 }
 

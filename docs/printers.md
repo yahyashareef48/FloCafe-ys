@@ -138,8 +138,8 @@ the station list, and print on the default kitchen printer.
 KOT printing can be disabled for the business. When it is disabled, neither automatic nor manual KOT
 print requests are sent.
 
-On the backend thermal path, item names print bold at double width and height, wrapped to half the
-paper's columns. When **Big token number** is on for bills, the ticket also prints the token large under
+On the backend thermal path, item names and the order-note banner print bold at the ticket's normal
+text size, wrapped to the paper's columns; nothing is stretched to double height. When **Big token number** is on for bills, the ticket also prints the token large under
 its banner: the bill's token once the order has a bill, otherwise the trailing counter of the order
 number. Order and bill numbers count separately, so a ticket printed before billing can show a
 different number from the bill printed later.
