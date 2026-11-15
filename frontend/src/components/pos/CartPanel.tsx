@@ -616,22 +616,6 @@ export default function CartPanel({
 
       {/* Cart Footer */}
       <div data-testid="cart-footer" className="p-4 border-t border-border dark:border-border">
-        {/* Order Notes */}
-        {cart.items.length > 0 && (
-          <div className="mb-3">
-            <textarea
-              value={cart.orderNotes}
-              onChange={(e) => cart.setOrderNotes(e.target.value.slice(0, 200))}
-              placeholder={t('orderNotesPlaceholder')}
-              rows={2}
-              maxLength={200}
-              className="w-full min-h-20 px-3 py-2 text-sm border border-border bg-card rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
-            />
-            <p className="text-xs text-muted-foreground text-end mt-0.5">
-              {cart.orderNotes.length}/200
-            </p>
-          </div>
-        )}
         <div className="flex justify-between mb-1 text-sm">
           <span className="text-muted-foreground">{t('items')}</span>
           <span className="font-medium">{cart.itemCount()}</span>
