@@ -85,7 +85,11 @@ function setSetting(key: string, value: string): void {
     .run(key, value, now());
 }
 
-async function captureServer(): Promise<{ port: number; jobs: Buffer[]; close: () => Promise<void> }> {
+async function captureServer(): Promise<{
+  port: number;
+  jobs: Buffer[];
+  close: () => Promise<void>;
+}> {
   const jobs: Buffer[] = [];
   const server = net.createServer((socket) => {
     const chunks: Buffer[] = [];
@@ -125,7 +129,10 @@ function migrationChecks(): void {
   assertEqualOrThrow(getCurrentSchemaVersion(), 118, 'setup: database starts at schema v118');
   const db = getDatabase();
   if (printerColumns().includes('auto_cut')) db.exec('ALTER TABLE printers DROP COLUMN auto_cut');
-  assertOrThrow(!printerColumns().includes('auto_cut'), 'setup: v118 printers table has no auto_cut');
+  assertOrThrow(
+    !printerColumns().includes('auto_cut'),
+    'setup: v118 printers table has no auto_cut',
+  );
   db.prepare(
     `INSERT INTO printers (id, name, connection_type, paper_width, is_default, created_at, updated_at)
      VALUES ('legacy', 'Legacy printer', 'usb', 'cols-32', 1, ?, ?)`,
@@ -143,18 +150,29 @@ function migrationChecks(): void {
 
 function escPosChecks(): void {
   console.log('\n--- buildEscPos: cut command or tear line ---');
-  const { buildEscPos, tearLineText, tearLineBytes } = require('../main/printers/formatting-helpers');
-  const { GENERIC_THERMAL_CAPABILITIES, LATIN_THERMAL_CAPABILITIES } = require(
-    '../shared/print/thermal-capabilities',
-  );
+  const {
+    buildEscPos,
+    tearLineText,
+    tearLineBytes,
+  } = require('../main/printers/formatting-helpers');
+  const {
+    GENERIC_THERMAL_CAPABILITIES,
+    LATIN_THERMAL_CAPABILITIES,
+  } = require('../shared/print/thermal-capabilities');
   const lines = ['{INIT}', 'Hello', '{CUT}'];
   const full = buildEscPos(lines, false, { cutMode: 'full', columns: 32 });
   const partial = buildEscPos(lines, false, { cutMode: 'partial', columns: 32 });
   const none = buildEscPos(lines, false, { cutMode: 'none', columns: 32, language: 'en' });
   assertOrThrow(full.includes(Buffer.from([0x1d, 0x56, 0x00])), 'full cut sends GS V 0');
-  assertOrThrow(partial.includes(Buffer.from([0x1d, 0x56, 0x42, 0x00])), 'partial cut sends GS V B 0');
+  assertOrThrow(
+    partial.includes(Buffer.from([0x1d, 0x56, 0x42, 0x00])),
+    'partial cut sends GS V B 0',
+  );
   assertOrThrow(!none.includes(GS_V), 'a printer without a cutter gets no cut command');
-  assertOrThrow(!none.toString('latin1').includes('Cut here'), 'a single job ends without a tear line');
+  assertOrThrow(
+    !none.toString('latin1').includes('Cut here'),
+    'a single job ends without a tear line',
+  );
   assertIncludesOrThrow(
     tearLineBytes(32, 'en').toString('latin1'),
     '----- Cut here -----',
@@ -192,7 +210,12 @@ function kotLayoutChecks(): void {
     kot_token: '0003',
   };
   const items = [
-    { product_name: 'Mini Shawarma Samoli Platter Large', quantity: 1, status: 'pending', addons: [{ name: 'Extra garlic' }] },
+    {
+      product_name: 'Mini Shawarma Samoli Platter Large',
+      quantity: 1,
+      status: 'pending',
+      addons: [{ name: 'Extra garlic' }],
+    },
     { product_name: 'Nuggets', quantity: 12, status: 'pending' },
   ];
   const options = {
@@ -204,14 +227,17 @@ function kotLayoutChecks(): void {
     cutMode: 'none',
   };
   const result = renderKotViaDocument(order, items, 'Shawarma', options);
-  const tokenLine = result.lines.find((line: string) => line.includes('0003') && !line.includes('ORD'));
+  const tokenLine = result.lines.find(
+    (line: string) => line.includes('0003') && !line.includes('ORD'),
+  );
   assertEqualOrThrow(
     tokenLine,
     '{CENTER}{BOLD}{DOUBLE_HEIGHT}{DOUBLE_WIDTH}0003{/DOUBLE_WIDTH}{/DOUBLE_HEIGHT}{/BOLD}{/CENTER}',
     'the token prints large and centred',
   );
   assertOrThrow(
-    result.lines.indexOf(tokenLine) === result.lines.findIndex((l: string) => l.includes('KITCHEN')) + 1,
+    result.lines.indexOf(tokenLine) ===
+      result.lines.findIndex((l: string) => l.includes('KITCHEN')) + 1,
     'the token sits right under the banner',
   );
   const headings = result.lines.filter((line: string) => line.startsWith('{BOLD}'));
@@ -231,14 +257,22 @@ function kotLayoutChecks(): void {
     1,
     'only the token is printed large',
   );
-  assertOrThrow(!result.data.includes(DOUBLE_HEIGHT_ONLY_BOLD), 'no line is stretched to double height alone');
+  assertOrThrow(
+    !result.data.includes(DOUBLE_HEIGHT_ONLY_BOLD),
+    'no line is stretched to double height alone',
+  );
   assertOrThrow(!result.data.includes(GS_V), 'a KOT for a printer without a cutter sends no cut');
   assertOrThrow(
     !result.lines.slice(-3).some((line: string) => /^-+$/.test(line) || line === ''),
     'it ends on its last item: no blank line, closing rule, or tear line',
   );
 
-  const withoutToken = renderKotViaDocument({ ...order, kot_token: '' }, items, 'Shawarma', options);
+  const withoutToken = renderKotViaDocument(
+    { ...order, kot_token: '' },
+    items,
+    'Shawarma',
+    options,
+  );
   assertOrThrow(
     !withoutToken.lines.some((line: string) => line.includes('{CENTER}{BOLD}{DOUBLE_HEIGHT}')),
     'no token line is printed when the order carries none',
@@ -284,7 +318,11 @@ async function routeChecks(): Promise<void> {
     assertEqualOrThrow(invalid.status, 400, 'a non-boolean auto_cut is rejected');
     const badMode = await request(app).put(`/api/printers/${id}`).send({ no_cutter_mode: 'some' });
     assertEqualOrThrow(badMode.status, 400, 'an unknown no_cutter_mode is rejected');
-    assertEqualOrThrow(created.body.printer.no_cutter_mode, 'all', 'no_cutter_mode defaults to all');
+    assertEqualOrThrow(
+      created.body.printer.no_cutter_mode,
+      'all',
+      'no_cutter_mode defaults to all',
+    );
 
     const orderId = Number(
       db
@@ -313,11 +351,17 @@ async function routeChecks(): Promise<void> {
     setSetting('bill_highlight_token', 'false');
     const tokensOff = (await printKot()).toString('latin1');
     assertOrThrow(!printsToken(tokensOff, '0007'), 'no token when the store prints none');
-    assertOrThrow(Buffer.from(tokensOff, 'latin1').includes(GS_V), 'a printer with a cutter still cuts');
+    assertOrThrow(
+      Buffer.from(tokensOff, 'latin1').includes(GS_V),
+      'a printer with a cutter still cuts',
+    );
 
     setSetting('bill_highlight_token', 'true');
     const beforeBill = (await printKot()).toString('latin1');
-    assertOrThrow(printsToken(beforeBill, '0007'), 'an unbilled order shows its order number counter');
+    assertOrThrow(
+      printsToken(beforeBill, '0007'),
+      'an unbilled order shows its order number counter',
+    );
     db.prepare(
       `INSERT INTO bills (bill_number, order_id, subtotal, total, balance, payment_status, created_at, updated_at)
        VALUES ('INV-20261115-0003', ?, 40, 40, 0, 'paid', datetime('now'), datetime('now'))`,
@@ -336,7 +380,10 @@ async function routeChecks(): Promise<void> {
     const first = await printKot();
     const second = await printKot();
     assertOrThrow(!first.includes(GS_V) && !second.includes(GS_V), 'no cut command is sent');
-    assertOrThrow(!first.toString('latin1').includes('Cut here'), 'the first part has no tear line');
+    assertOrThrow(
+      !first.toString('latin1').includes('Cut here'),
+      'the first part has no tear line',
+    );
     assertOrThrow(
       !first.subarray(-3).equals(TAIL_FEED),
       'the first part leaves the feed for later, so the next part follows tightly',
@@ -358,19 +405,30 @@ async function routeChecks(): Promise<void> {
     await request(app).put(`/api/printers/${id}`).send({ no_cutter_mode: 'parts' });
     resetNoCutterJobs();
     const partOne = await printKot();
-    assertOrThrow(partOne.subarray(-3).equals(TAIL_FEED), 'the first part prints at once and feeds');
+    assertOrThrow(
+      partOne.subarray(-3).equals(TAIL_FEED),
+      'the first part prints at once and feeds',
+    );
     const jobsAfterFirst = capture.jobs.length;
     const queued = await postKot();
     assertEqualOrThrow(queued.print_parts?.pending?.length, 1, 'the next part waits');
     assertEqualOrThrow(queued.print_parts?.printed, 1, 'one part is printed');
     assertEqualOrThrow(queued.print_parts?.total, 2, 'two parts in all');
     assertEqualOrThrow(queued.print_parts?.pending?.[0]?.kind, 'kot', 'the waiting part is a KOT');
-    assertEqualOrThrow(queued.print_parts?.pending?.[0]?.station, 'Shawarma', 'it names its station');
+    assertEqualOrThrow(
+      queued.print_parts?.pending?.[0]?.station,
+      'Shawarma',
+      'it names its station',
+    );
     await postKot();
     await new Promise((resolve) => setTimeout(resolve, 200));
     assertEqualOrThrow(capture.jobs.length, jobsAfterFirst, 'waiting parts are not printed');
     const listed = await request(app).get('/api/printers/parts-queue');
-    assertEqualOrThrow(listed.body.print_parts.pending.length, 2, 'the banner can list waiting parts');
+    assertEqualOrThrow(
+      listed.body.print_parts.pending.length,
+      2,
+      'the banner can list waiting parts',
+    );
 
     const next = await request(app).post('/api/printers/parts-queue/next');
     assertEqualOrThrow(next.status, 200, 'print next succeeds');
@@ -379,18 +437,31 @@ async function routeChecks(): Promise<void> {
     assertEqualOrThrow(next.body.print_parts.printed, 2, 'two parts are printed');
     assertEqualOrThrow(next.body.print_parts.pending.length, 1, 'one part still waits');
     const last = await request(app).post('/api/printers/parts-queue/next');
-    assertEqualOrThrow(last.body.print_parts.pending.length, 0, 'nothing waits after the last part');
+    assertEqualOrThrow(
+      last.body.print_parts.pending.length,
+      0,
+      'nothing waits after the last part',
+    );
 
     const fresh = await printKot();
-    assertOrThrow(fresh.subarray(-3).equals(TAIL_FEED), 'after the last part, a new print starts at once');
+    assertOrThrow(
+      fresh.subarray(-3).equals(TAIL_FEED),
+      'after the last part, a new print starts at once',
+    );
     await postKot();
     const discarded = await request(app).post('/api/printers/parts-queue/discard');
-    assertEqualOrThrow(discarded.body.print_parts.pending.length, 0, 'skip the rest clears waiting parts');
+    assertEqualOrThrow(
+      discarded.body.print_parts.pending.length,
+      0,
+      'skip the rest clears waiting parts',
+    );
     resetNoCutterJobs();
 
     console.log('\n--- Items without a station ---');
     const { routeItemsToStations } = require('../main/routes/printers');
-    db.prepare("INSERT INTO categories (id, name) VALUES ('cat-shawarma', 'Shawarma'), ('cat-drinks', 'Drinks')").run();
+    db.prepare(
+      "INSERT INTO categories (id, name) VALUES ('cat-shawarma', 'Shawarma'), ('cat-drinks', 'Drinks')",
+    ).run();
     db.prepare(
       "INSERT INTO products (id, category_id, name, price) VALUES ('p-roll', 'cat-shawarma', 'Roll', 40), ('p-cola', 'cat-drinks', 'Cola', 20)",
     ).run();
@@ -403,9 +474,16 @@ async function routeChecks(): Promise<void> {
     ];
     const stationNames = () =>
       routeItemsToStations(db, orderItems)
-        .map((group: { stationName: string; items: unknown[] }) => `${group.stationName}:${group.items.length}`)
+        .map(
+          (group: { stationName: string; items: unknown[] }) =>
+            `${group.stationName}:${group.items.length}`,
+        )
         .join(',');
-    assertEqualOrThrow(stationNames(), 'Shawarma:1,Kitchen:1', 'by default unassigned items get a Kitchen ticket');
+    assertEqualOrThrow(
+      stationNames(),
+      'Shawarma:1,Kitchen:1',
+      'by default unassigned items get a Kitchen ticket',
+    );
     setSetting('kot_print_unassigned_items', 'false');
     assertEqualOrThrow(stationNames(), 'Shawarma:1', 'with the toggle off they are not printed');
     db.prepare("UPDATE kitchen_stations SET is_active = 0 WHERE id = 'st-1'").run();

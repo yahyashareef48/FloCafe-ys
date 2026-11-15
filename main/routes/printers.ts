@@ -272,9 +272,13 @@ router.get('/supported', requirePermission('printers.manage'), (_req: Request, r
 });
 
 // Parts waiting on a no-cutter printer in "print in parts" mode.
-router.get('/parts-queue', requirePermission('printing.execute'), (_req: Request, res: Response) => {
-  res.json({ print_parts: printPartsState() });
-});
+router.get(
+  '/parts-queue',
+  requirePermission('printing.execute'),
+  (_req: Request, res: Response) => {
+    res.json({ print_parts: printPartsState() });
+  },
+);
 
 // GET /api/printers/:id
 router.get('/:id', requirePermission('printers.manage'), (req: Request, res: Response) => {
@@ -1170,7 +1174,11 @@ router.post(
       });
 
       if (result.ok) {
-        res.json({ success: true, warnings: result.warnings || [], print_parts: printPartsState() });
+        res.json({
+          success: true,
+          warnings: result.warnings || [],
+          print_parts: printPartsState(),
+        });
       } else {
         res.status(502).json({
           error: result.detail || 'Print failed. Check printer connection and settings.',
