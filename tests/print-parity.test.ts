@@ -957,7 +957,7 @@ function run(): void {
     const kotText = escPosToText(migratedBuf);
     warn(kotText.includes('Main Kitchen'), `${label}: station block rendered`);
     warn(kotText.includes('Order #ORD-PARITY-001'), `${label}: shared order-number format rendered`);
-    warn(kotText.includes('2x  Espresso Doppio'), `${label}: item rows with quantity prefix`);
+    warn(kotText.includes('2x Espresso Doppio'), `${label}: item rows with quantity prefix`);
     warn(kotText.includes('+ Oat milk'), `${label}: addon lines rendered`);
     warn(kotText.includes('>> Less sugar'), `${label}: instruction lines rendered`);
     if (cols >= 42) warn(!kotText.includes(PERSIAN_ITEM), `${label}: unsupported-script item skipped with warning only`);

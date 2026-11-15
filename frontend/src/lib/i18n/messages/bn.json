@@ -1234,7 +1234,15 @@
     "dayCloseBlockedByOpenShiftHint": "এই ব্যবসায়িক দিনটি বন্ধ করার আগে খোলা শিফট #{id} ({name}) বন্ধ করুন।",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {#টি খোলা অর্ডার পরবর্তী শিফটে যাবে} other {#টি খোলা অর্ডার পরবর্তী শিফটে যাবে}}",
     "shiftCloseUnpaidWarningHint": "এই অর্ডারগুলো পরবর্তী শিফটের জন্য খোলা থাকবে। এই শিফট বন্ধ করলে শুধুমাত্র এই শিফটে ইতিমধ্যে সংগৃহীত নগদ পেমেন্টের হিসাব মেলানো হয়।",
-    "shiftCloseUnpaidMoreCount": "+আরও {count}টি খোলা অর্ডার"
+    "shiftCloseUnpaidMoreCount": "+আরও {count}টি খোলা অর্ডার",
+    "printPartsPrinted": "{total}টির মধ্যে {printed}টি প্রিন্ট হয়েছে",
+    "printPartsNext": "পরেরটি: {part}",
+    "printPartsPrintNext": "পরেরটি প্রিন্ট",
+    "printPartsKitchen": "কিচেন টিকিট ({station})",
+    "printPartsBill": "বিল",
+    "printPartsOther": "প্রিন্ট",
+    "printPartsSkip": "বাকিগুলো বাদ দিন",
+    "printPartsFailed": "প্রিন্ট করা যায়নি। প্রিন্টার দেখে আবার চেষ্টা করুন।"
   },
   "printTest": {
     "amt": "এএমটি",
@@ -1367,7 +1375,8 @@
       "columns": "কলাম",
       "wrapHint": "পরবর্তী লাইন মোড়ানো হলে, একটি ছোট কলাম মান চয়ন করুন।",
       "success": "আপনি যদি এটি পড়তে পারেন, আপনার প্রিন্টার কাজ করছে!"
-    }
+    },
+    "cutHere": "এখানে কাটুন"
   },
   "products": {
     "includeDescriptions": "বিবরণ অন্তর্ভুক্ত করুন",
@@ -2140,6 +2149,9 @@
     "kdsViewSaved": "ডিফল্ট ভিউ সংরক্ষিত",
     "kitchenStations": "রান্নাঘর স্টেশন",
     "kitchenStationsHint": "একটি রান্নাঘরের স্টেশনে বিভাগগুলি রুট করুন, এর প্রিন্টার চয়ন করুন এবং কেডিএস-এ সেই আইটেমগুলি কে দেখতে হবে এমন শেফকে বরাদ্দ করুন।",
+    "kotPrintUnassigned": "স্টেশন ছাড়া আইটেম প্রিন্ট করুন",
+    "kotPrintUnassignedHint": "চালু: কোনো স্টেশনে না থাকা ক্যাটাগরির আইটেম আলাদা কিচেন টিকিটে প্রিন্ট হবে। বন্ধ: সেগুলো প্রিন্ট হবে না।",
+    "stationUnassignedNotPrinted": "প্রিন্ট হবে না",
     "kitchenWorkflowBothOffNote": "কিচেন ডিসপ্লে এবং KOT প্রিন্টিং উভয়ই বন্ধ। রান্নাঘরের আইটেমগুলি কোথাও প্রদর্শন বা মুদ্রণ করবে না — অর্ডারগুলিকে সরাসরি কাউন্টারে পরিবেশন করা চিহ্নিত করতে হবে।",
     "kotPrintLanguage": "রান্নাঘরের টিকিটের ভাষা",
     "kotPrintLanguageHint": "রান্নাঘরের টিকিট স্টোরের ভাষা অনুসরণ করে, যদি না একটি নির্দিষ্ট ভাষা বেছে নেওয়া হয়।",
@@ -2234,6 +2246,13 @@
     "paperSize58": "2.5\" (58 মিমি)",
     "paperSize80": "3.5\" (80 মিমি)",
     "paperWidth": "মুদ্রণযোগ্য কলাম",
+    "printerAutoCut": "অটো-কাটার",
+    "printerAutoCutHint": "প্রিন্টারে কাগজ কাটার না থাকলে এটি বন্ধ করুন।",
+    "noCutterMode": "কাটার ছাড়া",
+    "noCutterModeAll": "সব একসাথে প্রিন্ট",
+    "noCutterModeAllHint": "টিকিট ও বিল একসাথে প্রিন্ট হবে, মাঝে এখানে কাটুন লাইন থাকবে।",
+    "noCutterModeParts": "ভাগে ভাগে প্রিন্ট",
+    "noCutterModePartsHint": "প্রথম অংশ সাথে সাথে প্রিন্ট হবে। পরের প্রতিটি অংশের জন্য ব্যানারে পরেরটি প্রিন্ট চাপুন।",
     "paperWidth58": "2.5\" (58 মিমি, 32 কোলস)",
     "paperWidth58Wide": "ন্যারো রোল (৩৬ কোলস)",
     "paperWidth80": "3.5\" (80 মিমি, 48 কোলস - চওড়া)",

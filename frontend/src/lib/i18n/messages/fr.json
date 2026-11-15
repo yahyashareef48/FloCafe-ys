@@ -1234,7 +1234,15 @@
     "dayCloseBlockedByOpenShiftHint": "Fermez le service ouvert #{id} ({name}) avant de clôturer cette journée commerciale.",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# commande ouverte sera reportée} other {# commandes ouvertes seront reportées}}",
     "shiftCloseUnpaidWarningHint": "Ces commandes restent ouvertes pour le service suivant. La clôture de ce service ne rapproche que les paiements en espèces déjà encaissés pendant ce service.",
-    "shiftCloseUnpaidMoreCount": "+{count} autres commandes ouvertes"
+    "shiftCloseUnpaidMoreCount": "+{count} autres commandes ouvertes",
+    "printPartsPrinted": "{printed} sur {total} imprimés",
+    "printPartsNext": "Suivant : {part}",
+    "printPartsPrintNext": "Imprimer la suite",
+    "printPartsKitchen": "Bon de cuisine ({station})",
+    "printPartsBill": "Addition",
+    "printPartsOther": "Impression",
+    "printPartsSkip": "Ignorer le reste",
+    "printPartsFailed": "Impression impossible. Vérifiez l’imprimante et réessayez."
   },
   "printTest": {
     "amt": "Montant",
@@ -1367,7 +1375,8 @@
       "columns": "Colonnes",
       "wrapHint": "Si la ligne suivante passe à la ligne, choisissez un nombre de colonnes inférieur.",
       "success": "Si vous pouvez lire ceci, votre imprimante fonctionne !"
-    }
+    },
+    "cutHere": "Couper ici"
   },
   "products": {
     "includeDescriptions": "Inclure les descriptions",
@@ -2140,6 +2149,9 @@
     "kdsViewSaved": "Vue par défaut enregistrée",
     "kitchenStations": "Postes de cuisine",
     "kitchenStationsHint": "Acheminez les catégories vers un poste de cuisine, choisissez son imprimante et affectez le chef qui doit voir ces articles dans le KDS.",
+    "kotPrintUnassigned": "Imprimer les articles sans poste",
+    "kotPrintUnassignedHint": "Activé : les articles des catégories sans poste sortent sur un bon de cuisine à part. Désactivé : ils ne sont pas imprimés.",
+    "stationUnassignedNotPrinted": "non imprimé",
     "kitchenWorkflowBothOffNote": "L’affichage en cuisine et l’impression des bons de cuisine sont tous deux désactivés. Les articles de cuisine ne seront ni affichés ni imprimés ; les commandes devront être marquées comme servies directement au comptoir.",
     "kotPrintLanguage": "Langue des bons de cuisine",
     "kotPrintLanguageHint": "Les bons de cuisine utilisent la langue de l’établissement, sauf si une langue fixe est choisie.",
@@ -2234,6 +2246,13 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "Colonnes imprimables",
+    "printerAutoCut": "Massicot automatique",
+    "printerAutoCutHint": "Désactivez cette option si l’imprimante n’a pas de massicot.",
+    "noCutterMode": "Sans massicot",
+    "noCutterModeAll": "Tout imprimer en une fois",
+    "noCutterModeAllHint": "Les tickets et l’addition s’impriment ensemble, séparés par une ligne Couper ici.",
+    "noCutterModeParts": "Imprimer en plusieurs parties",
+    "noCutterModePartsHint": "La première partie s’imprime tout de suite. Touchez Imprimer la suite dans le bandeau pour chaque partie.",
     "paperWidth58": "2.5\" (58mm, 32 cols)",
     "paperWidth58Wide": "Rouleau étroit (36 colonnes)",
     "paperWidth80": "3.5\" (80mm, 48 cols - wide)",

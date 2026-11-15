@@ -7787,6 +7787,24 @@ export const MIGRATIONS: { version: number; name: string; up: () => void }[] = [
       ).run(now(), now());
     },
   },
+  {
+    version: 119,
+    name: 'add_printer_auto_cut',
+    up: () => {
+      if (!getColumns(db, 'printers').includes('auto_cut')) {
+        db.exec(`ALTER TABLE printers ADD COLUMN auto_cut INTEGER NOT NULL DEFAULT 1`);
+      }
+    },
+  },
+  {
+    version: 120,
+    name: 'add_printer_no_cutter_mode',
+    up: () => {
+      if (!getColumns(db, 'printers').includes('no_cutter_mode')) {
+        db.exec(`ALTER TABLE printers ADD COLUMN no_cutter_mode TEXT NOT NULL DEFAULT 'all'`);
+      }
+    },
+  },
 ];
 
 function syncBackupBeforeMigration(fromVersion: number, toVersion: number): void {
@@ -8229,6 +8247,8 @@ function createSchema(): void {
       is_default INTEGER DEFAULT 0,
       cash_drawer_pulse_enabled INTEGER NOT NULL DEFAULT 0,
       paper_width TEXT DEFAULT '80mm',
+      auto_cut INTEGER NOT NULL DEFAULT 1,
+      no_cutter_mode TEXT NOT NULL DEFAULT 'all',
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     );

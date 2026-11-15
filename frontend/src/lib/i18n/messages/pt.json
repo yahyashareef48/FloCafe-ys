@@ -1234,7 +1234,15 @@
     "dayCloseBlockedByOpenShiftHint": "Feche o turno aberto #{id} ({name}) antes de fechar este dia comercial.",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# pedido aberto será transferido} other {# pedidos abertos serão transferidos}}",
     "shiftCloseUnpaidWarningHint": "Estes pedidos permanecem abertos para o próximo turno. Fechar este turno concilia apenas os pagamentos em dinheiro já recebidos durante este turno.",
-    "shiftCloseUnpaidMoreCount": "+{count} outros pedidos abertos"
+    "shiftCloseUnpaidMoreCount": "+{count} outros pedidos abertos",
+    "printPartsPrinted": "Impressas {printed} de {total}",
+    "printPartsNext": "Seguinte: {part}",
+    "printPartsPrintNext": "Imprimir seguinte",
+    "printPartsKitchen": "Talão da cozinha ({station})",
+    "printPartsBill": "Conta",
+    "printPartsOther": "Impressão",
+    "printPartsSkip": "Ignorar o resto",
+    "printPartsFailed": "Não foi possível imprimir. Verifique a impressora e tente de novo."
   },
   "printTest": {
     "amt": "Total",
@@ -1367,7 +1375,8 @@
       "columns": "Colunas",
       "wrapHint": "Se a próxima linha quebrar, escolha um valor de colunas menor.",
       "success": "Se você consegue ler isto, sua impressora está funcionando!"
-    }
+    },
+    "cutHere": "Cortar aqui"
   },
   "products": {
     "includeDescriptions": "Incluir descrições",
@@ -2140,6 +2149,9 @@
     "kdsViewSaved": "Visualização padrão salva",
     "kitchenStations": "Estações de Cozinha",
     "kitchenStationsHint": "Direcione categorias para uma estação de cozinha, escolha a impressora e atribua o chef que deve ver esses itens no KDS.",
+    "kotPrintUnassigned": "Imprimir artigos sem posto",
+    "kotPrintUnassignedHint": "Ativado: os artigos de categorias sem posto saem num talão de cozinha à parte. Desativado: não são impressos.",
+    "stationUnassignedNotPrinted": "não impresso",
     "kitchenWorkflowBothOffNote": "O Display de Cozinha e a impressão de KOT estão desativados. Os itens de cozinha não serão exibidos nem impressos em nenhum lugar — os pedidos precisarão ser marcados como servidos diretamente no balcão.",
     "kotPrintLanguage": "Idioma dos cupons de cozinha",
     "kotPrintLanguageHint": "Os cupons de cozinha seguem o idioma da loja, exceto se um idioma fixo for escolhido.",
@@ -2234,6 +2246,13 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "Colunas Imprimíveis",
+    "printerAutoCut": "Guilhotina automática",
+    "printerAutoCutHint": "Desative se a impressora não tiver guilhotina.",
+    "noCutterMode": "Sem guilhotina",
+    "noCutterModeAll": "Imprimir tudo de uma vez",
+    "noCutterModeAllHint": "Os talões e a conta saem juntos, com uma linha Cortar aqui entre eles.",
+    "noCutterModeParts": "Imprimir por partes",
+    "noCutterModePartsHint": "A primeira parte sai logo. Toque em Imprimir seguinte no aviso para cada parte.",
     "paperWidth58": "2.5\" (58mm, 32 cols)",
     "paperWidth58Wide": "Rolo estreito (36 cols)",
     "paperWidth80": "3.5\" (80mm, 48 cols - largo)",

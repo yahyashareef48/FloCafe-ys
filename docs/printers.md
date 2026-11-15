@@ -26,6 +26,21 @@ Enable **Open cash drawer on checkout** on a receipt printer only when a till is
 printer's drawer-kick port. When enabled, Al Baik POS appends the standard ESC/POS drawer pulse to
 printed receipt jobs for that printer, and only for payment methods on the drawer's allowlist.
 
+Turn off **Auto-cutter** on a network or USB printer that has no paper cutter, such as a pocket
+Bluetooth printer, then choose how it prints several parts, such as the kitchen tickets and bill of
+one checkout. The setting is not offered for WebUSB printers.
+
+- **Print all at once:** parts that reach the printer within three seconds of each other print as
+  one strip, with a dashed **Cut here** line between them and a blank line on each side of it. The paper feeds once the printer has been
+  idle for three seconds, so the last part can be torn off; it has no Cut here line.
+- **Print in parts:** the first part prints and feeds at once. Each further part of the same action
+  waits, and a banner shows how many have printed and names the next one. **Print next** prints it;
+  the banner closes after the last part. The X on the banner drops the parts still waiting. A print
+  that arrives more than eight seconds after the previous part, once nothing is waiting, starts anew.
+
+The Cut here label prints in the store language when the printer can encode it, and in English
+otherwise. A no-cutter kitchen ticket ends on its last item, with no closing rule.
+
 ## Receipt logos
 
 Upload a PNG, JPEG, or WebP image under **Settings > General > Store Logo**. The source file can be
@@ -127,10 +142,19 @@ can be linked to one or more stations from the Staff form. A chef created withou
 unrestricted by station.
 
 Items in categories without a station use the read-only **DEFAULT > Printer Name** route shown with
-the station list, and print on the default kitchen printer.
+the station list, and print on the default kitchen printer as a separate **Kitchen** ticket. Turn off
+**Print items without a station** under the station list to leave those items off kitchen tickets.
+The switch applies only while at least one active station has categories and a printer; with none,
+every item still prints on one Kitchen ticket.
 
 KOT printing can be disabled for the business. When it is disabled, neither automatic nor manual KOT
 print requests are sent.
+
+On the backend thermal path, item names and the order-note banner print bold at the ticket's normal
+text size, wrapped to the paper's columns; nothing is stretched to double height. When **Big token number** is on for bills, the ticket also prints the token large under
+its banner: the bill's token once the order has a bill, otherwise the trailing counter of the order
+number. Order and bill numbers count separately, so a ticket printed before billing can show a
+different number from the bill printed later.
 
 ## Troubleshooting
 

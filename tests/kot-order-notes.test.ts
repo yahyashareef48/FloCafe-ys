@@ -68,7 +68,7 @@ const withNotes = renderKotViaDocument(
 );
 assert.ok(isKotDocument(withNotes.document));
 const bannerIndexes = withNotes.lines.flatMap((line, i) =>
-  line.includes('{DOUBLE_HEIGHT}{BOLD}!! ') || /\{BOLD\}\s{3}/.test(line) ? [i] : [],
+  line.startsWith('{BOLD}!! ') || /^\{BOLD\}\s{3}/.test(line) ? [i] : [],
 );
 const itemIndex = withNotes.lines.findIndex((line) => line.includes('Pad Thai'));
 assert.ok(bannerIndexes.length >= 2, 'long note wraps onto multiple banner lines');
@@ -281,8 +281,8 @@ async function runAsyncTests() {
 
   const docLines = renderKotDocumentToLines(docWithNotes, opts);
   assert.ok(
-    docLines.some((line) => line.includes('{DOUBLE_HEIGHT}{BOLD}!! Note: ')),
-    'renderKotDocumentToLines formats header.orderNotes as double-height bold banner',
+    docLines.some((line) => line.includes('{BOLD}!! Note: ')),
+    'renderKotDocumentToLines formats header.orderNotes as a bold banner',
   );
 
   const docBlank = frontend.printDocument.buildFrontendKotDocument(

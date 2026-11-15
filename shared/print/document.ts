@@ -878,6 +878,8 @@ export interface KotOrderSnapshot {
   readonly customerName?: string;
   /** Order-level notes (allergy alerts, packing instructions), when present. */
   readonly orderNotes?: string;
+  /** Large token number called out to the customer, when the store prints tokens. */
+  readonly token?: string;
 }
 
 /**
@@ -912,6 +914,8 @@ export interface KotHeaderBlock {
   readonly timestamp: DirectionalText;
   /** Order-level notes rendered as a highlighted banner above the items. */
   readonly orderNotes?: { readonly label: SemanticLabel; readonly text: DirectionalText } | null;
+  /** Token number printed large under the banner, matching the bill's token. */
+  readonly token?: DirectionalText | null;
 }
 
 /** Ordered kitchen item rows with addons and preparation instructions. */
@@ -1557,7 +1561,8 @@ function isKotDocumentBlock(value: unknown): value is KotDocumentBlock {
         value.orderNotes === null ||
         (isRecord(value.orderNotes) &&
           isSemanticLabel(value.orderNotes.label) &&
-          isDirectionalText(value.orderNotes.text)))
+          isDirectionalText(value.orderNotes.text))) &&
+      (value.token === undefined || isOptionalDirectionalText(value.token))
     );
   }
   if (value.kind !== 'kot-items' || !Array.isArray(value.rows)) return false;
@@ -1646,6 +1651,7 @@ export function buildKotDocument(printData: KotPrintData, printContext: PrintCon
             text: directionalText(printData.order.orderNotes.trim(), base),
           })
         : null,
+    token: optionalDirectional(printData.order?.token?.trim(), base),
   });
 
   const items: KotItemsBlock = Object.freeze({

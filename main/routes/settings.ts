@@ -1735,6 +1735,7 @@ const ALLOWED_WILDCARD_KEYS = new Set([
   'require_kitchen_delivered_before_settlement',
   'server_app_enabled',
   'kot_printing_enabled',
+  'kot_print_unassigned_items',
   'server_app_bill_printing_enabled',
   'split_checks_enabled',
   'card_transaction_id_required',
@@ -2010,6 +2011,9 @@ router.put(
       // Upgrades legacy string values to canonical structured JSON on save.
       if (req.params.key === 'bill_template' && !isAvailableBillTemplate(value)) {
         return res.status(400).json({ error: 'Unsupported bill template' });
+      }
+      if (req.params.key === 'kot_print_unassigned_items' && value !== 'true' && value !== 'false') {
+        return res.status(400).json({ error: "kot_print_unassigned_items must be 'true' or 'false'" });
       }
       if (req.params.key === 'theme_mode' && !isThemeMode(value)) {
         return res.status(400).json({ error: 'Invalid theme_mode value' });

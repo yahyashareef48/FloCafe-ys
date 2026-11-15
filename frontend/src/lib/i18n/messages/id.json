@@ -1234,7 +1234,15 @@
     "dayCloseBlockedByOpenShiftHint": "Tutup shift terbuka #{id} ({name}) sebelum menutup hari kerja ini.",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# pesanan terbuka akan dilanjutkan ke shift berikutnya} other {# pesanan terbuka akan dilanjutkan ke shift berikutnya}}",
     "shiftCloseUnpaidWarningHint": "Pesanan ini tetap terbuka untuk shift berikutnya. Menutup shift ini hanya mencocokkan pembayaran tunai yang sudah diterima selama shift ini.",
-    "shiftCloseUnpaidMoreCount": "+{count} pesanan terbuka lainnya"
+    "shiftCloseUnpaidMoreCount": "+{count} pesanan terbuka lainnya",
+    "printPartsPrinted": "Tercetak {printed} dari {total}",
+    "printPartsNext": "Berikutnya: {part}",
+    "printPartsPrintNext": "Cetak berikutnya",
+    "printPartsKitchen": "Tiket dapur ({station})",
+    "printPartsBill": "Tagihan",
+    "printPartsOther": "Cetakan",
+    "printPartsSkip": "Lewati sisanya",
+    "printPartsFailed": "Gagal mencetak. Periksa printer lalu coba lagi."
   },
   "printTest": {
     "amt": "Jml",
@@ -1367,7 +1375,8 @@
       "columns": "Kolom",
       "wrapHint": "Jika baris berikutnya terpotong, pilih nilai kolom yang lebih kecil.",
       "success": "Jika Anda dapat membaca ini, printer Anda berfungsi!"
-    }
+    },
+    "cutHere": "Potong di sini"
   },
   "products": {
     "includeDescriptions": "Sertakan deskripsi",
@@ -2140,6 +2149,9 @@
     "kdsViewSaved": "Tampilan bawaan disimpan",
     "kitchenStations": "Stasiun Dapur",
     "kitchenStationsHint": "Arahkan kategori ke stasiun dapur, pilih printernya, dan tetapkan koki yang akan melihat item tersebut di KDS.",
+    "kotPrintUnassigned": "Cetak item tanpa stasiun",
+    "kotPrintUnassignedHint": "Aktif: item dari kategori tanpa stasiun dicetak di tiket dapur terpisah. Nonaktif: item itu tidak dicetak.",
+    "stationUnassignedNotPrinted": "tidak dicetak",
     "kitchenWorkflowBothOffNote": "Kitchen Display dan pencetakan KOT sama-sama mati. Item dapur tidak akan ditampilkan atau dicetak di mana pun — pesanan harus ditandai saji langsung di kasir.",
     "kotPrintLanguage": "Bahasa tiket dapur",
     "kotPrintLanguageHint": "Tiket dapur mengikuti bahasa toko kecuali bahasa tetap dipilih.",
@@ -2234,6 +2246,13 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "Kolom Cetak",
+    "printerAutoCut": "Pemotong otomatis",
+    "printerAutoCutHint": "Matikan jika printer tidak punya pemotong kertas.",
+    "noCutterMode": "Tanpa pemotong",
+    "noCutterModeAll": "Cetak sekaligus",
+    "noCutterModeAllHint": "Tiket dan tagihan dicetak bersama, dengan garis Potong di sini di antaranya.",
+    "noCutterModeParts": "Cetak per bagian",
+    "noCutterModePartsHint": "Bagian pertama langsung dicetak. Ketuk Cetak berikutnya di banner untuk tiap bagian.",
     "paperWidth58": "2.5\" (58mm, 32 kolom)",
     "paperWidth58Wide": "Gulungan sempit (36 kolom)",
     "paperWidth80": "3.5\" (80mm, 48 kolom - lebar)",

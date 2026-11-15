@@ -1234,7 +1234,15 @@
     "dayCloseBlockedByOpenShiftHint": "इस व्यावसायिक दिन को बंद करने से पहले खुली शिफ्ट #{id} ({name}) को बंद करें।",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# खुला ऑर्डर अगली शिफ्ट में आगे जाएगा} other {# खुले ऑर्डर अगली शिफ्ट में आगे जाएंगे}}",
     "shiftCloseUnpaidWarningHint": "ये ऑर्डर अगली शिफ्ट के लिए खुले रहते हैं। इस शिफ्ट को बंद करने पर केवल इस शिफ्ट के दौरान पहले से प्राप्त नकद भुगतानों का मिलान होता है।",
-    "shiftCloseUnpaidMoreCount": "+{count} और खुले ऑर्डर"
+    "shiftCloseUnpaidMoreCount": "+{count} और खुले ऑर्डर",
+    "printPartsPrinted": "{total} में से {printed} प्रिंट हुए",
+    "printPartsNext": "अगला: {part}",
+    "printPartsPrintNext": "अगला प्रिंट करें",
+    "printPartsKitchen": "किचन टिकट ({station})",
+    "printPartsBill": "बिल",
+    "printPartsOther": "प्रिंट",
+    "printPartsSkip": "बाकी छोड़ें",
+    "printPartsFailed": "प्रिंट नहीं हो सका। प्रिंटर जाँचें और फिर कोशिश करें।"
   },
   "printTest": {
     "amt": "राशि",
@@ -1367,7 +1375,8 @@
       "columns": "कॉलम",
       "wrapHint": "यदि अगली पंक्ति लिपटे, तो छोटा कॉलम मान चुनें।",
       "success": "यदि आप इसे पढ़ सकते हैं, तो प्रिंटर सही काम कर रहा है!"
-    }
+    },
+    "cutHere": "यहाँ से काटें"
   },
   "products": {
     "includeDescriptions": "विवरण शामिल करें",
@@ -2140,6 +2149,9 @@
     "kdsViewSaved": "डिफ़ॉल्ट दृश्य सहेजा गया",
     "kitchenStations": "रसोई स्टेशन",
     "kitchenStationsHint": "श्रेणियों को किचन स्टेशन पर रूट करें, उसका प्रिंटर चुनें, और शेफ को नियुक्त करें जिसे केडीएस में उन वस्तुओं को देखना चाहिए।",
+    "kotPrintUnassigned": "बिना स्टेशन वाले आइटम प्रिंट करें",
+    "kotPrintUnassignedHint": "चालू: जिन कैटेगरी का कोई स्टेशन नहीं, उनके आइटम अलग किचन टिकट पर प्रिंट होंगे। बंद: वे प्रिंट नहीं होंगे।",
+    "stationUnassignedNotPrinted": "प्रिंट नहीं होगा",
     "kitchenWorkflowBothOffNote": "किचन डिस्प्ले और KOT प्रिंटिंग दोनों बंद हैं। रसोई के सामान कहीं भी प्रदर्शित या मुद्रित नहीं होंगे - ऑर्डर को सीधे काउंटर पर परोसा जाना चिह्नित करना होगा।",
     "kotPrintLanguage": "रसोई टिकट भाषा",
     "kotPrintLanguageHint": "जब तक कोई निश्चित भाषा नहीं चुनी जाती, रसोई के टिकट स्टोर की भाषा का पालन करते हैं।",
@@ -2234,6 +2246,13 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "मुद्रण योग्य कॉलम",
+    "printerAutoCut": "ऑटो-कटर",
+    "printerAutoCutHint": "अगर प्रिंटर में पेपर कटर नहीं है तो इसे बंद करें।",
+    "noCutterMode": "कटर के बिना",
+    "noCutterModeAll": "सब एक साथ प्रिंट करें",
+    "noCutterModeAllHint": "टिकट और बिल एक साथ प्रिंट होंगे, बीच में यहाँ से काटें लाइन होगी।",
+    "noCutterModeParts": "हिस्सों में प्रिंट करें",
+    "noCutterModePartsHint": "पहला हिस्सा तुरंत प्रिंट होगा। हर अगले हिस्से के लिए बैनर पर अगला प्रिंट करें दबाएँ।",
     "paperWidth58": "2.5\" (58mm, 32 cols)",
     "paperWidth58Wide": "संकीर्ण रोल (36 कॉलम)",
     "paperWidth80": "3.5\" (80mm, 48 cols - wide)",

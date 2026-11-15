@@ -1234,7 +1234,15 @@
     "dayCloseBlockedByOpenShiftHint": "Mbyllni turnin e hapur #{id} ({name}) përpara se të mbyllni këtë ditë pune.",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# porosi e hapur do të bartet} other {# porosi të hapura do të barten}}",
     "shiftCloseUnpaidWarningHint": "Këto porosi mbeten të hapura për turnin tjetër. Mbyllja e këtij turni rakordon vetëm pagesat me para në dorë të arkëtuara tashmë gjatë këtij turni.",
-    "shiftCloseUnpaidMoreCount": "+{count} porosi të tjera të hapura"
+    "shiftCloseUnpaidMoreCount": "+{count} porosi të tjera të hapura",
+    "printPartsPrinted": "U printuan {printed} nga {total}",
+    "printPartsNext": "Tjetra: {part}",
+    "printPartsPrintNext": "Printo tjetrën",
+    "printPartsKitchen": "Biletë kuzhine ({station})",
+    "printPartsBill": "Fatura",
+    "printPartsOther": "Printim",
+    "printPartsSkip": "Kapërce të tjerat",
+    "printPartsFailed": "Printimi dështoi. Kontrolloni printerin dhe provoni sërish."
   },
   "printTest": {
     "amt": "Shuma",
@@ -1367,7 +1375,8 @@
       "columns": "Kolonat",
       "wrapHint": "Nëse rreshti tjetër thyhet, zgjidhni një vlerë më të vogël kolonash.",
       "success": "Nëse mund ta lexoni këtë, printeri juaj funksionon!"
-    }
+    },
+    "cutHere": "Prisni këtu"
   },
   "products": {
     "includeDescriptions": "Përfshi përshkrimet",
@@ -2140,6 +2149,9 @@
     "kdsViewSaved": "Pamja e parazgjedhur u ruajt",
     "kitchenStations": "Stacionet e kuzhinës",
     "kitchenStationsHint": "Shpërndani kategoritë te stacionet e kuzhinës, zgjidhni printerin e tyre dhe caktoni shefin që duhet t’i shohë artikujt në KDS.",
+    "kotPrintUnassigned": "Printo artikujt pa stacion",
+    "kotPrintUnassignedHint": "Aktiv: artikujt e kategorive pa stacion printohen në një biletë kuzhine më vete. Joaktiv: nuk printohen.",
+    "stationUnassignedNotPrinted": "nuk printohet",
     "kitchenWorkflowBothOffNote": "Si ekrani i kuzhinës ashtu edhe printimi KOT janë joaktiv. Artikujt e kuzhinës nuk do të shfaqen apo printohen askund – porositë do të duhet të shënohen si të shërbyera direkt në kontor.",
     "kotPrintLanguage": "Gjuha e porosive të kuzhinës",
     "kotPrintLanguageHint": "Porositë e kuzhinës ndjekin gjuhën e dyqanit, përveç nëse zgjidhet një gjuhë fikse.",
@@ -2234,6 +2246,13 @@
     "paperSize58": "2.5\" (58 mm)",
     "paperSize80": "3,5\" (80 mm)",
     "paperWidth": "Kolona të printueshme",
+    "printerAutoCut": "Prerës automatik",
+    "printerAutoCutHint": "Çaktivizojeni nëse printeri nuk ka prerës letre.",
+    "noCutterMode": "Pa prerës",
+    "noCutterModeAll": "Printo gjithçka njëherësh",
+    "noCutterModeAllHint": "Biletat dhe fatura printohen bashkë, me një vijë Prisni këtu mes tyre.",
+    "noCutterModeParts": "Printo me pjesë",
+    "noCutterModePartsHint": "Pjesa e parë printohet menjëherë. Prekni Printo tjetrën te shiriti për çdo pjesë tjetër.",
     "paperWidth58": "2,5\" (58 mm, 32 kolona)",
     "paperWidth58Wide": "Rrotull i ngushtë (36 pika)",
     "paperWidth80": "3,5\" (80 mm, 48 kolona - gjerësi)",

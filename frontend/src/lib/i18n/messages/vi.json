@@ -1234,7 +1234,15 @@
     "dayCloseBlockedByOpenShiftHint": "Hãy đóng ca đang mở #{id} ({name}) trước khi chốt ngày kinh doanh này.",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# đơn đang mở sẽ chuyển sang ca tiếp theo} other {# đơn đang mở sẽ chuyển sang ca tiếp theo}}",
     "shiftCloseUnpaidWarningHint": "Các đơn này vẫn mở cho ca tiếp theo. Việc đóng ca này chỉ đối soát các khoản tiền mặt đã thu trong ca này.",
-    "shiftCloseUnpaidMoreCount": "+{count} đơn đang mở khác"
+    "shiftCloseUnpaidMoreCount": "+{count} đơn đang mở khác",
+    "printPartsPrinted": "Đã in {printed}/{total}",
+    "printPartsNext": "Tiếp theo: {part}",
+    "printPartsPrintNext": "In phần tiếp",
+    "printPartsKitchen": "Phiếu bếp ({station})",
+    "printPartsBill": "Hóa đơn",
+    "printPartsOther": "Bản in",
+    "printPartsSkip": "Bỏ qua phần còn lại",
+    "printPartsFailed": "Không in được. Kiểm tra máy in rồi thử lại."
   },
   "printTest": {
     "amt": "Số tiền",
@@ -1367,7 +1375,8 @@
       "columns": "Số cột",
       "wrapHint": "Nếu dòng tiếp theo xuống dòng, hãy chọn số cột nhỏ hơn.",
       "success": "Nếu bạn đọc được nội dung này, máy in đang hoạt động!"
-    }
+    },
+    "cutHere": "Cắt tại đây"
   },
   "products": {
     "includeDescriptions": "Bao gồm mô tả",
@@ -2140,6 +2149,9 @@
     "kdsViewSaved": "Đã lưu chế độ xem mặc định",
     "kitchenStations": "Khu vực bếp",
     "kitchenStationsHint": "Định tuyến danh mục đến khu vực bếp, chọn máy in và gán đầu bếp sẽ thấy các món đó trong KDS.",
+    "kotPrintUnassigned": "In món không thuộc trạm nào",
+    "kotPrintUnassignedHint": "Bật: món thuộc danh mục không có trạm sẽ in trên phiếu bếp riêng. Tắt: không in.",
+    "stationUnassignedNotPrinted": "không in",
     "kitchenWorkflowBothOffNote": "Cả màn hình bếp và in KOT đều đang tắt. Món bếp sẽ không hiển thị hoặc in ở bất cứ đâu - cần đánh dấu đơn đã phục vụ trực tiếp tại quầy.",
     "kotPrintLanguage": "Ngôn ngữ phiếu bếp",
     "kotPrintLanguageHint": "Phiếu bếp theo ngôn ngữ cửa hàng trừ khi chọn một ngôn ngữ cố định.",
@@ -2234,6 +2246,13 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "Số cột có thể in",
+    "printerAutoCut": "Dao cắt tự động",
+    "printerAutoCutHint": "Tắt mục này nếu máy in không có dao cắt giấy.",
+    "noCutterMode": "Khi không có dao cắt",
+    "noCutterModeAll": "In tất cả một lần",
+    "noCutterModeAllHint": "Phiếu bếp và hóa đơn in liền nhau, có đường Cắt tại đây ở giữa.",
+    "noCutterModeParts": "In từng phần",
+    "noCutterModePartsHint": "Phần đầu tiên in ngay. Chạm In phần tiếp trên thanh thông báo cho mỗi phần sau.",
     "paperWidth58": "2.5\" (58mm, 32 cột)",
     "paperWidth58Wide": "Cuộn hẹp (36 cột)",
     "paperWidth80": "3.5\" (80mm, 48 cột - rộng)",

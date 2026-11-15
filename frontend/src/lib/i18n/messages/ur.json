@@ -1234,7 +1234,15 @@
     "dayCloseBlockedByOpenShiftHint": "اس کاروباری دن کو بند کرنے سے پہلے کھلی شفٹ #{id} ({name}) کو بند کریں۔",
     "shiftCloseUnpaidWarningTitle": "{count, plural, one {# کھلا آرڈر اگلی شفٹ میں منتقل ہوگا} other {# کھلے آرڈرز اگلی شفٹ میں منتقل ہوں گے}}",
     "shiftCloseUnpaidWarningHint": "یہ آرڈرز اگلی شفٹ کے لیے کھلے رہیں گے۔ اس شفٹ کو بند کرنے سے صرف وہ نقد ادائیگیاں ملائی جاتی ہیں جو اس شفٹ کے دوران وصول ہو چکی ہیں۔",
-    "shiftCloseUnpaidMoreCount": "+{count} مزید کھلے آرڈرز"
+    "shiftCloseUnpaidMoreCount": "+{count} مزید کھلے آرڈرز",
+    "printPartsPrinted": "{total} میں سے {printed} پرنٹ ہوئے",
+    "printPartsNext": "اگلا: {part}",
+    "printPartsPrintNext": "اگلا پرنٹ کریں",
+    "printPartsKitchen": "کچن ٹکٹ ({station})",
+    "printPartsBill": "بل",
+    "printPartsOther": "پرنٹ",
+    "printPartsSkip": "باقی چھوڑ دیں",
+    "printPartsFailed": "پرنٹ نہیں ہو سکا۔ پرنٹر چیک کر کے دوبارہ کوشش کریں۔"
   },
   "printTest": {
     "amt": "رقم",
@@ -1367,7 +1375,8 @@
       "columns": "کالم",
       "wrapHint": "اگر اگلا لائن ایک نئی قطار میں منتقل ہو تو کالم کی کم قدر منتخب کریں۔",
       "success": "اگر آپ یہ پڑھ سکتے ہیں تو آپ کا پرنٹر کام کر رہا ہے!"
-    }
+    },
+    "cutHere": "یہاں سے کاٹیں"
   },
   "products": {
     "includeDescriptions": "تفصیلات شامل کریں",
@@ -2140,6 +2149,9 @@
     "kdsViewSaved": "ڈیفالٹ ویو محفوظ ہو گیا",
     "kitchenStations": "کچن اسٹیشن",
     "kitchenStationsHint": "زمرے کو کچن اسٹیشن کو بھیجیں، اس کا پرنٹر منتخب کریں اور وہ شیف مقرر کریں جو KDS میں یہ آئٹمز دیکھے۔",
+    "kotPrintUnassigned": "بغیر اسٹیشن والی اشیاء پرنٹ کریں",
+    "kotPrintUnassignedHint": "آن: جن کیٹیگریز کا کوئی اسٹیشن نہیں ان کی اشیاء الگ کچن ٹکٹ پر پرنٹ ہوں گی۔ آف: پرنٹ نہیں ہوں گی۔",
+    "stationUnassignedNotPrinted": "پرنٹ نہیں ہوگا",
     "kitchenWorkflowBothOffNote": "کچن ڈسپلے اور KOT پرنٹنگ دونوں بند ہیں۔ کچن آئٹمز کہیں دکھائی یا پرنٹ نہیں ہوں گے — آرڈرز کو براہ راست کاؤنٹر پر پیش شدہ نشان زد کرنا ہوگا۔",
     "kotPrintLanguage": "کچن ٹکٹ کی زبان",
     "kotPrintLanguageHint": "مقررہ زبان منتخب نہ کریں تو کچن ٹکٹ اسٹور کی زبان کے مطابق ہوں گے۔",
@@ -2234,6 +2246,13 @@
     "paperSize58": "2.5\" (58mm)",
     "paperSize80": "3.5\" (80mm)",
     "paperWidth": "پرنٹ قابل کالم",
+    "printerAutoCut": "آٹو کٹر",
+    "printerAutoCutHint": "اگر پرنٹر میں کاغذ کاٹنے والا کٹر نہیں ہے تو اسے بند کریں۔",
+    "noCutterMode": "کٹر کے بغیر",
+    "noCutterModeAll": "سب ایک ساتھ پرنٹ کریں",
+    "noCutterModeAllHint": "ٹکٹ اور بل ایک ساتھ پرنٹ ہوں گے، درمیان میں یہاں سے کاٹیں والی لائن ہوگی۔",
+    "noCutterModeParts": "حصوں میں پرنٹ کریں",
+    "noCutterModePartsHint": "پہلا حصہ فوراً پرنٹ ہوگا۔ ہر اگلے حصے کے لیے بینر پر اگلا پرنٹ کریں دبائیں۔",
     "paperWidth58": "2.5\" (58mm, 32 cols)",
     "paperWidth58Wide": "تنگ رول (36 cols)",
     "paperWidth80": "3.5\" (80mm, 48 cols - چوڑا)",
