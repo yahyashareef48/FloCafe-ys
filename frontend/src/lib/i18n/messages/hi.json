@@ -883,7 +883,10 @@
     "editOrderChanged": "आपके बदलते समय यह ऑर्डर बदल गया। बदलें फिर से खोलें।",
     "editOrderNoChanges": "अभी कुछ नहीं बदला",
     "editOrderCalculating": "हिसाब लगाया जा रहा है…",
-    "editOrderTakePayment": "अतिरिक्त {amount} ऑर्डर से भुगतान के रूप में लें"
+    "editOrderTakePayment": "इन्हें {amount} कम करें। ज़्यादा पैसे भुगतान लें से लें।",
+    "editOrderAllRemovedPaid": "भुगतान किया गया {amount} भी मिट जाएगा और रिफ़ंड के रूप में दर्ज नहीं होगा। पैसे खुद लौटाएं।",
+    "editOrderOwnersFailed": "मालिकों की सूची लोड नहीं हो सकी। बदलें बंद करके फिर कोशिश करें।",
+    "editOrderQuantity": "{name} की मात्रा"
   },
   "pos": {
     "addCustomer": "ग्राहक जोड़ें",

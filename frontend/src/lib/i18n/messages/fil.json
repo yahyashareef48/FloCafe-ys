@@ -883,7 +883,10 @@
     "editOrderChanged": "Nagbago ang order habang ine-edit mo. Buksan muli ang Edit.",
     "editOrderNoChanges": "Wala pang binago",
     "editOrderCalculating": "Kinukuwenta…",
-    "editOrderTakePayment": "Singilin ang dagdag na {amount} bilang bayad mula sa order"
+    "editOrderTakePayment": "Bawasan ng {amount}. Kunin ang dagdag na pera gamit ang Tumanggap ng bayad.",
+    "editOrderAllRemovedPaid": "Mabubura rin ang {amount} na binayad at hindi ito itatala bilang refund. Ikaw mismo ang magbalik ng pera.",
+    "editOrderOwnersFailed": "Hindi ma-load ang mga may-ari. Isara ang Edit at subukan muli.",
+    "editOrderQuantity": "Dami ng {name}"
   },
   "pos": {
     "addCustomer": "Magdagdag ng Customer",

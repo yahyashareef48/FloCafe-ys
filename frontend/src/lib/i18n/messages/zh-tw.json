@@ -883,7 +883,10 @@
     "editOrderChanged": "編輯期間此訂單已變更。請重新開啟編輯。",
     "editOrderNoChanges": "尚未修改",
     "editOrderCalculating": "正在計算…",
-    "editOrderTakePayment": "多出的 {amount} 請在訂單中收款"
+    "editOrderTakePayment": "請減少 {amount}。多收的錢請用收款功能收取。",
+    "editOrderAllRemovedPaid": "已付的 {amount} 會一併清除，不記為退款。請自行把錢退給顧客。",
+    "editOrderOwnersFailed": "無法載入店主名單。請關閉編輯後重試。",
+    "editOrderQuantity": "{name} 的數量"
   },
   "pos": {
     "addCustomer": "新增顧客",

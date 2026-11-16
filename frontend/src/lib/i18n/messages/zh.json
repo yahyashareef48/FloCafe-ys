@@ -883,7 +883,10 @@
     "editOrderChanged": "编辑期间此订单已变更。请重新打开编辑。",
     "editOrderNoChanges": "尚未修改",
     "editOrderCalculating": "正在计算…",
-    "editOrderTakePayment": "多出的 {amount} 请在订单中收款"
+    "editOrderTakePayment": "请减少 {amount}。多收的钱请用收款功能收取。",
+    "editOrderAllRemovedPaid": "已付的 {amount} 会一并清除，不记为退款。请自行把钱退给顾客。",
+    "editOrderOwnersFailed": "无法加载店主名单。请关闭编辑后重试。",
+    "editOrderQuantity": "{name} 的数量"
   },
   "pos": {
     "addCustomer": "添加顾客",

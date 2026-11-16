@@ -883,7 +883,10 @@
     "editOrderChanged": "編集中にこの注文が変更されました。もう一度編集を開いてください。",
     "editOrderNoChanges": "まだ変更はありません",
     "editOrderCalculating": "計算中…",
-    "editOrderTakePayment": "追加の {amount} は注文の支払いとして受け取ってください"
+    "editOrderTakePayment": "{amount} 減らしてください。追加の代金は支払いを受け取るで受け取ります。",
+    "editOrderAllRemovedPaid": "支払われた {amount} も消え、返金としては記録されません。お金は手渡しで返してください。",
+    "editOrderOwnersFailed": "オーナーを読み込めませんでした。編集を閉じてもう一度お試しください。",
+    "editOrderQuantity": "{name} の数量"
   },
   "pos": {
     "addCustomer": "顧客を追加",

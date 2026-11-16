@@ -883,7 +883,10 @@
     "editOrderChanged": "تغيّر هذا الطلب أثناء التعديل. افتح التعديل مرة أخرى.",
     "editOrderNoChanges": "لم يتغير شيء بعد",
     "editOrderCalculating": "جارٍ الحساب…",
-    "editOrderTakePayment": "حصّل الـ {amount} الإضافية كدفعة من الطلب"
+    "editOrderTakePayment": "اخفض هذه بمقدار {amount}. حصّل المبلغ الإضافي من خلال استلام الدفعة.",
+    "editOrderAllRemovedPaid": "يُمحى المبلغ المدفوع {amount} معه ولا يُسجَّل كاسترداد. أعد المال بنفسك.",
+    "editOrderOwnersFailed": "تعذّر تحميل المالكين. أغلق التعديل وحاول مرة أخرى.",
+    "editOrderQuantity": "كمية {name}"
   },
   "pos": {
     "addCustomer": "إضافة عميل",

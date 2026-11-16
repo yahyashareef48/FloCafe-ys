@@ -883,7 +883,10 @@
     "editOrderChanged": "Đơn đã thay đổi trong lúc bạn sửa. Hãy mở Sửa lại.",
     "editOrderNoChanges": "Chưa thay đổi gì",
     "editOrderCalculating": "Đang tính…",
-    "editOrderTakePayment": "Thu thêm {amount} bằng cách thanh toán từ đơn"
+    "editOrderTakePayment": "Giảm {amount}. Thu thêm tiền bằng Nhận thanh toán.",
+    "editOrderAllRemovedPaid": "Số tiền đã trả {amount} cũng bị xóa và không được ghi là hoàn tiền. Hãy tự trả lại tiền cho khách.",
+    "editOrderOwnersFailed": "Không tải được danh sách chủ quán. Đóng Sửa và thử lại.",
+    "editOrderQuantity": "Số lượng {name}"
   },
   "pos": {
     "addCustomer": "Thêm khách hàng",

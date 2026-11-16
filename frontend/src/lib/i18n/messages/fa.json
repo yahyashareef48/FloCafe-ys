@@ -883,7 +883,10 @@
     "editOrderChanged": "این سفارش هنگام ویرایش تغییر کرد. ویرایش را دوباره باز کنید.",
     "editOrderNoChanges": "هنوز تغییری نیست",
     "editOrderCalculating": "در حال محاسبه…",
-    "editOrderTakePayment": "{amount} اضافه را به‌صورت پرداخت از خود سفارش بگیرید"
+    "editOrderTakePayment": "این‌ها را {amount} کم کنید. پول اضافه را با دریافت پرداخت بگیرید.",
+    "editOrderAllRemovedPaid": "مبلغ پرداخت‌شده {amount} هم پاک می‌شود و به‌عنوان بازپرداخت ثبت نمی‌شود. پول را خودتان برگردانید.",
+    "editOrderOwnersFailed": "فهرست مالکان بارگیری نشد. ویرایش را ببندید و دوباره امتحان کنید.",
+    "editOrderQuantity": "تعداد {name}"
   },
   "pos": {
     "addCustomer": "افزودن مشتری",

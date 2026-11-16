@@ -883,7 +883,10 @@
     "editOrderChanged": "Cette commande a changé pendant la modification. Rouvrez Modifier.",
     "editOrderNoChanges": "Aucun changement pour l'instant",
     "editOrderCalculating": "Calcul…",
-    "editOrderTakePayment": "Encaissez les {amount} en plus comme paiement depuis la commande"
+    "editOrderTakePayment": "Baissez-les de {amount}. Encaissez le surplus avec Encaisser.",
+    "editOrderAllRemovedPaid": "Les {amount} payés sont effacés avec elle et ne sont pas enregistrés comme remboursement. Rendez l'argent vous-même.",
+    "editOrderOwnersFailed": "Impossible de charger les propriétaires. Fermez Modifier et réessayez.",
+    "editOrderQuantity": "Quantité de {name}"
   },
   "pos": {
     "addCustomer": "Ajouter un client",

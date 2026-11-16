@@ -883,7 +883,10 @@
     "editOrderChanged": "Заказ изменился, пока вы его редактировали. Откройте изменение заново.",
     "editOrderNoChanges": "Пока ничего не изменено",
     "editOrderCalculating": "Расчёт…",
-    "editOrderTakePayment": "Примите дополнительные {amount} как оплату заказа"
+    "editOrderTakePayment": "Уменьшите на {amount}. Доплату примите через «Принять оплату».",
+    "editOrderAllRemovedPaid": "Оплаченные {amount} тоже удаляются и не записываются как возврат. Верните деньги сами.",
+    "editOrderOwnersFailed": "Не удалось загрузить владельцев. Закройте изменение и попробуйте снова.",
+    "editOrderQuantity": "Количество: {name}"
   },
   "pos": {
     "addCustomer": "Добавить клиента",

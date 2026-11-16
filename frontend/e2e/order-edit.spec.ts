@@ -50,9 +50,9 @@ test('a paid order is corrected and re-split with the owner PIN', async ({ page,
 
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByText(`Edit order #${order.order_number}`)).toBeVisible();
-  await expect(dialog.getByTestId('edit-order-qty')).toHaveText('1');
+  await expect(dialog.getByTestId('edit-order-qty')).toHaveValue('1');
   await dialog.getByRole('button', { name: /^One more / }).click();
-  await expect(dialog.getByTestId('edit-order-qty')).toHaveText('2');
+  await expect(dialog.getByTestId('edit-order-qty')).toHaveValue('2');
   await expect(dialog.getByText(/Collect .* more from the customer/)).toBeVisible();
   await expect(dialog.getByTestId('edit-order-payment-status')).toHaveText(
     'Payments match the total',

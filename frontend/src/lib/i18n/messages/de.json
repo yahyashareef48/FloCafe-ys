@@ -883,7 +883,10 @@
     "editOrderChanged": "Diese Bestellung wurde während der Bearbeitung geändert. Bearbeiten erneut öffnen.",
     "editOrderNoChanges": "Noch nichts geändert",
     "editOrderCalculating": "Wird berechnet…",
-    "editOrderTakePayment": "Die zusätzlichen {amount} als Zahlung über die Bestellung kassieren"
+    "editOrderTakePayment": "Um {amount} senken. Mehr Geld über Zahlung annehmen kassieren.",
+    "editOrderAllRemovedPaid": "Die bezahlten {amount} werden mit gelöscht und nicht als Erstattung erfasst. Gib das Geld selbst zurück.",
+    "editOrderOwnersFailed": "Inhaber konnten nicht geladen werden. Bearbeiten schließen und erneut versuchen.",
+    "editOrderQuantity": "Menge von {name}"
   },
   "pos": {
     "addCustomer": "Kunde hinzufügen",

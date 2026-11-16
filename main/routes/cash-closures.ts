@@ -43,11 +43,7 @@ import {
   tenantBusinessDayStartTime,
 } from '../db';
 import { requireAnyPermission, requirePermission } from '../services/authorization';
-import {
-  getPendingSalesWipe,
-  markSalesWipePending,
-  wipeSalesData,
-} from '../services/sales-wipe';
+import { getPendingSalesWipe, markSalesWipePending, wipeSalesData } from '../services/sales-wipe';
 import { nextZNumber } from '../db';
 import { getTenantCurrency } from '../services/refund';
 import { openSessionBlockingDayClose } from '../services/cash-day-close-guards';
@@ -417,7 +413,7 @@ export function paymentMethodBreakdown(
       END) je
       WHERE b.payment_details IS NOT NULL
         AND b.created_at < ?
-        AND (b.paid_at IS NULL OR b.paid_at >= ?)
+        AND (b.paid_at IS NULL OR b.paid_at >= ? OR b.updated_at >= ?)
         AND (? = 0 OR b.paid_at IS NOT NULL)
         AND (? = 0 OR COALESCE(o.status, '') != 'cancelled')
         AND json_type(je.value) = 'object'
@@ -449,6 +445,7 @@ export function paymentMethodBreakdown(
   `)
     .all(
       end,
+      start,
       start,
       paidOnly ? 1 : 0,
       excludeCancelledOrders ? 1 : 0,
@@ -555,7 +552,12 @@ export function cashDrawerSalesAndRefunds(
         END
       ) je
       WHERE b.created_at < datetime(?)
-        AND (b.paid_at IS NULL OR b.paid_at >= datetime(?, '-1 day'))
+        AND (
+          b.paid_at IS NULL
+          OR b.paid_at >= datetime(?, '-1 day')
+          -- An order edit can add a line today to a bill paid on an earlier day.
+          OR b.updated_at >= datetime(?)
+        )
         AND json_type(je.value) = 'object'
     ),
     cash_sales AS (
@@ -574,7 +576,7 @@ export function cashDrawerSalesAndRefunds(
       (SELECT sales_cents FROM cash_sales) AS sales_cents,
       (SELECT refunds_cents FROM cash_refunds) AS refunds_cents
   `)
-    .get(end, start, minorFactor, start, end, start, end) as {
+    .get(end, start, start, minorFactor, start, end, start, end) as {
     sales_cents: number;
     refunds_cents: number;
   };
