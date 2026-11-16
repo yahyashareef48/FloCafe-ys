@@ -43,11 +43,7 @@ import {
   tenantBusinessDayStartTime,
 } from '../db';
 import { requireAnyPermission, requirePermission } from '../services/authorization';
-import {
-  getPendingSalesWipe,
-  markSalesWipePending,
-  wipeSalesData,
-} from '../services/sales-wipe';
+import { getPendingSalesWipe, markSalesWipePending, wipeSalesData } from '../services/sales-wipe';
 import { nextZNumber } from '../db';
 import { getTenantCurrency } from '../services/refund';
 import { openSessionBlockingDayClose } from '../services/cash-day-close-guards';
