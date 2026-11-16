@@ -494,6 +494,44 @@ async function main() {
       20,
       'the discount is 10% of the new subtotal',
     );
+    db.prepare(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('global_cashback_percent', '5')",
+    ).run();
+    current = await preview(loyalId, [{ id: loyalLine.id, quantity: 2 }]);
+    const methodOnly = await edit(loyalId, {
+      ...OWNER,
+      expected_version: current.version,
+      items: [{ id: loyalLine.id, quantity: 2 }],
+      payments: [{ method: 'custom', payment_method_id: upiId, amount: 180 }],
+    });
+    assertEqualOrThrow(methodOnly.status, 200, 'a payment-only change saves');
+    assertEqualOrThrow(
+      row(
+        "SELECT amount FROM loyalty_ledger WHERE bill_id = ? AND type = 'credit'",
+        loyalBill.data.bill.id,
+      )?.amount,
+      18,
+      'cashback already earned is kept when only the method changes',
+    );
+    db.prepare(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('global_cashback_percent', '10')",
+    ).run();
+
+    console.log('\n--- Card money that needs a transaction ID is refused ---');
+    db.prepare(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('card_transaction_id_required', 'true')",
+    ).run();
+    current = await preview(loyalId, [{ id: loyalLine.id, quantity: 2 }]);
+    const toCard = await edit(loyalId, {
+      ...OWNER,
+      expected_version: current.version,
+      items: [{ id: loyalLine.id, quantity: 2 }],
+      payments: [{ method: 'card', amount: 180 }],
+    });
+    assertEqualOrThrow(toCard.status, 400, 'moving money onto card without its ID is refused');
+    db.prepare(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('card_transaction_id_required', 'false')",
+    ).run();
 
     console.log('\n--- The day cash count sees an edit of an older order ---');
     const oldOrder = await paidOrder(

@@ -7147,6 +7147,17 @@ function applyOrderEditInTxn(
       if ((targets.get('builtin:wallet')?.minor ?? 0) !== walletBefore) {
         throw editError('Loyalty points paid on this order cannot be changed here');
       }
+      const cardBefore = oldLines
+        .filter((line) => paymentKey(line) === 'builtin:card')
+        .reduce((sum, line) => sum + Math.round(Number(line.amount || 0) * minorFactor), 0);
+      if (
+        (targets.get('builtin:card')?.minor ?? 0) > cardBefore &&
+        getSettingValue('card_transaction_id_required') === 'true'
+      ) {
+        throw editError(
+          'Card money needs its transaction ID, which Edit cannot take. Use another method here.',
+        );
+      }
       const openSession = getOpenSession(db);
       const rewrite = rewritePaymentLines(oldLines, targets, {
         minorFactor,
@@ -7237,6 +7248,8 @@ function applyOrderEditInTxn(
       refreshBillCashback(db, bill.id, bill.customer_id || order.customer_id, finalLines, {
         minorFactor,
         at,
+        oldTotal: wasPaid ? Number(bill.total || 0) : 0,
+        oldLines: wasPaid ? oldLines : [],
       });
     }
   }
@@ -7289,48 +7302,59 @@ function applyOrderEditInTxn(
   return result;
 }
 
-/** Keeps a paid bill's cashback in step with what the edited order is now worth. */
+/**
+ * Keeps a paid bill's cashback in step with what the edited order is now worth. Cashback already
+ * earned scales with the bill and keeps the rate it was earned at; a payment-only change leaves it.
+ */
 function refreshBillCashback(
   db: ReturnType<typeof getDatabase>,
   billId: number,
   customerId: string | null,
   lines: EditPaymentLine[],
-  context: { minorFactor: number; at: string },
+  context: { minorFactor: number; at: string; oldTotal: number; oldLines: EditPaymentLine[] },
 ): void {
-  const credit = db
-    .prepare(
-      `SELECT id FROM loyalty_ledger WHERE bill_id = ? AND type = 'credit' ORDER BY id LIMIT 1`,
-    )
-    .get(billId) as { id: number } | undefined;
+  const { minorFactor, at } = context;
+  const walletOf = (paymentLines: EditPaymentLine[]) =>
+    paymentLines
+      .filter((line) => line.method === 'wallet')
+      .reduce((sum, line) => sum + Math.round(Number(line.amount || 0) * minorFactor), 0);
   const bill = db.prepare('SELECT * FROM bills WHERE id = ?').get(billId) as {
     bill_number: string;
     total: number;
   };
-  const cashback = customerId ? calculateCashback(db, bill, customerId) : 0;
-  const totalMinor = Math.round(Number(bill.total || 0) * context.minorFactor);
-  const walletMinor = lines
-    .filter((line) => line.method === 'wallet')
-    .reduce((sum, line) => sum + Math.round(Number(line.amount || 0) * context.minorFactor), 0);
-  const points = Math.floor(cashback * (1 - Math.min(1, walletMinor / Math.max(1, totalMinor))));
-  if (credit && points > 0) {
-    db.prepare('UPDATE loyalty_ledger SET amount = ?, updated_at = ? WHERE id = ?').run(
-      points,
-      context.at,
-      credit.id,
-    );
-  } else if (credit) {
-    db.prepare('DELETE FROM loyalty_ledger WHERE id = ?').run(credit.id);
-  } else if (points > 0 && customerId) {
+  const newBase = Math.round(Number(bill.total || 0) * minorFactor) - walletOf(lines);
+  const oldBase =
+    Math.round(Number(context.oldTotal || 0) * minorFactor) - walletOf(context.oldLines);
+  if (newBase === oldBase) return;
+  const credit = db
+    .prepare(
+      `SELECT id, amount FROM loyalty_ledger WHERE bill_id = ? AND type = 'credit' ORDER BY id LIMIT 1`,
+    )
+    .get(billId) as { id: number; amount: number } | undefined;
+  if (credit) {
+    const points =
+      oldBase > 0 ? Math.floor((Number(credit.amount) * Math.max(0, newBase)) / oldBase) : 0;
+    if (points > 0) {
+      db.prepare('UPDATE loyalty_ledger SET amount = ?, updated_at = ? WHERE id = ?').run(
+        points,
+        at,
+        credit.id,
+      );
+    } else {
+      db.prepare('DELETE FROM loyalty_ledger WHERE id = ?').run(credit.id);
+    }
+    return;
+  }
+  if (!customerId) return;
+  const totalMinor = Math.round(Number(bill.total || 0) * minorFactor);
+  const cashback = calculateCashback(db, bill, customerId);
+  const points = Math.floor(
+    cashback * (1 - Math.min(1, walletOf(lines) / Math.max(1, totalMinor))),
+  );
+  if (points > 0) {
     db.prepare(
       `INSERT INTO loyalty_ledger (customer_id, bill_id, type, amount, description, created_at, updated_at) VALUES (?, ?, 'credit', ?, ?, ?, ?)`,
-    ).run(
-      customerId,
-      billId,
-      points,
-      `Cashback on bill ${bill.bill_number}`,
-      context.at,
-      context.at,
-    );
+    ).run(customerId, billId, points, `Cashback on bill ${bill.bill_number}`, at, at);
   }
 }
 
@@ -7395,9 +7419,12 @@ router.post(
       const result = withTxn(() => {
         // A retry after a lost response gets the saved answer, kitchen items included.
         const stored = idempotencyKey
-          ? (getStoredOrderReplay(db, actorUserId, idempotencyKey, requestHash) as
-              | OrderEditResult
-              | null)
+          ? (getStoredOrderReplay(
+              db,
+              actorUserId,
+              idempotencyKey,
+              requestHash,
+            ) as OrderEditResult | null)
           : null;
         if (stored) {
           replayed = true;
