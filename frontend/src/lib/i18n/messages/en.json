@@ -882,7 +882,8 @@
     "editOrderFailed": "Order could not be updated",
     "editOrderChanged": "This order changed while you were editing. Open Edit again.",
     "editOrderNoChanges": "Nothing changed yet",
-    "editOrderCalculating": "Calculating…"
+    "editOrderCalculating": "Calculating…",
+    "editOrderTakePayment": "Take the extra {amount} as a payment from the order"
   },
   "pos": {
     "addCustomer": "Add Customer",

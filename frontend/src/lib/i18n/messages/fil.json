@@ -882,7 +882,8 @@
     "editOrderFailed": "Hindi ma-update ang order",
     "editOrderChanged": "Nagbago ang order habang ine-edit mo. Buksan muli ang Edit.",
     "editOrderNoChanges": "Wala pang binago",
-    "editOrderCalculating": "Kinukuwenta…"
+    "editOrderCalculating": "Kinukuwenta…",
+    "editOrderTakePayment": "Singilin ang dagdag na {amount} bilang bayad mula sa order"
   },
   "pos": {
     "addCustomer": "Magdagdag ng Customer",

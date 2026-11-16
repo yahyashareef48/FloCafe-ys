@@ -882,7 +882,8 @@
     "editOrderFailed": "سفارش به‌روزرسانی نشد",
     "editOrderChanged": "این سفارش هنگام ویرایش تغییر کرد. ویرایش را دوباره باز کنید.",
     "editOrderNoChanges": "هنوز تغییری نیست",
-    "editOrderCalculating": "در حال محاسبه…"
+    "editOrderCalculating": "در حال محاسبه…",
+    "editOrderTakePayment": "{amount} اضافه را به‌صورت پرداخت از خود سفارش بگیرید"
   },
   "pos": {
     "addCustomer": "افزودن مشتری",

@@ -882,7 +882,8 @@
     "editOrderFailed": "अर्डर अपडेट गर्न सकिएन",
     "editOrderChanged": "सम्पादन गर्दा यो अर्डर बदलियो। फेरि सम्पादन खोल्नुहोस्।",
     "editOrderNoChanges": "अहिलेसम्म केही बदलिएन",
-    "editOrderCalculating": "हिसाब हुँदैछ…"
+    "editOrderCalculating": "हिसाब हुँदैछ…",
+    "editOrderTakePayment": "थप {amount} अर्डरबाट भुक्तानीको रूपमा लिनुहोस्"
   },
   "pos": {
     "addCustomer": "ग्राहक थप्नुहोस्",

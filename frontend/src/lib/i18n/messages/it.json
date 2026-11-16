@@ -882,7 +882,8 @@
     "editOrderFailed": "Impossibile aggiornare l'ordine",
     "editOrderChanged": "L'ordine è cambiato mentre lo modificavi. Riapri Modifica.",
     "editOrderNoChanges": "Ancora nessuna modifica",
-    "editOrderCalculating": "Calcolo…"
+    "editOrderCalculating": "Calcolo…",
+    "editOrderTakePayment": "Incassa i {amount} in più come pagamento dall'ordine"
   },
   "pos": {
     "addCustomer": "Aggiungi cliente",

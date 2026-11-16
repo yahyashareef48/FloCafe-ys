@@ -313,7 +313,12 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
 
   const difference = newTotalMinor - toMinor(initial?.paid_amount ?? 0);
   const remainder = newTotalMinor - paidMinor;
-  const paymentsOk = !tookMoney || allRemoved || (mustMatch ? remainder === 0 : remainder >= 0);
+  // Edit re-splits money already taken; on a part-paid bill more money goes through Take payment.
+  const capMinor = mustMatch
+    ? newTotalMinor
+    : Math.min(newTotalMinor, toMinor(initial?.paid_amount ?? 0));
+  const overCap = paidMinor - capMinor;
+  const paymentsOk = !tookMoney || allRemoved || (mustMatch ? remainder === 0 : overCap <= 0);
   const selectedOwner = owners?.find((member) => String(member.id) === ownerId);
   const canSave =
     !saving &&
@@ -393,7 +398,7 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
     const others = rows
       .filter((row) => row.key !== key)
       .reduce((sum, row) => sum + toMinor(Number(row.amount) || 0), 0);
-    setRowAmount(key, String(Math.max(0, newTotalMinor - others) / minorFactor));
+    setRowAmount(key, String(Math.max(0, capMinor - others) / minorFactor));
   };
 
   const save = async () => {
@@ -711,12 +716,12 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
                   <span>{fmt(initial.paid_amount)}</span>
                 </div>
               )}
-              {tookMoney && difference > 0 && (
+              {mustMatch && difference > 0 && (
                 <p className="font-medium text-amber-700 dark:text-amber-300">
                   {t('editOrderCollectMore', { amount: fmt(difference / minorFactor) })}
                 </p>
               )}
-              {tookMoney && difference < 0 && (
+              {mustMatch && difference < 0 && (
                 <p className="font-medium text-amber-700 dark:text-amber-300">
                   {t('editOrderGiveBack', { amount: fmt(-difference / minorFactor) })}
                 </p>
@@ -772,13 +777,15 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
                 }`}
               >
                 {paymentsOk ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />}
-                {remainder === 0
-                  ? t('editOrderBalanced')
-                  : remainder > 0
-                    ? mustMatch
-                      ? t('editOrderToAssign', { amount: fmt(remainder / minorFactor) })
-                      : t('editOrderStaysDue', { amount: fmt(remainder / minorFactor) })
-                    : t('editOrderTooMuch', { amount: fmt(-remainder / minorFactor) })}
+                {remainder < 0
+                  ? t('editOrderTooMuch', { amount: fmt(-remainder / minorFactor) })
+                  : overCap > 0
+                    ? t('editOrderTakePayment', { amount: fmt(overCap / minorFactor) })
+                    : remainder === 0
+                      ? t('editOrderBalanced')
+                      : mustMatch
+                        ? t('editOrderToAssign', { amount: fmt(remainder / minorFactor) })
+                        : t('editOrderStaysDue', { amount: fmt(remainder / minorFactor) })}
               </p>
             </section>
           )}

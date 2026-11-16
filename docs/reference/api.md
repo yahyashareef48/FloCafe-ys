@@ -374,12 +374,14 @@ nothing changes. Cancelled orders, split bills and orders with a refund are refu
   kitchen already started becomes its own `pending` line. With `false` new lines are `served`.
 - Totals, order discount, charges, tax and the bill are recomputed. On a bill that took money,
   `payments` gives the wanted amount per method (`{ method, payment_method_id?, amount }`); a
-  fully paid bill must stay fully paid, a partly paid one cannot exceed its new total, and a bill
-  with no payment yet takes none here. Money moved between methods keeps the original payment's
-  time and shift; only extra money collected is stamped now in the open shift (cash then needs an
-  open shift when `require_open_shift` is on). Cash given back from a payment counted in another
-  shift is recorded as a `pay_out` in the open shift. Loyalty-point payments cannot change, and a
-  paid bill's cashback follows the new total. Card references of removed lines are dropped.
+  fully paid bill must stay fully paid, a partly paid one can be re-split or lowered but takes no
+  more money here (that goes through a payment), and a bill with no payment yet takes none. Money
+  moved between methods keeps the original payment's time and shift; only extra money collected is
+  stamped now in the open shift (cash then needs an open shift when `require_open_shift` is on).
+  Cash given back lowers the payment it came from when that payment belongs to the open shift (or
+  no shift is open); otherwise the payment stays as counted and a negative cash line in the open
+  shift records the cash leaving its drawer. Loyalty-point payments cannot change, and a paid bill's
+  cashback follows the new total. Card references of removed lines are dropped.
 - The change is audited as `order_edited` with the approving owner, the removed, changed and added
   lines, and the totals and payments before and after; a closed Z report keeps its stored figures.
 

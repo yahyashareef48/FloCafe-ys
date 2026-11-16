@@ -882,7 +882,8 @@
     "editOrderFailed": "Bestellung konnte nicht aktualisiert werden",
     "editOrderChanged": "Diese Bestellung wurde während der Bearbeitung geändert. Bearbeiten erneut öffnen.",
     "editOrderNoChanges": "Noch nichts geändert",
-    "editOrderCalculating": "Wird berechnet…"
+    "editOrderCalculating": "Wird berechnet…",
+    "editOrderTakePayment": "Die zusätzlichen {amount} als Zahlung über die Bestellung kassieren"
   },
   "pos": {
     "addCustomer": "Kunde hinzufügen",

@@ -882,7 +882,8 @@
     "editOrderFailed": "آرڈر اپ ڈیٹ نہیں ہو سکا",
     "editOrderChanged": "ترمیم کے دوران یہ آرڈر بدل گیا۔ دوبارہ ترمیم کھولیں۔",
     "editOrderNoChanges": "ابھی کچھ نہیں بدلا",
-    "editOrderCalculating": "حساب ہو رہا ہے…"
+    "editOrderCalculating": "حساب ہو رہا ہے…",
+    "editOrderTakePayment": "اضافی {amount} آرڈر سے ادائیگی کے طور پر لیں"
   },
   "pos": {
     "addCustomer": "گاہک شامل کریں",

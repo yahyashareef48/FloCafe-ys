@@ -882,7 +882,8 @@
     "editOrderFailed": "無法更新訂單",
     "editOrderChanged": "編輯期間此訂單已變更。請重新開啟編輯。",
     "editOrderNoChanges": "尚未修改",
-    "editOrderCalculating": "正在計算…"
+    "editOrderCalculating": "正在計算…",
+    "editOrderTakePayment": "多出的 {amount} 請在訂單中收款"
   },
   "pos": {
     "addCustomer": "新增顧客",

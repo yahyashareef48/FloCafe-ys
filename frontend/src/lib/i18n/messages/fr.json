@@ -882,7 +882,8 @@
     "editOrderFailed": "Impossible de mettre à jour la commande",
     "editOrderChanged": "Cette commande a changé pendant la modification. Rouvrez Modifier.",
     "editOrderNoChanges": "Aucun changement pour l'instant",
-    "editOrderCalculating": "Calcul…"
+    "editOrderCalculating": "Calcul…",
+    "editOrderTakePayment": "Encaissez les {amount} en plus comme paiement depuis la commande"
   },
   "pos": {
     "addCustomer": "Ajouter un client",

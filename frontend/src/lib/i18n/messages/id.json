@@ -882,7 +882,8 @@
     "editOrderFailed": "Pesanan tidak dapat diperbarui",
     "editOrderChanged": "Pesanan ini berubah saat Anda mengedit. Buka Ubah lagi.",
     "editOrderNoChanges": "Belum ada perubahan",
-    "editOrderCalculating": "Menghitung…"
+    "editOrderCalculating": "Menghitung…",
+    "editOrderTakePayment": "Terima {amount} tambahan sebagai pembayaran dari pesanan"
   },
   "pos": {
     "addCustomer": "Tambah Pelanggan",

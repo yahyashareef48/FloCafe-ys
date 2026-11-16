@@ -882,7 +882,8 @@
     "editOrderFailed": "Bestelling kon niet worden bijgewerkt",
     "editOrderChanged": "Deze bestelling is tijdens het bewerken gewijzigd. Open Bewerken opnieuw.",
     "editOrderNoChanges": "Nog niets gewijzigd",
-    "editOrderCalculating": "Berekenen…"
+    "editOrderCalculating": "Berekenen…",
+    "editOrderTakePayment": "Reken de extra {amount} af als betaling vanuit de bestelling"
   },
   "pos": {
     "addCustomer": "Klant toevoegen",

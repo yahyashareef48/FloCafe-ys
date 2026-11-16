@@ -882,7 +882,8 @@
     "editOrderFailed": "تعذر تحديث الطلب",
     "editOrderChanged": "تغيّر هذا الطلب أثناء التعديل. افتح التعديل مرة أخرى.",
     "editOrderNoChanges": "لم يتغير شيء بعد",
-    "editOrderCalculating": "جارٍ الحساب…"
+    "editOrderCalculating": "جارٍ الحساب…",
+    "editOrderTakePayment": "حصّل الـ {amount} الإضافية كدفعة من الطلب"
   },
   "pos": {
     "addCustomer": "إضافة عميل",

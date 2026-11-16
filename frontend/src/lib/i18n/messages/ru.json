@@ -882,7 +882,8 @@
     "editOrderFailed": "Не удалось обновить заказ",
     "editOrderChanged": "Заказ изменился, пока вы его редактировали. Откройте изменение заново.",
     "editOrderNoChanges": "Пока ничего не изменено",
-    "editOrderCalculating": "Расчёт…"
+    "editOrderCalculating": "Расчёт…",
+    "editOrderTakePayment": "Примите дополнительные {amount} как оплату заказа"
   },
   "pos": {
     "addCustomer": "Добавить клиента",

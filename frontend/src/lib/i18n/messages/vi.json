@@ -882,7 +882,8 @@
     "editOrderFailed": "Không thể cập nhật đơn",
     "editOrderChanged": "Đơn đã thay đổi trong lúc bạn sửa. Hãy mở Sửa lại.",
     "editOrderNoChanges": "Chưa thay đổi gì",
-    "editOrderCalculating": "Đang tính…"
+    "editOrderCalculating": "Đang tính…",
+    "editOrderTakePayment": "Thu thêm {amount} bằng cách thanh toán từ đơn"
   },
   "pos": {
     "addCustomer": "Thêm khách hàng",

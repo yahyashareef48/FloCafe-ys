@@ -882,7 +882,8 @@
     "editOrderFailed": "Porosia nuk u përditësua",
     "editOrderChanged": "Kjo porosi ndryshoi ndërsa e redaktonit. Hapni sërish Ndrysho.",
     "editOrderNoChanges": "Ende asnjë ndryshim",
-    "editOrderCalculating": "Po llogaritet…"
+    "editOrderCalculating": "Po llogaritet…",
+    "editOrderTakePayment": "Merrni {amount} shtesë si pagesë nga porosia"
   },
   "pos": {
     "addCustomer": "Shto klient",

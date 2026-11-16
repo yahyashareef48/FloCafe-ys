@@ -882,7 +882,8 @@
     "editOrderFailed": "Sipariş güncellenemedi",
     "editOrderChanged": "Siz düzenlerken bu sipariş değişti. Düzenle'yi yeniden açın.",
     "editOrderNoChanges": "Henüz değişiklik yok",
-    "editOrderCalculating": "Hesaplanıyor…"
+    "editOrderCalculating": "Hesaplanıyor…",
+    "editOrderTakePayment": "Fazladan {amount} tutarını siparişten ödeme olarak alın"
   },
   "pos": {
     "addCustomer": "Müşteri Ekle",

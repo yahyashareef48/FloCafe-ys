@@ -74,7 +74,7 @@ async function main() {
     stock_quantity: 20,
   });
 
-  seedUser(db, 'owner-edit', 'owner', '5678');
+  const ownerAuth = seedUser(db, 'owner-edit', 'owner', '5678');
   seedUser(db, 'manager-edit', 'manager', '1234');
   const cashierAuth = seedUser(db, 'cashier-edit', 'cashier', '9876');
 
@@ -319,14 +319,18 @@ async function main() {
     });
     assertEqualOrThrow(over.status, 400, 'payments above the new total are refused');
 
-    console.log('\n--- Cash given back from an earlier shift is paid out of the open drawer ---');
+    console.log('\n--- Cash given back from an earlier shift leaves the open drawer ---');
     const shiftOrder = await paidOrder(
       [{ product_id: 'prod-bun', quantity: 3 }],
       [{ method: 'cash', amount: 300 }],
     );
-    db.prepare(
-      "INSERT INTO cash_sessions (opened_by, opened_by_name, opened_at, opening_float_cents, status) VALUES ('owner-edit', 'owner', ?, 0, 'open')",
-    ).run(now());
+    const sessionId = Number(
+      db
+        .prepare(
+          "INSERT INTO cash_sessions (opened_by, opened_by_name, opened_at, opening_float_cents, status) VALUES ('owner-edit', 'owner', ?, 0, 'open')",
+        )
+        .run(now()).lastInsertRowid,
+    );
     const shiftLine = activeLines(shiftOrder)[0];
     current = await preview(shiftOrder, [{ id: shiftLine.id, quantity: 1 }]);
     const returned = await edit(shiftOrder, {
@@ -336,11 +340,94 @@ async function main() {
       payments: [{ method: 'cash', amount: 100 }],
     });
     assertEqualOrThrow(returned.status, 200, 'the edit saves');
-    const payOut = row(
-      "SELECT * FROM cash_drawer_movements WHERE movement_type = 'pay_out' ORDER BY id DESC LIMIT 1",
+    bill = billOf(shiftOrder);
+    assertEqualOrThrow(bill.paid_amount, 100, 'the bill is paid 100');
+    assertEqualOrThrow(bill.payment_details[0].amount, 300, 'the earlier cash stays as counted');
+    assertEqualOrThrow(bill.payment_details[1].amount, -200, 'the 200 given back is its own line');
+    assertEqualOrThrow(
+      bill.payment_details[1].cash_session_id,
+      sessionId,
+      'and leaves the open shift',
     );
-    assertOrThrow(!!payOut, 'a pay-out is recorded');
-    assertEqualOrThrow(payOut.amount_cents, 20000, 'for the 200 given back');
+    assertEqualOrThrow(
+      row("SELECT COUNT(*) AS n FROM cash_drawer_movements WHERE movement_type = 'pay_out'").n,
+      0,
+      'no separate pay-out double counts it',
+    );
+
+    console.log('\n--- Cash given back in the same shift just lowers the payment ---');
+    const sameShift = await paidOrder(
+      [{ product_id: 'prod-bun', quantity: 2 }],
+      [{ method: 'cash', amount: 200 }],
+    );
+    const sameLine = activeLines(sameShift)[0];
+    current = await preview(sameShift, [{ id: sameLine.id, quantity: 1 }]);
+    const sameEdit = await edit(sameShift, {
+      ...OWNER,
+      expected_version: current.version,
+      items: [{ id: sameLine.id, quantity: 1 }],
+      payments: [{ method: 'cash', amount: 100 }],
+    });
+    assertEqualOrThrow(sameEdit.status, 200, 'the edit saves');
+    bill = billOf(sameShift);
+    assertEqualOrThrow(bill.payment_details.length, 1, 'one cash line');
+    assertEqualOrThrow(bill.payment_details[0].amount, 100, 'lowered to 100');
+
+    console.log('\n--- Extra units on a started line keep its discount ---');
+    const discounted = await paidOrder([{ product_id: 'prod-tea', quantity: 2 }], []);
+    const discountedLine = activeLines(discounted)[0];
+    const itemDiscount = await api(
+      baseUrl,
+      `/api/orders/${discounted}/items/${discountedLine.id}/discount`,
+      {
+        method: 'PATCH',
+        body: { discount_type: 'percentage', discount_value: 10 },
+        headers: ownerAuth,
+      },
+    );
+    assertEqualOrThrow(
+      itemDiscount.status,
+      200,
+      `item discount set (${JSON.stringify(itemDiscount.data)})`,
+    );
+    db.prepare("UPDATE order_items SET status = 'preparing' WHERE id = ?").run(discountedLine.id);
+    const withKitchen = await preview(discounted, [{ id: discountedLine.id, quantity: 3 }]);
+    const withoutKitchen = await preview(discounted, [{ id: discountedLine.id, quantity: 3 }], {
+      send_to_kitchen: false,
+    });
+    assertEqualOrThrow(withKitchen.order_total, 675, 'three teas less 10% with the kitchen');
+    assertEqualOrThrow(withoutKitchen.order_total, 675, 'and the same without it');
+
+    console.log('\n--- Edit does not take more money on a part-paid bill ---');
+    const partOrder = await paidOrder([{ product_id: 'prod-bun', quantity: 3 }], []);
+    const partBill = billOf(partOrder);
+    const partPay = await api(baseUrl, `/api/bills/${partBill.id}/payments`, {
+      method: 'POST',
+      body: { payments: [{ method: 'custom', payment_method_id: upiId, amount: 100 }] },
+      headers: cashierAuth,
+    });
+    assertEqualOrThrow(partPay.data.bill.payment_status, 'partial', 'the bill is part paid');
+    const partLine = activeLines(partOrder)[0];
+    current = await preview(partOrder, [{ id: partLine.id, quantity: 3 }]);
+    assertEqualOrThrow(current.payments_must_match_total, false, 'a part-paid bill may stay due');
+    const settle = await edit(partOrder, {
+      ...OWNER,
+      expected_version: current.version,
+      items: [{ id: partLine.id, quantity: 3 }],
+      payments: [
+        { method: 'custom', payment_method_id: upiId, amount: 100 },
+        { method: 'cash', amount: 200 },
+      ],
+    });
+    assertEqualOrThrow(settle.status, 400, 'settling through Edit is refused');
+    const resplit = await edit(partOrder, {
+      ...OWNER,
+      expected_version: current.version,
+      items: [{ id: partLine.id, quantity: 3 }],
+      payments: [{ method: 'cash', amount: 100 }],
+    });
+    assertEqualOrThrow(resplit.status, 200, 'the part payment can be re-split');
+    assertEqualOrThrow(billOf(partOrder).payment_status, 'partial', 'and the bill stays part paid');
 
     console.log('\n--- Cashback and a percentage discount follow the new total ---');
     db.prepare(

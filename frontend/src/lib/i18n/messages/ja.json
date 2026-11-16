@@ -882,7 +882,8 @@
     "editOrderFailed": "注文を更新できませんでした",
     "editOrderChanged": "編集中にこの注文が変更されました。もう一度編集を開いてください。",
     "editOrderNoChanges": "まだ変更はありません",
-    "editOrderCalculating": "計算中…"
+    "editOrderCalculating": "計算中…",
+    "editOrderTakePayment": "追加の {amount} は注文の支払いとして受け取ってください"
   },
   "pos": {
     "addCustomer": "顧客を追加",

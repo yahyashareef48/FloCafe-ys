@@ -882,7 +882,8 @@
     "editOrderFailed": "অর্ডার আপডেট করা যায়নি",
     "editOrderChanged": "সম্পাদনার সময় এই অর্ডার বদলে গেছে। আবার সম্পাদনা খুলুন।",
     "editOrderNoChanges": "এখনও কিছু বদলায়নি",
-    "editOrderCalculating": "হিসাব করা হচ্ছে…"
+    "editOrderCalculating": "হিসাব করা হচ্ছে…",
+    "editOrderTakePayment": "অতিরিক্ত {amount} অর্ডার থেকে পেমেন্ট হিসেবে নিন"
   },
   "pos": {
     "addCustomer": "গ্রাহক যোগ করুন",

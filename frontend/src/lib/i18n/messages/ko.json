@@ -882,7 +882,8 @@
     "editOrderFailed": "주문을 수정할 수 없습니다",
     "editOrderChanged": "수정하는 동안 주문이 바뀌었습니다. 수정을 다시 여세요.",
     "editOrderNoChanges": "아직 변경 사항 없음",
-    "editOrderCalculating": "계산 중…"
+    "editOrderCalculating": "계산 중…",
+    "editOrderTakePayment": "추가 {amount}은 주문에서 결제로 받으세요"
   },
   "pos": {
     "addCustomer": "고객 추가",

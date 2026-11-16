@@ -114,8 +114,6 @@ import {
   NO_CASH_SESSION_ID,
   requireOpenSessionForCash,
 } from '../services/shift-session-gate';
-import { closedDayExists, insertCashDrawerMovement } from '../services/cash-drawer-movements';
-import { currentBusinessDate } from '../services/expenses';
 
 type PinApproverCandidate = { id: string; role: string; pin_hash: string };
 
@@ -6544,6 +6542,7 @@ function resolveEditPaymentTargets(
 
 interface FreedPayment {
   minor: number;
+  line: EditPaymentLine;
   timestamp: string | undefined;
   cashSessionId: number | null | undefined;
   isCash: boolean;
@@ -6552,19 +6551,21 @@ interface FreedPayment {
 /**
  * Rewrites a bill's payment lines to the requested amount per method. Money moved from one method
  * to another keeps the time and shift of the payment it corrects; only money collected beyond what
- * was paid is stamped now, in the open shift. Returns the cash given back to the customer from a
- * payment counted in another shift, which the open drawer pays out.
+ * was paid is stamped now, in the open shift. Cash given back from a payment another shift
+ * counted stays on that payment and leaves the open shift as a negative cash line, so each
+ * drawer and the day keep matching the cash that really moved.
  */
 function rewritePaymentLines(
   existingLines: EditPaymentLine[],
   targets: Map<string, PaymentTarget>,
-  context: { minorFactor: number; at: string; openSessionId: number | null },
-): {
-  lines: EditPaymentLine[];
-  collectedNowCash: boolean;
-  cashReturnedFromOtherShiftMinor: number;
-} {
-  const { minorFactor, at, openSessionId } = context;
+  context: {
+    minorFactor: number;
+    at: string;
+    openSessionId: number | null;
+    fallbackTimestamp: string;
+  },
+): { lines: EditPaymentLine[]; collectedNowCash: boolean } {
+  const { minorFactor, at, openSessionId, fallbackTimestamp } = context;
   const toMinor = (value: unknown) => Math.round(Number(value || 0) * minorFactor);
   const lines = existingLines.map((line) => ({ ...line }));
   const existingMinor = new Map<string, number>();
@@ -6584,9 +6585,15 @@ function rewritePaymentLines(
   }
   const keys = [...methodByKey.keys()];
   const targetMinor = (key: string) => targets.get(key)?.minor ?? 0;
+  const identityOf = (key: string) => {
+    const identity = methodByKey.get(key)!;
+    return {
+      method: identity.method,
+      ...(identity.payment_method_id ? { payment_method_id: identity.payment_method_id } : {}),
+    };
+  };
 
   const freed: FreedPayment[] = [];
-  const emptied = new Set<EditPaymentLine>();
   for (const key of keys) {
     let toRemove = (existingMinor.get(key) ?? 0) - targetMinor(key);
     if (toRemove <= 0) continue;
@@ -6597,12 +6604,9 @@ function rewritePaymentLines(
       const take = Math.min(lineMinor, toRemove);
       if (take <= 0) continue;
       line.amount = (lineMinor - take) / minorFactor;
-      if (line.tendered_amount !== undefined) line.tendered_amount = line.amount;
-      if (line.change_amount !== undefined) line.change_amount = 0;
-      if (line.requested_amount !== undefined) line.requested_amount = line.amount;
-      if (line.amount === 0) emptied.add(line);
       freed.push({
         minor: take,
+        line,
         timestamp: line.timestamp,
         cashSessionId: line.cash_session_id,
         isCash: isCashKey(key, line.method),
@@ -6610,50 +6614,66 @@ function rewritePaymentLines(
       toRemove -= take;
     }
   }
-  const kept = lines.filter((line) => !emptied.has(line));
 
+  const appended: EditPaymentLine[] = [];
   let collectedNowCash = false;
   for (const key of keys) {
     let toAdd = targetMinor(key) - (existingMinor.get(key) ?? 0);
     if (toAdd <= 0) continue;
-    const identity = methodByKey.get(key)!;
-    const base = {
-      method: identity.method,
-      ...(identity.payment_method_id ? { payment_method_id: identity.payment_method_id } : {}),
-    };
     for (const slot of freed) {
       if (toAdd <= 0) break;
       const take = Math.min(slot.minor, toAdd);
       if (take <= 0) continue;
       slot.minor -= take;
       toAdd -= take;
-      kept.push({
-        ...base,
+      appended.push({
+        ...identityOf(key),
         amount: take / minorFactor,
-        timestamp: slot.timestamp ?? at,
+        timestamp: slot.timestamp || fallbackTimestamp,
         cash_session_id: slot.cashSessionId ?? null,
         edited_at: at,
       });
     }
     if (toAdd > 0) {
-      kept.push({
-        ...base,
+      appended.push({
+        ...identityOf(key),
         amount: toAdd / minorFactor,
         timestamp: at,
         cash_session_id: openSessionId ?? NO_CASH_SESSION_ID,
         edited_at: at,
       });
-      if (isCashKey(key, identity.method)) collectedNowCash = true;
+      if (isCashKey(key, identityOf(key).method)) collectedNowCash = true;
     }
   }
 
-  const cashReturnedFromOtherShiftMinor =
-    openSessionId === null
-      ? 0
-      : freed
-          .filter((slot) => slot.isCash && slot.minor > 0 && slot.cashSessionId !== openSessionId)
-          .reduce((sum, slot) => sum + slot.minor, 0);
-  return { lines: kept, collectedNowCash, cashReturnedFromOtherShiftMinor };
+  if (openSessionId !== null) {
+    for (const slot of freed) {
+      if (!slot.isCash || slot.minor <= 0 || slot.cashSessionId === openSessionId) continue;
+      slot.line.amount = (toMinor(slot.line.amount) + slot.minor) / minorFactor;
+      appended.push({
+        method: slot.line.method,
+        ...(slot.line.payment_method_id
+          ? { payment_method_id: Number(slot.line.payment_method_id) }
+          : {}),
+        amount: -slot.minor / minorFactor,
+        timestamp: at,
+        cash_session_id: openSessionId,
+        edited_at: at,
+      });
+      slot.minor = 0;
+    }
+  }
+
+  for (const slot of freed) {
+    const line = slot.line;
+    if (line.tendered_amount !== undefined) line.tendered_amount = line.amount;
+    if (line.change_amount !== undefined) line.change_amount = 0;
+    if (line.requested_amount !== undefined) line.requested_amount = line.amount;
+  }
+  const kept = lines.filter(
+    (line) => !freed.some((slot) => slot.line === line) || line.amount !== 0,
+  );
+  return { lines: [...kept, ...appended], collectedNowCash };
 }
 
 /** Puts back everything a line holds and takes it again for a new quantity, keeping its price. */
@@ -6786,6 +6806,7 @@ function extraUnitsLine(
   db: ReturnType<typeof getDatabase>,
   item: EditItemRow,
   extraQuantity: number,
+  decimals: number,
 ): OrderItemInput {
   const parsed = parseItemJson({ ...item });
   const addons = db
@@ -6820,6 +6841,19 @@ function extraUnitsLine(
     if (price !== undefined) addon.price = price;
   }
   line.addons = resolved;
+  const addonPerUnit = resolved.reduce(
+    (sum, addon) => sum + Number(addon.price || 0) * Number(addon.quantity || 1),
+    0,
+  );
+  line.discount_amount = resolveEditedItemDiscountAmount(
+    db,
+    item,
+    (Number(item.unit_price) + addonPerUnit) * extraQuantity,
+    extraQuantity,
+    Number(item.quantity),
+    decimals,
+    true,
+  );
   return line;
 }
 
@@ -6965,6 +6999,7 @@ function applyOrderEditInTxn(
   const changed: { id: number; name: string; from: number; to: number }[] = [];
   const kitchenLines: { id: number | bigint; quantity: number }[] = [];
   const extraLines: OrderItemInput[] = [];
+  const extraSources: number[] = [];
   for (const item of activeItems.values()) {
     const quantity = keep.get(item.id);
     if (quantity === undefined) {
@@ -6977,7 +7012,10 @@ function applyOrderEditInTxn(
     changed.push({ id: item.id, name: item.product_name, from: oldQuantity, to: quantity });
     if (quantity > oldQuantity && sendToKitchen && item.status !== 'pending') {
       // The kitchen already moved this line on, so the extra units go to it as their own line.
-      extraLines.push(extraUnitsLine(db, item, Number((quantity - oldQuantity).toFixed(6))));
+      extraLines.push(
+        extraUnitsLine(db, item, Number((quantity - oldQuantity).toFixed(6)), decimals),
+      );
+      extraSources.push(item.id);
       continue;
     }
     changeLineQuantityInPlace(db, item, quantity, {
@@ -7016,6 +7054,20 @@ function applyOrderEditInTxn(
     actorUserId,
     initialStatus,
     preserveUnitPrice: true,
+  });
+  extraIds.forEach((id, index) => {
+    const sourceId = extraSources[index];
+    carryPriceOverride(db, sourceId, id);
+    const discount = getAppliedItemDiscountDetails(db, sourceId);
+    if (discount?.discount_type === 'percentage') {
+      recordOrderAudit(db, {
+        orderId,
+        orderItemId: String(id),
+        actorUserId,
+        action: 'item_discount_applied',
+        details: discount,
+      });
+    }
   });
   if (sendToKitchen) {
     for (const id of [...addedIds, ...extraIds]) kitchenLines.push({ id, quantity: 0 });
@@ -7098,6 +7150,7 @@ function applyOrderEditInTxn(
         minorFactor,
         at,
         openSessionId: openSession ? Number(openSession.id) : null,
+        fallbackTimestamp: bill.paid_at || at,
       });
       if (rewrite.collectedNowCash) requireOpenSessionForCash(db);
       finalLines = rewrite.lines;
@@ -7116,21 +7169,13 @@ function applyOrderEditInTxn(
       paymentsChanged =
         [...targets.values()].some((target) => (before.get(target.key) ?? 0) !== target.minor) ||
         [...before.entries()].some(([key, minor]) => minor > 0 && !targets.has(key));
-      if (openSession && rewrite.cashReturnedFromOtherShiftMinor > 0) {
-        const businessDate = currentBusinessDate();
-        if (!closedDayExists(db, businessDate)) {
-          insertCashDrawerMovement(db, {
-            businessDate,
-            movementType: 'pay_out',
-            amountCents: rewrite.cashReturnedFromOtherShiftMinor,
-            reason: `Order #${order.order_number} edited: cash given back`,
-            createdBy: actorUserId,
-            cashSessionId: Number(openSession.id),
-          });
-        }
-      }
     }
     if (!preview) {
+      if (!wasPaid && paidMinor > oldPaidMinor) {
+        throw editError(
+          'Edit cannot take more money on a part-paid bill; take the rest as a payment from the order',
+        );
+      }
       if (paidMinor > billTotalMinor) {
         throw editError(
           'The payments add up to more than the new total. Lower them so they match the bill.',

@@ -882,7 +882,8 @@
     "editOrderFailed": "อัปเดตออเดอร์ไม่ได้",
     "editOrderChanged": "ออเดอร์นี้เปลี่ยนไประหว่างที่คุณแก้ไข โปรดเปิดแก้ไขอีกครั้ง",
     "editOrderNoChanges": "ยังไม่มีการเปลี่ยนแปลง",
-    "editOrderCalculating": "กำลังคำนวณ…"
+    "editOrderCalculating": "กำลังคำนวณ…",
+    "editOrderTakePayment": "รับเงินเพิ่ม {amount} เป็นการชำระจากออเดอร์"
   },
   "pos": {
     "addCustomer": "เพิ่มลูกค้า",
