@@ -78,6 +78,7 @@ import { ROLE_ACCESS, hasRole } from '../../shared/role-permissions';
 import { isTerminalItemStatus } from '../../shared/order-item-status';
 import { getCurrencyFractionDigits, getCurrencyMinorUnitFactor } from '../countries';
 import {
+  calculateCashback,
   checkKitchenDeliveryStatus,
   completeExactBalanceSettlement,
   getTenantCurrency,
@@ -108,6 +109,11 @@ export {
   PIN_WINDOW_MS,
 };
 import { isOperationReference, serializeOperationFailure } from '../lib/operation-failure';
+import {
+  getOpenSession,
+  NO_CASH_SESSION_ID,
+  requireOpenSessionForCash,
+} from '../services/shift-session-gate';
 
 type PinApproverCandidate = { id: string; role: string; pin_hash: string };
 
@@ -6305,6 +6311,1101 @@ function deleteOrderInTxn(
   };
 }
 
+type OwnerApproval =
+  | { ok: true; approverId: string }
+  | { ok: false; status: number; error: string };
+
+/** Checks the owner staff PIN that approves an order delete or edit, under the shared PIN rate limit. */
+async function verifyOwnerApproval(req: Request, scope: string): Promise<OwnerApproval> {
+  const overridePin = typeof req.body?.override_pin === 'string' ? req.body.override_pin : '';
+  const approverId = typeof req.body?.approver_id === 'string' ? req.body.approver_id : '';
+  if (!approverId || !overridePin) {
+    return { ok: false, status: 400, error: `Owner PIN required to ${scope} an order` };
+  }
+  const db = getDatabase();
+  const canonicalIp = normalizeIpForRateLimit(req.ip || req.socket.remoteAddress || 'unknown');
+  const rateLimitKey = `pin:${canonicalIp}:order-${scope}`;
+  const approver = await withPinVerificationLock(rateLimitKey, async () => {
+    if (isPinRateLimited(rateLimitKey)) return 'rate-limited' as const;
+    const candidate = db
+      .prepare(
+        "SELECT id, pin_hash FROM users WHERE id = ? AND role = 'owner' AND is_active = 1 AND pin_hash IS NOT NULL",
+      )
+      .get(approverId) as { id: string; pin_hash: string } | undefined;
+    if (
+      candidate &&
+      /^\d{4,6}$/.test(overridePin) &&
+      (await verifyPinAsync(candidate.pin_hash, overridePin))
+    ) {
+      clearPinRateLimit(rateLimitKey);
+      return candidate;
+    }
+    checkPinRateLimit(rateLimitKey);
+    return null;
+  });
+  if (approver === 'rate-limited') {
+    return { ok: false, status: 429, error: 'Too many PIN attempts. Try again in 15 minutes.' };
+  }
+  if (!approver) return { ok: false, status: 403, error: 'Invalid owner PIN' };
+  return { ok: true, approverId: approver.id };
+}
+
+const ORDER_EDIT_REASON = 'Order edited';
+const MAX_EDIT_PAYMENT_LINES = 20;
+
+interface EditPaymentLine {
+  method: string;
+  payment_method_id?: number | null;
+  amount: number;
+  timestamp?: string;
+  cash_session_id?: number | null;
+  tendered_amount?: number;
+  change_amount?: number;
+  transaction_id?: string;
+  [key: string]: unknown;
+}
+
+interface EditItemRow extends OrderItemRow {
+  order_id: number;
+  product_name: string;
+  subtotal: number;
+  total: number;
+}
+
+interface EditBillRow {
+  id: number;
+  order_id: number;
+  bill_number: string;
+  customer_id: string | null;
+  total: number;
+  paid_amount: number | null;
+  payment_status: string;
+  payment_details: string | null;
+  paid_at: string | null;
+  split_group_id: string | null;
+}
+
+export interface OrderEditResult {
+  deleted: boolean;
+  order_id: number;
+  order_number: string;
+  /** Fingerprint of the order as it stood before this request; a save must quote it. */
+  version: string;
+  order_total: number;
+  bill_total: number | null;
+  paid_amount: number;
+  balance: number;
+  payment_status: string | null;
+  /** A fully paid bill must stay fully paid, so the new payment split has to equal the bill total. */
+  payments_must_match_total: boolean;
+  payments: EditPaymentLine[];
+  kitchen_items: unknown[];
+}
+
+class OrderEditPreview extends Error {
+  constructor(readonly result: OrderEditResult) {
+    super('Order edit preview');
+  }
+}
+
+function editError(message: string, statusCode = 400): Error {
+  return Object.assign(new Error(message), { statusCode });
+}
+
+function parsePaymentLines(raw: string | null): EditPaymentLine[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    const lines = Array.isArray(parsed) ? parsed : [parsed];
+    return lines.filter(
+      (line): line is EditPaymentLine =>
+        !!line && typeof line === 'object' && typeof (line as EditPaymentLine).method === 'string',
+    );
+  } catch {
+    return [];
+  }
+}
+
+function paymentKey(line: { method: string; payment_method_id?: number | null }): string {
+  return line.payment_method_id
+    ? `custom:${Number(line.payment_method_id)}`
+    : `builtin:${line.method.toLowerCase()}`;
+}
+
+function isCashKey(key: string, method: string): boolean {
+  return key === 'builtin:cash' || (key.startsWith('custom:') && method.toLowerCase() === 'cash');
+}
+
+/**
+ * What the edit compares against, so a save is refused when someone else changed the order's
+ * items, totals or payments after the editor opened. Kitchen progress does not count.
+ */
+function orderEditVersion(db: ReturnType<typeof getDatabase>, orderId: string | number): string {
+  const order = db
+    .prepare('SELECT total, discount_amount, customer_id, status FROM orders WHERE id = ?')
+    .get(orderId) as { status: string } | undefined;
+  const items = (
+    db
+      .prepare('SELECT id, quantity, status FROM order_items WHERE order_id = ? ORDER BY id')
+      .all(orderId) as { id: number; quantity: number; status: string }[]
+  ).map((item) => [item.id, Number(item.quantity), isTerminalItemStatus(item.status)]);
+  const bills = db
+    .prepare(
+      'SELECT id, total, paid_amount, payment_status, payment_details FROM bills WHERE order_id = ? ORDER BY id',
+    )
+    .all(orderId);
+  const cancelled = order?.status === 'cancelled';
+  return createHash('sha256')
+    .update(JSON.stringify({ order: order ? { ...order, status: cancelled } : null, items, bills }))
+    .digest('hex')
+    .slice(0, 24);
+}
+
+interface PaymentTarget {
+  key: string;
+  method: string;
+  payment_method_id: number | null;
+  minor: number;
+}
+
+/** Reads the requested payment split into one amount per method, in minor units. */
+function resolveEditPaymentTargets(
+  db: ReturnType<typeof getDatabase>,
+  input: unknown,
+  existingLines: EditPaymentLine[],
+  minorFactor: number,
+): Map<string, PaymentTarget> {
+  if (!Array.isArray(input)) throw editError('payments must be a list');
+  if (input.length > MAX_EDIT_PAYMENT_LINES) {
+    throw editError(`A maximum of ${MAX_EDIT_PAYMENT_LINES} payment lines is allowed`);
+  }
+  const existingByKey = new Map(existingLines.map((line) => [paymentKey(line), line]));
+  const targets = new Map<string, PaymentTarget>();
+  input.forEach((raw, index) => {
+    const entry = (raw && typeof raw === 'object' ? raw : {}) as {
+      method?: unknown;
+      payment_method_id?: unknown;
+      amount?: unknown;
+    };
+    const amount = Number(entry.amount);
+    if (typeof entry.amount !== 'number' || !Number.isFinite(amount) || amount < 0) {
+      throw editError(`Payment line ${index + 1} needs an amount of zero or more`);
+    }
+    const minor = Math.round(amount * minorFactor);
+    if (Math.abs(minor - amount * minorFactor) > 1e-6) {
+      throw editError(`Payment line ${index + 1} has too many decimal places`);
+    }
+    let method: string;
+    let methodId: number | null = null;
+    const requestedId =
+      entry.payment_method_id === undefined || entry.payment_method_id === null
+        ? null
+        : Number(entry.payment_method_id);
+    const requestedMethod = typeof entry.method === 'string' ? entry.method.trim() : '';
+    if (requestedId !== null && Number.isSafeInteger(requestedId) && requestedId > 0) {
+      const known = existingByKey.get(`custom:${requestedId}`);
+      const configured = known
+        ? { id: requestedId, name: known.method }
+        : (db
+            .prepare('SELECT id, name FROM payment_methods WHERE id = ? AND is_active = 1')
+            .get(requestedId) as { id: number; name: string } | undefined);
+      if (!configured) throw editError(`Payment line ${index + 1} uses an unavailable method`);
+      method = configured.name;
+      methodId = Number(configured.id);
+    } else if (['cash', 'card', 'wallet'].includes(requestedMethod.toLowerCase())) {
+      method = requestedMethod.toLowerCase();
+    } else if (requestedMethod && existingByKey.has(`builtin:${requestedMethod.toLowerCase()}`)) {
+      method = existingByKey.get(`builtin:${requestedMethod.toLowerCase()}`)!.method;
+    } else {
+      const configured = requestedMethod
+        ? (db
+            .prepare(
+              'SELECT id, name FROM payment_methods WHERE lower(name) = lower(?) AND is_active = 1',
+            )
+            .get(requestedMethod) as { id: number; name: string } | undefined)
+        : undefined;
+      if (!configured) throw editError(`Payment line ${index + 1} uses an unavailable method`);
+      method = configured.name;
+      methodId = Number(configured.id);
+    }
+    const key = paymentKey({ method, payment_method_id: methodId });
+    const current = targets.get(key);
+    targets.set(key, {
+      key,
+      method,
+      payment_method_id: methodId,
+      minor: (current?.minor ?? 0) + minor,
+    });
+  });
+  return targets;
+}
+
+interface FreedPayment {
+  minor: number;
+  line: EditPaymentLine;
+  timestamp: string | undefined;
+  cashSessionId: number | null | undefined;
+  isCash: boolean;
+}
+
+/**
+ * Rewrites a bill's payment lines to the requested amount per method. Money moved from one method
+ * to another keeps the time and shift of the payment it corrects; only money collected beyond what
+ * was paid is stamped now, in the open shift. Cash given back from a payment another shift
+ * counted stays on that payment and leaves the open shift as a negative cash line, so each
+ * drawer and the day keep matching the cash that really moved.
+ */
+function rewritePaymentLines(
+  existingLines: EditPaymentLine[],
+  targets: Map<string, PaymentTarget>,
+  context: {
+    minorFactor: number;
+    at: string;
+    openSessionId: number | null;
+    fallbackTimestamp: string;
+  },
+): { lines: EditPaymentLine[]; collectedNowCash: boolean } {
+  const { minorFactor, at, openSessionId, fallbackTimestamp } = context;
+  const toMinor = (value: unknown) => Math.round(Number(value || 0) * minorFactor);
+  const lines = existingLines.map((line) => ({ ...line }));
+  const existingMinor = new Map<string, number>();
+  const methodByKey = new Map<string, { method: string; payment_method_id: number | null }>();
+  for (const line of lines) {
+    const key = paymentKey(line);
+    existingMinor.set(key, (existingMinor.get(key) ?? 0) + toMinor(line.amount));
+    methodByKey.set(key, {
+      method: line.method,
+      payment_method_id: line.payment_method_id ? Number(line.payment_method_id) : null,
+    });
+  }
+  for (const [key, target] of targets) {
+    if (!methodByKey.has(key)) {
+      methodByKey.set(key, { method: target.method, payment_method_id: target.payment_method_id });
+    }
+  }
+  const keys = [...methodByKey.keys()];
+  const targetMinor = (key: string) => targets.get(key)?.minor ?? 0;
+  const identityOf = (key: string) => {
+    const identity = methodByKey.get(key)!;
+    return {
+      method: identity.method,
+      ...(identity.payment_method_id ? { payment_method_id: identity.payment_method_id } : {}),
+    };
+  };
+
+  const freed: FreedPayment[] = [];
+  for (const key of keys) {
+    let toRemove = (existingMinor.get(key) ?? 0) - targetMinor(key);
+    if (toRemove <= 0) continue;
+    for (let index = lines.length - 1; index >= 0 && toRemove > 0; index -= 1) {
+      const line = lines[index];
+      if (paymentKey(line) !== key) continue;
+      const lineMinor = toMinor(line.amount);
+      const take = Math.min(lineMinor, toRemove);
+      if (take <= 0) continue;
+      line.amount = (lineMinor - take) / minorFactor;
+      freed.push({
+        minor: take,
+        line,
+        timestamp: line.timestamp,
+        cashSessionId: line.cash_session_id,
+        isCash: isCashKey(key, line.method),
+      });
+      toRemove -= take;
+    }
+  }
+
+  const appended: EditPaymentLine[] = [];
+  let collectedNowCash = false;
+  for (const key of keys) {
+    let toAdd = targetMinor(key) - (existingMinor.get(key) ?? 0);
+    if (toAdd <= 0) continue;
+    for (const slot of freed) {
+      if (toAdd <= 0) break;
+      const take = Math.min(slot.minor, toAdd);
+      if (take <= 0) continue;
+      slot.minor -= take;
+      toAdd -= take;
+      appended.push({
+        ...identityOf(key),
+        amount: take / minorFactor,
+        timestamp: slot.timestamp || fallbackTimestamp,
+        cash_session_id: slot.cashSessionId ?? null,
+        edited_at: at,
+      });
+    }
+    if (toAdd > 0) {
+      appended.push({
+        ...identityOf(key),
+        amount: toAdd / minorFactor,
+        timestamp: at,
+        cash_session_id: openSessionId ?? NO_CASH_SESSION_ID,
+        edited_at: at,
+      });
+      if (isCashKey(key, identityOf(key).method)) collectedNowCash = true;
+    }
+  }
+
+  if (openSessionId !== null) {
+    for (const slot of freed) {
+      if (!slot.isCash || slot.minor <= 0 || slot.cashSessionId === openSessionId) continue;
+      slot.line.amount = (toMinor(slot.line.amount) + slot.minor) / minorFactor;
+      appended.push({
+        method: slot.line.method,
+        ...(slot.line.payment_method_id
+          ? { payment_method_id: Number(slot.line.payment_method_id) }
+          : {}),
+        amount: -slot.minor / minorFactor,
+        timestamp: at,
+        cash_session_id: openSessionId,
+        edited_at: at,
+      });
+      slot.minor = 0;
+    }
+  }
+
+  for (const slot of freed) {
+    const line = slot.line;
+    if (line.tendered_amount !== undefined) line.tendered_amount = line.amount;
+    if (line.change_amount !== undefined) line.change_amount = 0;
+    if (line.requested_amount !== undefined) line.requested_amount = line.amount;
+  }
+  const kept = lines.filter(
+    (line) => !freed.some((slot) => slot.line === line) || line.amount !== 0,
+  );
+  return { lines: [...kept, ...appended], collectedNowCash };
+}
+
+/** Puts back everything a line holds and takes it again for a new quantity, keeping its price. */
+function changeLineQuantityInPlace(
+  db: ReturnType<typeof getDatabase>,
+  item: EditItemRow,
+  newQuantity: number,
+  context: {
+    tenantInfo: Parameters<typeof calculateItemTax>[0];
+    customer: TaxCustomerRow;
+    decimals: number;
+    actorUserId: string;
+    at: string;
+  },
+): void {
+  const { tenantInfo, customer, decimals, actorUserId, at } = context;
+  const product = db.prepare('SELECT * FROM products WHERE id = ?').get(item.product_id) as
+    | ProductRow
+    | undefined;
+  if (!product) {
+    throw editError(
+      `${item.product_name} is no longer on the menu; remove it and add a new item instead`,
+      409,
+    );
+  }
+  try {
+    validateProductQuantity(product, newQuantity);
+  } catch (err: unknown) {
+    throw editError(err instanceof Error ? err.message : 'Invalid quantity');
+  }
+  const oldQuantity = Number(item.quantity);
+  const ratio = newQuantity / oldQuantity;
+  const addons = db
+    .prepare('SELECT * FROM order_item_addons WHERE order_item_id = ? ORDER BY id')
+    .all(item.id) as {
+    id: number;
+    addon_id: string | null;
+    addon_name: string;
+    price: number;
+    quantity: number;
+    inventory_deducted_quantity: number;
+  }[];
+  const referenceId = `${item.id}:edit:${at}`;
+
+  const inventoryTarget =
+    Number(item.inventory_deducted_quantity) > 0 ? orderItemInventoryTarget(db, item) : null;
+  const newDeducted = Number((Number(item.inventory_deducted_quantity) * ratio).toFixed(6));
+  if (inventoryTarget) {
+    adjustProductStock(db, {
+      productId: inventoryTarget.productId,
+      variantId: inventoryTarget.variantId,
+      quantityDelta: Number((Number(item.inventory_deducted_quantity) - newDeducted).toFixed(6)),
+      movementType: newQuantity < oldQuantity ? 'cancel_restore' : 'sale',
+      referenceType: 'order_item',
+      referenceId,
+      reason: ORDER_EDIT_REASON,
+      actorUserId,
+      createdAt: at,
+    });
+  }
+  const addonLines = addons.map((addon) => ({
+    id: addon.addon_id,
+    name: addon.addon_name,
+    inventory_deducted_quantity: Number(addon.inventory_deducted_quantity || 0),
+  }));
+  const scaledAddonLines = addonLines.map((addon) => ({
+    ...addon,
+    inventory_deducted_quantity: Number((addon.inventory_deducted_quantity * ratio).toFixed(6)),
+  }));
+  const moveOptions = { actorUserId, referenceId, reason: ORDER_EDIT_REASON, createdAt: at };
+  moveOrderItemAddonStock(db, addonLines, { ...moveOptions, direction: 'restore' });
+  moveOrderItemAddonStock(db, scaledAddonLines, { ...moveOptions, direction: 'deplete' });
+  addons.forEach((addon, index) => {
+    db.prepare('UPDATE order_item_addons SET inventory_deducted_quantity = ? WHERE id = ?').run(
+      scaledAddonLines[index].inventory_deducted_quantity,
+      addon.id,
+    );
+  });
+
+  const oldRecipe = parseRecipeSnapshot(item.recipe_snapshot);
+  const newRecipe = oldRecipe ? scaleRecipeSnapshot(oldRecipe, ratio, decimals) : null;
+  if (oldRecipe && newRecipe) {
+    applyRecipeSnapshot(db, oldRecipe, { direction: 'restore', actorUserId, referenceId });
+    applyRecipeSnapshot(db, newRecipe, { direction: 'deplete', actorUserId, referenceId });
+  }
+  const { ingredientCost, ingredientCostKnown } = extractOrderItemCostFromSnapshot(newRecipe);
+
+  const addonPerUnit = addons.reduce(
+    (sum, addon) => sum + Number(addon.price || 0) * Number(addon.quantity || 1),
+    0,
+  );
+  const baseTotal = (Number(item.unit_price) + addonPerUnit) * newQuantity;
+  const discount = resolveEditedItemDiscountAmount(
+    db,
+    item,
+    baseTotal,
+    newQuantity,
+    oldQuantity,
+    decimals,
+  );
+  const subtotal = Math.max(0, Number((baseTotal - discount).toFixed(decimals)));
+  const tax = calculateItemTax(tenantInfo, product, subtotal, customer);
+  const total = subtotal + (tax.tax_type === 'inclusive' ? 0 : tax.tax_amount);
+  db.prepare(`
+    UPDATE order_items
+    SET quantity = ?, inventory_deducted_quantity = ?, recipe_snapshot = ?, ingredient_cost = ?,
+        ingredient_cost_known = ?, subtotal = ?, tax_amount = ?, tax_breakdown = ?, tax_snapshot = ?,
+        tax_type = ?, discount_amount = ?, total = ?, updated_at = ?
+    WHERE id = ?
+  `).run(
+    newQuantity,
+    inventoryTarget ? newDeducted : Number(item.inventory_deducted_quantity),
+    newRecipe ? JSON.stringify(newRecipe) : item.recipe_snapshot,
+    ingredientCost,
+    ingredientCostKnown,
+    subtotal,
+    tax.tax_amount,
+    JSON.stringify(tax.tax_breakdown),
+    tax.tax_snapshot ? JSON.stringify(tax.tax_snapshot) : null,
+    tax.tax_type,
+    discount,
+    total,
+    at,
+    item.id,
+  );
+}
+
+/** A copy of an existing line for its extra units, so the kitchen makes only those. */
+function extraUnitsLine(
+  db: ReturnType<typeof getDatabase>,
+  item: EditItemRow,
+  extraQuantity: number,
+  decimals: number,
+): OrderItemInput {
+  const parsed = parseItemJson({ ...item });
+  const addons = db
+    .prepare(
+      'SELECT addon_id, addon_name, price, quantity FROM order_item_addons WHERE order_item_id = ? ORDER BY id',
+    )
+    .all(item.id) as {
+    addon_id: string | null;
+    addon_name: string;
+    price: number;
+    quantity: number;
+  }[];
+  const line: OrderItemInput = {
+    product_id: item.product_id,
+    variant_id: item.variant_id,
+    quantity: extraQuantity,
+    unit_price: Number(item.unit_price),
+    variant_selection: parsed.variant_selection,
+    modifier_selection: parsed.modifier_selection,
+    special_instructions: item.special_instructions,
+    addons: addons.map((addon) => ({
+      id: addon.addon_id ?? undefined,
+      name: addon.addon_name,
+      price: addon.price,
+      quantity: addon.quantity,
+    })),
+  };
+  const resolved = resolveItemAddons(db, line.product_id, line.addons, extraQuantity);
+  const originalPrice = new Map(addons.map((addon) => [addon.addon_id, addon.price]));
+  for (const addon of resolved) {
+    const price = originalPrice.get(addon.id);
+    if (price !== undefined) addon.price = price;
+  }
+  line.addons = resolved;
+  const addonPerUnit = resolved.reduce(
+    (sum, addon) => sum + Number(addon.price || 0) * Number(addon.quantity || 1),
+    0,
+  );
+  line.discount_amount = resolveEditedItemDiscountAmount(
+    db,
+    item,
+    (Number(item.unit_price) + addonPerUnit) * extraQuantity,
+    extraQuantity,
+    Number(item.quantity),
+    decimals,
+    true,
+  );
+  return line;
+}
+
+interface ParsedEditItems {
+  keep: Map<number, number>;
+  added: OrderItemInput[];
+}
+
+function parseEditItems(input: unknown, activeItems: Map<number, EditItemRow>): ParsedEditItems {
+  if (!Array.isArray(input)) throw editError('items must be a list');
+  if (input.length > MAX_ORDER_ITEMS) {
+    throw editError(`A maximum of ${MAX_ORDER_ITEMS} items is allowed per order`);
+  }
+  const keep = new Map<number, number>();
+  const added: OrderItemInput[] = [];
+  input.forEach((raw, index) => {
+    const entry = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+    const quantity = Number(entry.quantity);
+    if (typeof entry.quantity !== 'number' || !Number.isFinite(quantity) || quantity <= 0) {
+      throw editError(`Item ${index + 1} needs a quantity above zero`);
+    }
+    if (entry.id !== undefined && entry.id !== null) {
+      const id = Number(entry.id);
+      if (!activeItems.has(id)) {
+        throw editError(`Item ${index + 1} is not an active line of this order`);
+      }
+      if (keep.has(id)) throw editError(`Item ${index + 1} is listed twice`);
+      keep.set(id, quantity);
+      return;
+    }
+    if (typeof entry.product_id !== 'string' || !entry.product_id) {
+      throw editError(`Item ${index + 1} needs a product`);
+    }
+    added.push({
+      product_id: entry.product_id,
+      variant_id: typeof entry.variant_id === 'string' ? entry.variant_id : null,
+      quantity,
+      addons: Array.isArray(entry.addons) ? (entry.addons as OrderItemInput['addons']) : null,
+      special_instructions:
+        typeof entry.special_instructions === 'string' ? entry.special_instructions : null,
+      ...(entry.price_override !== undefined && entry.price_override !== null
+        ? { price_override: entry.price_override as OrderItemInput['price_override'] }
+        : {}),
+    });
+  });
+  return { keep, added };
+}
+
+/**
+ * Corrects an order in place: lines removed, quantities changed, new lines added and, for a bill
+ * that took money, the payment split rewritten so it still matches what the customer paid.
+ * Removing every line deletes the order. A preview runs the same work and rolls it back.
+ */
+function applyOrderEditInTxn(
+  db: ReturnType<typeof getDatabase>,
+  orderId: string,
+  body: Record<string, unknown>,
+  context: { actorUserId: string; approverId: string | null; preview: boolean },
+): OrderEditResult {
+  const { actorUserId, approverId, preview } = context;
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId) as
+    | (EditableOrderRow & {
+        id: number;
+        order_number: string;
+        total: number;
+        table_id: string | null;
+        completed_at: string | null;
+      })
+    | undefined;
+  if (!order) throw editError('Order not found', 404);
+  const version = orderEditVersion(db, orderId);
+  if (!preview && body.expected_version !== version) {
+    throw editError('This order changed after you opened it. Close Edit and open it again.', 409);
+  }
+  if (order.status === 'cancelled') {
+    throw editError('A cancelled order cannot be edited', 409);
+  }
+  const bills = db
+    .prepare('SELECT * FROM bills WHERE order_id = ? ORDER BY id')
+    .all(orderId) as EditBillRow[];
+  if (bills.length > 1 || bills.some((bill) => bill.split_group_id)) {
+    throw editError('An order with a split bill cannot be edited', 409);
+  }
+  const bill = bills[0] ?? null;
+  const hasRefund =
+    (bill && ['refunded', 'partially_refunded'].includes(bill.payment_status)) ||
+    !!db
+      .prepare(
+        'SELECT 1 FROM refunds r JOIN bills b ON b.id = r.bill_id WHERE b.order_id = ? LIMIT 1',
+      )
+      .get(orderId);
+  if (hasRefund) throw editError('An order with a refund cannot be edited', 409);
+
+  const allItems = db
+    .prepare('SELECT * FROM order_items WHERE order_id = ? ORDER BY id')
+    .all(orderId) as EditItemRow[];
+  const activeItems = new Map(
+    allItems.filter((item) => !isTerminalItemStatus(item.status)).map((item) => [item.id, item]),
+  );
+  const { keep, added } = parseEditItems(body.items, activeItems);
+  const sendToKitchen = body.send_to_kitchen !== false;
+  const at = now();
+
+  const currency = getTenantCurrency();
+  const decimals = getCurrencyFractionDigits(currency);
+  const minorFactor = getCurrencyMinorUnitFactor(currency);
+  const oldLines = bill ? parsePaymentLines(bill.payment_details) : [];
+  const oldPaidMinor = Math.round(Number(bill?.paid_amount || 0) * minorFactor);
+  const wasPaid = bill?.payment_status === 'paid';
+
+  if (keep.size === 0 && added.length === 0) {
+    const result: OrderEditResult = {
+      deleted: true,
+      order_id: order.id,
+      order_number: String(order.order_number),
+      version,
+      order_total: 0,
+      bill_total: bill ? 0 : null,
+      paid_amount: 0,
+      balance: 0,
+      payment_status: null,
+      payments_must_match_total: false,
+      payments: [],
+      kitchen_items: [],
+    };
+    if (preview) return result;
+    deleteOrderInTxn(db, orderId, actorUserId);
+    return result;
+  }
+
+  const tenantInfo = {
+    country: getSettingValue('country') || '',
+    business_type: getSettingValue('business_type') || 'restaurant',
+    state_code: getSettingValue('state_code') || '',
+    currency,
+    taxes_enabled: getSettingValue('taxes_enabled') === 'true',
+  };
+  const customer = order.customer_id
+    ? (db.prepare('SELECT * FROM customers WHERE id = ?').get(order.customer_id) as TaxCustomerRow)
+    : null;
+
+  const removed: { id: number; name: string; quantity: number }[] = [];
+  const changed: { id: number; name: string; from: number; to: number }[] = [];
+  const kitchenLines: { id: number | bigint; quantity: number }[] = [];
+  const extraLines: OrderItemInput[] = [];
+  const extraSources: number[] = [];
+  for (const item of activeItems.values()) {
+    const quantity = keep.get(item.id);
+    if (quantity === undefined) {
+      cancelOrderItemAndRestoreStock(db, item, actorUserId, ORDER_EDIT_REASON);
+      removed.push({ id: item.id, name: item.product_name, quantity: Number(item.quantity) });
+      continue;
+    }
+    const oldQuantity = Number(item.quantity);
+    if (quantity === oldQuantity) continue;
+    changed.push({ id: item.id, name: item.product_name, from: oldQuantity, to: quantity });
+    if (quantity > oldQuantity && sendToKitchen && item.status !== 'pending') {
+      // The kitchen already moved this line on, so the extra units go to it as their own line.
+      extraLines.push(
+        extraUnitsLine(db, item, Number((quantity - oldQuantity).toFixed(6)), decimals),
+      );
+      extraSources.push(item.id);
+      continue;
+    }
+    changeLineQuantityInPlace(db, item, quantity, {
+      tenantInfo,
+      customer,
+      decimals,
+      actorUserId,
+      at,
+    });
+    if (quantity > oldQuantity && sendToKitchen) {
+      kitchenLines.push({ id: item.id, quantity: Number((quantity - oldQuantity).toFixed(6)) });
+    }
+  }
+
+  const initialStatus = sendToKitchen ? 'pending' : 'served';
+  try {
+    for (const item of added) {
+      validateItemNotes(db, item.special_instructions);
+      item.addons = resolveItemAddons(db, item.product_id, item.addons, item.quantity);
+    }
+  } catch (err: unknown) {
+    throw editError(err instanceof Error ? err.message : 'Invalid order item');
+  }
+  const addedIds = insertOrderItems(db, orderId, added, {
+    tenantInfo,
+    customer,
+    isOnlineOrder: !!order.online_platform,
+    actorUserId,
+    initialStatus,
+    canOverridePrice: hasPermission(actorUserId, ITEM_PRICE_OVERRIDE_PERMISSION),
+  });
+  const extraIds = insertOrderItems(db, orderId, extraLines, {
+    tenantInfo,
+    customer,
+    isOnlineOrder: !!order.online_platform,
+    actorUserId,
+    initialStatus,
+    preserveUnitPrice: true,
+  });
+  extraIds.forEach((id, index) => {
+    const sourceId = extraSources[index];
+    carryPriceOverride(db, sourceId, id);
+    const discount = getAppliedItemDiscountDetails(db, sourceId);
+    if (discount?.discount_type === 'percentage') {
+      recordOrderAudit(db, {
+        orderId,
+        orderItemId: String(id),
+        actorUserId,
+        action: 'item_discount_applied',
+        details: discount,
+      });
+    }
+  });
+  if (sendToKitchen) {
+    for (const id of [...addedIds, ...extraIds]) kitchenLines.push({ id, quantity: 0 });
+  }
+
+  const totals = calculateOrderTotals(db, orderId);
+  const discountAmount = resolveOrderLevelDiscountAmount(order, totals.subtotal, decimals);
+  const engineCharges = resolveEngineCharges(order, totals.subtotal, discountAmount);
+  const { taxRollup, total, roundOff } = recomputeOrderTotals({
+    tenantInfo,
+    chargeContext: order,
+    customer,
+    totals,
+    discountAmount,
+    taxScaling: 'when-discounted',
+    appliedCharges: engineCharges ? engineCharges.appliedCharges : null,
+    chargeColumnOverrides: engineCharges?.chargeColumnOverrides,
+  });
+  const serviceCharge = engineCharges
+    ? engineCharges.columns.service_charge
+    : order.service_charge || 0;
+  const packagingCharge = engineCharges
+    ? engineCharges.columns.packaging_charge
+    : order.packaging_charge || 0;
+  const chargesJson = engineCharges ? engineCharges.chargesJson : (order.charges_breakdown ?? null);
+  db.prepare(`
+    UPDATE orders SET subtotal = ?, tax_amount = ?, tax_breakdown = ?, tax_snapshot = ?, discount_amount = ?,
+      total = ?, service_charge = ?, packaging_charge = ?, charges_breakdown = ?, round_off = ?, updated_at = ?
+    WHERE id = ?
+  `).run(
+    totals.subtotal,
+    taxRollup.taxAmount,
+    JSON.stringify(taxRollup.breakdowns),
+    taxRollup.snapshotJson,
+    discountAmount,
+    total,
+    serviceCharge,
+    packagingCharge,
+    chargesJson,
+    roundOff,
+    at,
+    orderId,
+  );
+
+  let billTotal: number | null = null;
+  let paidMinor = 0;
+  let paymentStatus: string | null = null;
+  let finalLines: EditPaymentLine[] = [];
+  let paymentsChanged = false;
+  if (!bill) {
+    if (Array.isArray(body.payments) && body.payments.length > 0) {
+      throw editError('This order has no bill yet; take payment from the order instead');
+    }
+  } else {
+    const pack = getActiveCountryPack(tenantInfo.country);
+    const rounded = applyPayableRounding(total, pack, currency);
+    billTotal = rounded.total;
+    const billTotalMinor = Math.round(billTotal * minorFactor);
+    finalLines = oldLines;
+    paidMinor = oldPaidMinor;
+    const paymentsGiven = Array.isArray(body.payments);
+    const tookMoney = wasPaid || oldPaidMinor > 0;
+    if (paymentsGiven && !tookMoney && !preview) {
+      const asked = (body.payments as { amount?: unknown }[]).some(
+        (line) => Number(line?.amount) > 0,
+      );
+      if (asked)
+        throw editError('This bill has no payment yet; take payment from the order instead');
+    }
+    if (paymentsGiven && tookMoney && !preview) {
+      const targets = resolveEditPaymentTargets(db, body.payments, oldLines, minorFactor);
+      const walletBefore = oldLines
+        .filter((line) => paymentKey(line) === 'builtin:wallet')
+        .reduce((sum, line) => sum + Math.round(Number(line.amount || 0) * minorFactor), 0);
+      if ((targets.get('builtin:wallet')?.minor ?? 0) !== walletBefore) {
+        throw editError('Loyalty points paid on this order cannot be changed here');
+      }
+      const openSession = getOpenSession(db);
+      const rewrite = rewritePaymentLines(oldLines, targets, {
+        minorFactor,
+        at,
+        openSessionId: openSession ? Number(openSession.id) : null,
+        fallbackTimestamp: bill.paid_at || at,
+      });
+      if (rewrite.collectedNowCash) requireOpenSessionForCash(db);
+      finalLines = rewrite.lines;
+      paidMinor = finalLines.reduce(
+        (sum, line) => sum + Math.round(Number(line.amount || 0) * minorFactor),
+        0,
+      );
+      const before = new Map<string, number>();
+      for (const line of oldLines) {
+        const key = paymentKey(line);
+        before.set(
+          key,
+          (before.get(key) ?? 0) + Math.round(Number(line.amount || 0) * minorFactor),
+        );
+      }
+      paymentsChanged =
+        [...targets.values()].some((target) => (before.get(target.key) ?? 0) !== target.minor) ||
+        [...before.entries()].some(([key, minor]) => minor > 0 && !targets.has(key));
+    }
+    if (!preview) {
+      if (!wasPaid && paidMinor > oldPaidMinor) {
+        throw editError(
+          'Edit cannot take more money on a part-paid bill; take the rest as a payment from the order',
+        );
+      }
+      if (paidMinor > billTotalMinor) {
+        throw editError(
+          'The payments add up to more than the new total. Lower them so they match the bill.',
+        );
+      }
+      if (wasPaid && paidMinor !== billTotalMinor) {
+        throw editError('This order was fully paid, so the payments must add up to the new total.');
+      }
+    }
+    paymentStatus =
+      wasPaid || (paidMinor > 0 && paidMinor >= billTotalMinor)
+        ? 'paid'
+        : paidMinor > 0
+          ? 'partial'
+          : 'unpaid';
+    db.prepare(`
+      UPDATE bills SET subtotal = ?, total = ?, paid_amount = ?, balance = ?, payment_status = ?,
+        payment_details = ?, tax_amount = ?, tax_breakdown = ?, tax_snapshot = ?, discount_amount = ?,
+        delivery_charge = ?, packaging_charge = ?, service_charge = ?,
+        charges_breakdown = COALESCE(?, charges_breakdown), round_off = ?,
+        paid_at = CASE WHEN ? = 'paid' THEN COALESCE(paid_at, ?) ELSE paid_at END, updated_at = ?
+      WHERE id = ?
+    `).run(
+      totals.subtotal,
+      billTotal,
+      paidMinor / minorFactor,
+      Math.max(0, billTotalMinor - paidMinor) / minorFactor,
+      paymentStatus,
+      finalLines.length > 0 || bill.payment_details ? JSON.stringify(finalLines) : null,
+      taxRollup.taxAmount,
+      JSON.stringify(taxRollup.breakdowns),
+      taxRollup.snapshotJson,
+      discountAmount,
+      order.delivery_charge || 0,
+      packagingCharge,
+      serviceCharge,
+      chargesJson,
+      rounded.adjustment,
+      paymentStatus,
+      at,
+      at,
+      bill.id,
+    );
+    const keptTransactionIds = new Set(
+      finalLines.map((line) => line.transaction_id).filter((id): id is string => !!id),
+    );
+    for (const line of oldLines) {
+      if (line.transaction_id && !keptTransactionIds.has(line.transaction_id)) {
+        db.prepare(
+          'DELETE FROM payment_transaction_refs WHERE bill_id = ? AND transaction_id = ?',
+        ).run(bill.id, line.transaction_id);
+      }
+    }
+    if (paymentStatus === 'paid') {
+      if (!wasPaid && !['completed', 'cancelled'].includes(order.status)) {
+        db.prepare(
+          "UPDATE orders SET status = 'completed', completed_at = ?, updated_at = ? WHERE id = ?",
+        ).run(at, at, orderId);
+        if (order.table_id) {
+          db.prepare("UPDATE tables SET status = 'available', updated_at = ? WHERE id = ?").run(
+            at,
+            order.table_id,
+          );
+        }
+      }
+      refreshBillCashback(db, bill.id, bill.customer_id || order.customer_id, finalLines, {
+        minorFactor,
+        at,
+      });
+    }
+  }
+
+  const kitchenItems = kitchenLines.flatMap(({ id, quantity }) => {
+    const row = db.prepare('SELECT * FROM order_items WHERE id = ?').get(id) as
+      | { id: number; quantity: number }
+      | undefined;
+    if (!row) return [];
+    const [hydrated] = attachEffectiveAddons(db, [parseItemJson(row) as { id: number }]);
+    return [quantity > 0 ? { ...hydrated, quantity } : hydrated];
+  });
+  const result: OrderEditResult = {
+    deleted: false,
+    order_id: order.id,
+    order_number: String(order.order_number),
+    version,
+    order_total: total,
+    bill_total: billTotal,
+    paid_amount: paidMinor / minorFactor,
+    balance:
+      billTotal === null
+        ? 0
+        : Math.max(0, Math.round(billTotal * minorFactor) - paidMinor) / minorFactor,
+    payment_status: paymentStatus,
+    payments_must_match_total: wasPaid,
+    payments: finalLines,
+    kitchen_items: kitchenItems,
+  };
+  if (preview) return result;
+
+  if (removed.length === 0 && changed.length === 0 && added.length === 0 && !paymentsChanged) {
+    throw editError('Nothing was changed');
+  }
+  recordOrderAudit(db, {
+    orderId,
+    actorUserId,
+    action: 'order_edited',
+    details: {
+      approved_by: approverId,
+      removed,
+      changed,
+      added_item_ids: [...addedIds, ...extraIds].map(Number),
+      total_before: Number(order.total) || 0,
+      total_after: total,
+      payments_before: oldLines.map(({ method, amount }) => ({ method, amount })),
+      payments_after: finalLines.map(({ method, amount }) => ({ method, amount })),
+    },
+  });
+  return result;
+}
+
+/** Keeps a paid bill's cashback in step with what the edited order is now worth. */
+function refreshBillCashback(
+  db: ReturnType<typeof getDatabase>,
+  billId: number,
+  customerId: string | null,
+  lines: EditPaymentLine[],
+  context: { minorFactor: number; at: string },
+): void {
+  const credit = db
+    .prepare(
+      `SELECT id FROM loyalty_ledger WHERE bill_id = ? AND type = 'credit' ORDER BY id LIMIT 1`,
+    )
+    .get(billId) as { id: number } | undefined;
+  const bill = db.prepare('SELECT * FROM bills WHERE id = ?').get(billId) as {
+    bill_number: string;
+    total: number;
+  };
+  const cashback = customerId ? calculateCashback(db, bill, customerId) : 0;
+  const totalMinor = Math.round(Number(bill.total || 0) * context.minorFactor);
+  const walletMinor = lines
+    .filter((line) => line.method === 'wallet')
+    .reduce((sum, line) => sum + Math.round(Number(line.amount || 0) * context.minorFactor), 0);
+  const points = Math.floor(cashback * (1 - Math.min(1, walletMinor / Math.max(1, totalMinor))));
+  if (credit && points > 0) {
+    db.prepare('UPDATE loyalty_ledger SET amount = ?, updated_at = ? WHERE id = ?').run(
+      points,
+      context.at,
+      credit.id,
+    );
+  } else if (credit) {
+    db.prepare('DELETE FROM loyalty_ledger WHERE id = ?').run(credit.id);
+  } else if (points > 0 && customerId) {
+    db.prepare(
+      `INSERT INTO loyalty_ledger (customer_id, bill_id, type, amount, description, created_at, updated_at) VALUES (?, ?, 'credit', ?, ?, ?, ?)`,
+    ).run(
+      customerId,
+      billId,
+      points,
+      `Cashback on bill ${bill.bill_number}`,
+      context.at,
+      context.at,
+    );
+  }
+}
+
+// POST /api/orders/:id/edit — corrects an order entered wrongly: remove lines, change quantities,
+// add items and re-split what was paid between cash, UPI and the other methods. With
+// `preview: true` it returns the new totals without saving; saving needs the owner's staff PIN.
+router.post(
+  '/:id/edit',
+  orderWriteRateLimit,
+  requirePermission('orders.status.update'),
+  asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const authUser = (req as Request & { user?: { userId?: string } }).user;
+      const actorUserId = String(authUser?.userId || '');
+      if (!actorUserId) return res.status(403).json({ error: 'Authentication required' });
+      const body = (req.body && typeof req.body === 'object' ? req.body : {}) as Record<
+        string,
+        unknown
+      >;
+      const db = getDatabase();
+      const orderId = String(req.params.id);
+      if (body.preview === true) {
+        try {
+          withTxn(() => {
+            throw new OrderEditPreview(
+              applyOrderEditInTxn(db, orderId, body, {
+                actorUserId,
+                approverId: null,
+                preview: true,
+              }),
+            );
+          });
+        } catch (error: unknown) {
+          if (error instanceof OrderEditPreview) return res.json(error.result);
+          throw error;
+        }
+      }
+      if (!db.prepare('SELECT 1 FROM orders WHERE id = ?').get(orderId)) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      const approval = await verifyOwnerApproval(req, 'edit');
+      if (!approval.ok) return res.status(approval.status).json({ error: approval.error });
+
+      const result = withTxn(() =>
+        applyOrderEditInTxn(db, orderId, body, {
+          actorUserId,
+          approverId: approval.approverId,
+          preview: false,
+        }),
+      );
+      console.log(
+        `[Orders] Order ${result.order_number} ${result.deleted ? 'deleted by edit' : 'edited'} by ${actorUserId}, approved by owner ${approval.approverId}`,
+      );
+      if (!result.deleted) cloudSync.recordOrderChanged(orderId, 'order.updated');
+      notifyKdsUpdate();
+      res.json(result);
+    } catch (error: unknown) {
+      const err = error as { statusCode?: number; message?: string };
+      const inventoryError = error instanceof InventoryServiceError;
+      if (!err.statusCode && !inventoryError) console.error('[API] Internal error:', error);
+      const statusCode = err.statusCode || 500;
+      res
+        .status(statusCode)
+        .json({ error: statusCode < 500 ? err.message : 'Internal server error' });
+    }
+  }),
+);
+
 // DELETE /api/orders/:id — erases an order entered by mistake, in any state, as if it was never
 // placed: no refund or cancellation is recorded. The owner's staff PIN approves it.
 router.delete(
@@ -6314,40 +7415,13 @@ router.delete(
   asyncHandler(async (req: Request, res: Response) => {
     try {
       const authUser = (req as any).user;
-      const overridePin = typeof req.body?.override_pin === 'string' ? req.body.override_pin : '';
-      const approverId = typeof req.body?.approver_id === 'string' ? req.body.approver_id : '';
-      if (!approverId || !overridePin) {
-        return res.status(400).json({ error: 'Owner PIN required to delete an order' });
-      }
       const db = getDatabase();
       if (!db.prepare('SELECT 1 FROM orders WHERE id = ?').get(req.params.id)) {
         return res.status(404).json({ error: 'Order not found' });
       }
-
-      const canonicalIp = normalizeIpForRateLimit(req.ip || req.socket.remoteAddress || 'unknown');
-      const rateLimitKey = `pin:${canonicalIp}:order-delete`;
-      const approver = await withPinVerificationLock(rateLimitKey, async () => {
-        if (isPinRateLimited(rateLimitKey)) return 'rate-limited' as const;
-        const candidate = db
-          .prepare(
-            "SELECT id, pin_hash FROM users WHERE id = ? AND role = 'owner' AND is_active = 1 AND pin_hash IS NOT NULL",
-          )
-          .get(approverId) as { id: string; pin_hash: string } | undefined;
-        if (
-          candidate &&
-          /^\d{4,6}$/.test(overridePin) &&
-          (await verifyPinAsync(candidate.pin_hash, overridePin))
-        ) {
-          clearPinRateLimit(rateLimitKey);
-          return candidate;
-        }
-        checkPinRateLimit(rateLimitKey);
-        return null;
-      });
-      if (approver === 'rate-limited') {
-        return res.status(429).json({ error: 'Too many PIN attempts. Try again in 15 minutes.' });
-      }
-      if (!approver) return res.status(403).json({ error: 'Invalid owner PIN' });
+      const approval = await verifyOwnerApproval(req, 'delete');
+      if (!approval.ok) return res.status(approval.status).json({ error: approval.error });
+      const approver = { id: approval.approverId };
 
       const deleted = db.transaction(() =>
         deleteOrderInTxn(db, String(req.params.id), authUser.userId),

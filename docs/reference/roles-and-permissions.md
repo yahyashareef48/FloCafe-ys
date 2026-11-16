@@ -175,6 +175,11 @@ is already an owner or manager. Full safeguard, restock, and audit rules are in
 entered by mistake, in any state, but the deletion runs only with an active owner's staff PIN; a
 manager's PIN is not accepted. See [the Orders API reference](api.md#orders).
 
+**Order editing.** The same rule applies to **Edit order**: anyone holding `orders.status.update`
+can open it to remove items, change quantities, add items or re-split what was paid between cash,
+UPI and other methods, but the change saves only with an active owner's staff PIN. See
+[the Orders API reference](api.md#orders).
+
 **Owner visibility.** The permission editor itself is rendered only for an authenticated user
 holding `authorization.manage` — an active owner, always. The API enforces this independently;
 hiding a control in the interface is not a security boundary.

@@ -3363,7 +3363,7 @@ function preparePaymentBatch(
   return { bill, prepared, existingPayments, effectiveCustomerId };
 }
 
-function calculateCashback(
+export function calculateCashback(
   db: ReturnType<typeof getDatabase>,
   bill: any,
   customerId: string | null,

@@ -95,6 +95,7 @@ export interface OrderDetailPanelProps {
   onConvertToTakeaway: (order: Order) => void;
   onCancelOrder: (order: Order) => void;
   onDeleteOrder?: (order: Order) => void;
+  onEditOrder?: (order: Order) => void;
   onPrint: (billId: number) => void;
   onPrintOrder?: (order: Order) => void;
   onPrintDeliverySlip?: (order: Order) => void;
@@ -155,6 +156,7 @@ function OrderDetailContent({
   onConvertToTakeaway,
   onCancelOrder,
   onDeleteOrder,
+  onEditOrder,
   onPrint,
   onPrintOrder,
   onPrintDeliverySlip,
@@ -388,6 +390,15 @@ function OrderDetailContent({
                         <Lock size={14} className="me-2" />
                       )}
                       {cancellingOrderId === order.id ? tOrders('cancelling') : tCommon('cancel')}
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {onEditOrder && order.status !== 'cancelled' && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => onEditOrder(order)}>
+                      <Pencil size={14} className="me-2" />
+                      {tOrders('editOrder')}
                     </DropdownMenuItem>
                   </>
                 )}
