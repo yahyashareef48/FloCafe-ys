@@ -363,11 +363,13 @@ returning `order_total`, `bill_total`, `paid_amount`, `payments`, `payments_must
 `kitchen_items` and `version`; it needs no PIN. A save sends that `version` as
 `expected_version` (`409` when the order's lines, totals or payments changed since) plus the same
 owner `approver_id` and `override_pin` as a delete (`400`, `403`, `429` as above), and `400` when
-nothing changes. Cancelled orders, split bills and orders with a refund are refused (`409`).
+nothing changes. Cancelled orders, split bills and orders with a refund are refused (`409`). An
+optional `Idempotency-Key` header makes a retried save return the stored answer, `kitchen_items`
+included, instead of applying it again.
 
 - Removed lines become `cancelled` and give their stock back (reason `Order edited`). A changed
-  quantity keeps the line's price, item discount and add-ons and moves the stock difference. New
-  lines are priced from the current menu. Removing every line deletes the order exactly like
+  quantity, whole or weighed, keeps the line's price, item discount and add-ons and moves the stock
+  difference. New lines are priced from the current menu. Removing every line deletes the order exactly like
   `DELETE /:id` and returns `deleted: true`.
 - `send_to_kitchen` (default `true`) puts new lines in the kitchen as `pending` and returns them,
   with any extra units, in `kitchen_items` for a kitchen ticket; a quantity increase on a line the
@@ -377,11 +379,13 @@ nothing changes. Cancelled orders, split bills and orders with a refund are refu
   fully paid bill must stay fully paid, a partly paid one can be re-split or lowered but takes no
   more money here (that goes through a payment), and a bill with no payment yet takes none. Money
   moved between methods keeps the original payment's time and shift; only extra money collected is
-  stamped now in the open shift (cash then needs an open shift when `require_open_shift` is on).
-  Cash given back lowers the payment it came from when that payment belongs to the open shift (or
-  no shift is open); otherwise the payment stays as counted and a negative cash line in the open
-  shift records the cash leaving its drawer. Loyalty-point payments cannot change, and a paid bill's
-  cashback follows the new total. Card references of removed lines are dropped.
+  stamped now in the open shift. Cash given back lowers the payment it came from when that payment
+  belongs to the open shift (or no shift is open); otherwise the payment stays as counted and a
+  negative cash line in the open shift records the cash leaving its drawer. Cash collected or given
+  back needs an open shift when `require_open_shift` is on. Day cash counts and the payment mix by
+  line time include lines an edit adds to a bill paid on an earlier day. A bill the edit settles
+  becomes `paid` but its order and table stay as they were. Loyalty-point payments cannot change,
+  and a paid bill's cashback follows the new total. Card references of removed lines are dropped.
 - The change is audited as `order_edited` with the approving owner, the removed, changed and added
   lines, and the totals and payments before and after; a closed Z report keeps its stored figures.
 

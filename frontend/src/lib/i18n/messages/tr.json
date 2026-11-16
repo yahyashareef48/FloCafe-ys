@@ -883,7 +883,10 @@
     "editOrderChanged": "Siz düzenlerken bu sipariş değişti. Düzenle'yi yeniden açın.",
     "editOrderNoChanges": "Henüz değişiklik yok",
     "editOrderCalculating": "Hesaplanıyor…",
-    "editOrderTakePayment": "Fazladan {amount} tutarını siparişten ödeme olarak alın"
+    "editOrderTakePayment": "{amount} azaltın. Fazla parayı Ödeme al ile alın.",
+    "editOrderAllRemovedPaid": "Ödenen {amount} de silinir ve iade olarak kaydedilmez. Parayı kendiniz geri verin.",
+    "editOrderOwnersFailed": "Sahipler yüklenemedi. Düzenle'yi kapatıp tekrar deneyin.",
+    "editOrderQuantity": "{name} miktarı"
   },
   "pos": {
     "addCustomer": "Müşteri Ekle",

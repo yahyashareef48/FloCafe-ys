@@ -883,7 +883,10 @@
     "editOrderChanged": "This order changed while you were editing. Open Edit again.",
     "editOrderNoChanges": "Nothing changed yet",
     "editOrderCalculating": "Calculating…",
-    "editOrderTakePayment": "Take the extra {amount} as a payment from the order"
+    "editOrderTakePayment": "Lower these by {amount}. Take extra money with Take Payment.",
+    "editOrderAllRemovedPaid": "The {amount} paid is erased with it and is not recorded as a refund. Hand the money back yourself.",
+    "editOrderOwnersFailed": "Couldn't load the owners. Close Edit and try again.",
+    "editOrderQuantity": "Quantity of {name}"
   },
   "pos": {
     "addCustomer": "Add Customer",

@@ -48,6 +48,7 @@ import { parseDbTimestamp } from '@/lib/utils';
 import { formatItemHeading } from '@/lib/printer/item-heading';
 import { isTerminalItemStatus } from '../../../../shared/order-item-status';
 import PendingOrderItemEdits from './PendingOrderItemEdits';
+import { canEditOrder } from '@/lib/order-edit';
 
 type OrdersKey = keyof AppConfig['Messages']['orders'];
 type WhatsAppStatusKey = keyof AppConfig['Messages']['whatsapp']['status'];
@@ -476,7 +477,7 @@ export function OrderCard({
                     </DropdownMenuItem>
                   </>
                 )}
-                {onEditOrder && order.status !== 'cancelled' && (
+                {onEditOrder && canEditOrder(order) && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => onEditOrder(order)}>

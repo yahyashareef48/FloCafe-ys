@@ -38,6 +38,7 @@ const {
 const { getJWTSecret } = require('../main/routes/auth');
 const { orderRoutes, resetPinRateLimitForTests } = require('../main/routes/orders');
 const { billRoutes } = require('../main/routes/bills');
+const { cashDrawerSalesAndRefunds } = require('../main/routes/cash-closures');
 
 function seedUser(db: any, id: string, role: string, pin?: string) {
   const email = `${id}@test.local`;
@@ -493,6 +494,176 @@ async function main() {
       20,
       'the discount is 10% of the new subtotal',
     );
+
+    console.log('\n--- The day cash count sees an edit of an older order ---');
+    const oldOrder = await paidOrder(
+      [{ product_id: 'prod-bun', quantity: 3 }],
+      [{ method: 'cash', amount: 300 }],
+    );
+    const threeDaysAgo = new Date(Date.now() - 3 * 86400000)
+      .toISOString()
+      .replace('T', ' ')
+      .slice(0, 19);
+    const oldBill = billOf(oldOrder);
+    db.prepare(
+      'UPDATE bills SET paid_at = ?, created_at = ?, payment_details = ? WHERE id = ?',
+    ).run(
+      threeDaysAgo,
+      threeDaysAgo,
+      JSON.stringify(
+        oldBill.payment_details.map((line: any) => ({
+          ...line,
+          timestamp: threeDaysAgo,
+          cash_session_id: 0,
+        })),
+      ),
+      oldBill.id,
+    );
+    const dayStart = new Date(Date.now() - 3600000).toISOString().replace('T', ' ').slice(0, 19);
+    const dayEnd = new Date(Date.now() + 3600000).toISOString().replace('T', ' ').slice(0, 19);
+    const cashBefore = cashDrawerSalesAndRefunds(db, dayStart, dayEnd, 100).salesCents;
+    const oldLine = activeLines(oldOrder)[0];
+    current = await preview(oldOrder, [{ id: oldLine.id, quantity: 1 }]);
+    const oldEdit = await edit(oldOrder, {
+      ...OWNER,
+      expected_version: current.version,
+      items: [{ id: oldLine.id, quantity: 1 }],
+      payments: [{ method: 'cash', amount: 100 }],
+    });
+    assertEqualOrThrow(oldEdit.status, 200, 'the old order is edited');
+    assertEqualOrThrow(
+      cashDrawerSalesAndRefunds(db, dayStart, dayEnd, 100).salesCents - cashBefore,
+      -20000,
+      "today's cash count drops by the 200 given back",
+    );
+
+    console.log('\n--- A lost response is retried safely ---');
+    const retryOrder = await paidOrder(
+      [{ product_id: 'prod-bun', quantity: 1 }],
+      [{ method: 'cash', amount: 100 }],
+    );
+    const retryLine = activeLines(retryOrder)[0];
+    current = await preview(retryOrder, [{ id: retryLine.id, quantity: 2 }]);
+    const retryBody = {
+      ...OWNER,
+      expected_version: current.version,
+      items: [{ id: retryLine.id, quantity: 2 }],
+      payments: [{ method: 'cash', amount: 200 }],
+    };
+    const retryHeaders = { ...cashierAuth, 'Idempotency-Key': 'edit-retry-1' };
+    const first = await api(baseUrl, `/api/orders/${retryOrder}/edit`, {
+      method: 'POST',
+      body: retryBody,
+      headers: retryHeaders,
+    });
+    assertEqualOrThrow(first.status, 200, 'the first try saves');
+    const stockAfterFirst = stock('prod-bun');
+    const again = await api(baseUrl, `/api/orders/${retryOrder}/edit`, {
+      method: 'POST',
+      body: retryBody,
+      headers: retryHeaders,
+    });
+    assertEqualOrThrow(again.status, 200, 'the retry gets the saved answer');
+    assertEqualOrThrow(
+      again.data.kitchen_items.length,
+      first.data.kitchen_items.length,
+      'with the same kitchen ticket',
+    );
+    assertEqualOrThrow(stock('prod-bun'), stockAfterFirst, 'and nothing is applied twice');
+    assertEqualOrThrow(billOf(retryOrder).paid_amount, 200, 'the bill is paid once');
+
+    console.log('\n--- Weighed quantities ---');
+    seedProduct(db, 'prod-dates', 'cat-edit', 'Dates (kg)', 400, {
+      sale_unit: 'kg',
+      allow_fractional_quantity: true,
+    });
+    const weighed = await paidOrder(
+      [{ product_id: 'prod-dates', quantity: 0.5 }],
+      [{ method: 'cash', amount: 200 }],
+    );
+    const weighedLine = activeLines(weighed)[0];
+    current = await preview(weighed, [{ id: weighedLine.id, quantity: 0.75 }]);
+    assertEqualOrThrow(current.bill_total, 300, '0.75 kg is priced');
+    const weighedEdit = await edit(weighed, {
+      ...OWNER,
+      expected_version: current.version,
+      items: [{ id: weighedLine.id, quantity: 0.75 }],
+      payments: [{ method: 'cash', amount: 300 }],
+    });
+    assertEqualOrThrow(weighedEdit.status, 200, 'a weighed line is re-weighed');
+    assertEqualOrThrow(activeLines(weighed)[0].quantity, 0.75, 'to 0.75 kg');
+
+    console.log('\n--- Settling a part-paid bill leaves the order and table alone ---');
+    db.prepare(`INSERT INTO tables (id, number, capacity, status, created_at, updated_at)
+      VALUES ('table-edit', 'T5', 4, 'available', ?, ?)`).run(now(), now());
+    const dine = await api(baseUrl, '/api/orders', {
+      method: 'POST',
+      body: {
+        type: 'dine_in',
+        table_id: 'table-edit',
+        items: [
+          { product_id: 'prod-bun', quantity: 1 },
+          { product_id: 'prod-tea', quantity: 1 },
+        ],
+      },
+      headers: cashierAuth,
+    });
+    assertEqualOrThrow(dine.status, 201, 'dine-in order created');
+    const dineId = dine.data.order.id as number;
+    const dineBill = await api(baseUrl, '/api/bills/generate', {
+      method: 'POST',
+      body: { order_id: dineId },
+      headers: cashierAuth,
+    });
+    const dinePay = await api(baseUrl, `/api/bills/${dineBill.data.bill.id}/payments`, {
+      method: 'POST',
+      body: { payments: [{ method: 'cash', amount: 100 }] },
+      headers: cashierAuth,
+    });
+    assertEqualOrThrow(dinePay.data.bill.payment_status, 'partial', 'the bun is paid for');
+    const [dineBun] = activeLines(dineId);
+    current = await preview(dineId, [{ id: dineBun.id, quantity: 1 }]);
+    const settled = await edit(dineId, {
+      ...OWNER,
+      expected_version: current.version,
+      items: [{ id: dineBun.id, quantity: 1 }],
+      payments: [{ method: 'cash', amount: 100 }],
+    });
+    assertEqualOrThrow(settled.status, 200, 'removing the tea saves');
+    assertEqualOrThrow(billOf(dineId).payment_status, 'paid', 'the bill is now paid');
+    assertOrThrow(
+      row('SELECT status FROM orders WHERE id = ?', dineId).status !== 'completed',
+      'the order is not completed by the edit',
+    );
+    assertOrThrow(
+      row("SELECT status FROM tables WHERE id = 'table-edit'").status !== 'available',
+      'the table stays taken',
+    );
+
+    console.log('\n--- Cash given back needs an open shift when shifts are required ---');
+    db.prepare("UPDATE cash_sessions SET status = 'closed' WHERE status = 'open'").run();
+    db.prepare(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('require_open_shift', 'true')",
+    ).run();
+    const noShift = await paidOrder(
+      [{ product_id: 'prod-bun', quantity: 2 }],
+      [{ method: 'custom', payment_method_id: upiId, amount: 200 }],
+    );
+    db.prepare(
+      "UPDATE bills SET payment_details = json_replace(payment_details, '$[0].method', 'cash', '$[0].payment_method_id', NULL) WHERE order_id = ?",
+    ).run(noShift);
+    const noShiftLine = activeLines(noShift)[0];
+    current = await preview(noShift, [{ id: noShiftLine.id, quantity: 1 }]);
+    const blocked = await edit(noShift, {
+      ...OWNER,
+      expected_version: current.version,
+      items: [{ id: noShiftLine.id, quantity: 1 }],
+      payments: [{ method: 'cash', amount: 100 }],
+    });
+    assertEqualOrThrow(blocked.status, 409, 'giving cash back with no shift open is refused');
+    db.prepare(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('require_open_shift', 'false')",
+    ).run();
 
     console.log('\n--- An order with no bill yet ---');
     const open = await api(baseUrl, '/api/orders', {

@@ -883,7 +883,10 @@
     "editOrderChanged": "Pesanan ini berubah saat Anda mengedit. Buka Ubah lagi.",
     "editOrderNoChanges": "Belum ada perubahan",
     "editOrderCalculating": "Menghitung…",
-    "editOrderTakePayment": "Terima {amount} tambahan sebagai pembayaran dari pesanan"
+    "editOrderTakePayment": "Kurangi {amount}. Terima uang tambahan lewat Terima pembayaran.",
+    "editOrderAllRemovedPaid": "{amount} yang dibayar ikut terhapus dan tidak dicatat sebagai pengembalian dana. Kembalikan uangnya sendiri.",
+    "editOrderOwnersFailed": "Gagal memuat pemilik. Tutup Ubah lalu coba lagi.",
+    "editOrderQuantity": "Jumlah {name}"
   },
   "pos": {
     "addCustomer": "Tambah Pelanggan",

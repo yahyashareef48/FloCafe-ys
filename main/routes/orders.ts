@@ -6564,7 +6564,7 @@ function rewritePaymentLines(
     openSessionId: number | null;
     fallbackTimestamp: string;
   },
-): { lines: EditPaymentLine[]; collectedNowCash: boolean } {
+): { lines: EditPaymentLine[]; collectedNowCash: boolean; cashGivenBack: boolean } {
   const { minorFactor, at, openSessionId, fallbackTimestamp } = context;
   const toMinor = (value: unknown) => Math.round(Number(value || 0) * minorFactor);
   const lines = existingLines.map((line) => ({ ...line }));
@@ -6646,6 +6646,7 @@ function rewritePaymentLines(
     }
   }
 
+  const cashGivenBack = freed.some((slot) => slot.isCash && slot.minor > 0);
   if (openSessionId !== null) {
     for (const slot of freed) {
       if (!slot.isCash || slot.minor <= 0 || slot.cashSessionId === openSessionId) continue;
@@ -6673,7 +6674,7 @@ function rewritePaymentLines(
   const kept = lines.filter(
     (line) => !freed.some((slot) => slot.line === line) || line.amount !== 0,
   );
-  return { lines: [...kept, ...appended], collectedNowCash };
+  return { lines: [...kept, ...appended], collectedNowCash, cashGivenBack };
 }
 
 /** Puts back everything a line holds and takes it again for a new quantity, keeping its price. */
@@ -7054,6 +7055,7 @@ function applyOrderEditInTxn(
     actorUserId,
     initialStatus,
     preserveUnitPrice: true,
+    preserveSelections: true,
   });
   extraIds.forEach((id, index) => {
     const sourceId = extraSources[index];
@@ -7152,7 +7154,7 @@ function applyOrderEditInTxn(
         openSessionId: openSession ? Number(openSession.id) : null,
         fallbackTimestamp: bill.paid_at || at,
       });
-      if (rewrite.collectedNowCash) requireOpenSessionForCash(db);
+      if (rewrite.collectedNowCash || rewrite.cashGivenBack) requireOpenSessionForCash(db);
       finalLines = rewrite.lines;
       paidMinor = finalLines.reduce(
         (sum, line) => sum + Math.round(Number(line.amount || 0) * minorFactor),
@@ -7229,18 +7231,9 @@ function applyOrderEditInTxn(
         ).run(bill.id, line.transaction_id);
       }
     }
+    // A bill an edit settles leaves the order and its table as they are: the kitchen and the
+    // normal completion step still decide when the meal is over.
     if (paymentStatus === 'paid') {
-      if (!wasPaid && !['completed', 'cancelled'].includes(order.status)) {
-        db.prepare(
-          "UPDATE orders SET status = 'completed', completed_at = ?, updated_at = ? WHERE id = ?",
-        ).run(at, at, orderId);
-        if (order.table_id) {
-          db.prepare("UPDATE tables SET status = 'available', updated_at = ? WHERE id = ?").run(
-            at,
-            order.table_id,
-          );
-        }
-      }
       refreshBillCashback(db, bill.id, bill.customer_id || order.customer_id, finalLines, {
         minorFactor,
         at,
@@ -7375,19 +7368,54 @@ router.post(
           throw error;
         }
       }
+      const idempotencyKey = orderIdempotencyKey(req);
+      const requestHash = createHash('sha256')
+        .update(
+          JSON.stringify({
+            edit: orderId,
+            items: body.items ?? null,
+            payments: body.payments ?? null,
+            send_to_kitchen: body.send_to_kitchen ?? null,
+            expected_version: body.expected_version ?? null,
+          }),
+        )
+        .digest('hex');
       if (!db.prepare('SELECT 1 FROM orders WHERE id = ?').get(orderId)) {
+        // Removing every item deleted the order; a retry of that save still gets its answer.
+        const stored = idempotencyKey
+          ? getStoredOrderReplay(db, actorUserId, idempotencyKey, requestHash)
+          : null;
+        if (stored) return res.json(stored);
         return res.status(404).json({ error: 'Order not found' });
       }
       const approval = await verifyOwnerApproval(req, 'edit');
       if (!approval.ok) return res.status(approval.status).json({ error: approval.error });
 
-      const result = withTxn(() =>
-        applyOrderEditInTxn(db, orderId, body, {
+      let replayed = false;
+      const result = withTxn(() => {
+        // A retry after a lost response gets the saved answer, kitchen items included.
+        const stored = idempotencyKey
+          ? (getStoredOrderReplay(db, actorUserId, idempotencyKey, requestHash) as
+              | OrderEditResult
+              | null)
+          : null;
+        if (stored) {
+          replayed = true;
+          return stored;
+        }
+        const applied = applyOrderEditInTxn(db, orderId, body, {
           actorUserId,
           approverId: approval.approverId,
           preview: false,
-        }),
-      );
+        });
+        if (idempotencyKey) {
+          db.prepare(
+            'INSERT INTO order_idempotency (user_id, idempotency_key, request_hash, response_json, created_at) VALUES (?, ?, ?, ?, ?)',
+          ).run(actorUserId, idempotencyKey, requestHash, JSON.stringify(applied), now());
+        }
+        return applied;
+      });
+      if (replayed) return res.json(result);
       console.log(
         `[Orders] Order ${result.order_number} ${result.deleted ? 'deleted by edit' : 'edited'} by ${actorUserId}, approved by owner ${approval.approverId}`,
       );

@@ -883,7 +883,10 @@
     "editOrderChanged": "सम्पादन गर्दा यो अर्डर बदलियो। फेरि सम्पादन खोल्नुहोस्।",
     "editOrderNoChanges": "अहिलेसम्म केही बदलिएन",
     "editOrderCalculating": "हिसाब हुँदैछ…",
-    "editOrderTakePayment": "थप {amount} अर्डरबाट भुक्तानीको रूपमा लिनुहोस्"
+    "editOrderTakePayment": "यिनलाई {amount} घटाउनुहोस्। थप पैसा भुक्तानी लिनुहोस् बाट लिनुहोस्।",
+    "editOrderAllRemovedPaid": "तिरिएको {amount} पनि मेटिन्छ र फिर्ताको रूपमा दर्ता हुँदैन। पैसा आफैं फिर्ता दिनुहोस्।",
+    "editOrderOwnersFailed": "मालिकहरू लोड हुन सकेनन्। सम्पादन बन्द गरेर फेरि प्रयास गर्नुहोस्।",
+    "editOrderQuantity": "{name} को मात्रा"
   },
   "pos": {
     "addCustomer": "ग्राहक थप्नुहोस्",

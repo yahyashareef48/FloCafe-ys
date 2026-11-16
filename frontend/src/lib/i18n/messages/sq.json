@@ -883,7 +883,10 @@
     "editOrderChanged": "Kjo porosi ndryshoi ndërsa e redaktonit. Hapni sërish Ndrysho.",
     "editOrderNoChanges": "Ende asnjë ndryshim",
     "editOrderCalculating": "Po llogaritet…",
-    "editOrderTakePayment": "Merrni {amount} shtesë si pagesë nga porosia"
+    "editOrderTakePayment": "Uleni me {amount}. Merrni paratë shtesë me Merr pagesën.",
+    "editOrderAllRemovedPaid": "{amount} e paguar fshihet bashkë dhe nuk regjistrohet si rimbursim. Ktheni vetë paratë.",
+    "editOrderOwnersFailed": "Pronarët nuk u ngarkuan. Mbyllni Ndrysho dhe provoni sërish.",
+    "editOrderQuantity": "Sasia e {name}"
   },
   "pos": {
     "addCustomer": "Shto klient",

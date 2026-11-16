@@ -883,7 +883,10 @@
     "editOrderChanged": "Deze bestelling is tijdens het bewerken gewijzigd. Open Bewerken opnieuw.",
     "editOrderNoChanges": "Nog niets gewijzigd",
     "editOrderCalculating": "Berekenen…",
-    "editOrderTakePayment": "Reken de extra {amount} af als betaling vanuit de bestelling"
+    "editOrderTakePayment": "Verlaag met {amount}. Reken extra geld af via Betaling ontvangen.",
+    "editOrderAllRemovedPaid": "De betaalde {amount} wordt mee gewist en niet als terugbetaling vastgelegd. Geef het geld zelf terug.",
+    "editOrderOwnersFailed": "Eigenaren konden niet worden geladen. Sluit Bewerken en probeer opnieuw.",
+    "editOrderQuantity": "Aantal {name}"
   },
   "pos": {
     "addCustomer": "Klant toevoegen",

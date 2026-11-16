@@ -883,7 +883,10 @@
     "editOrderChanged": "ترمیم کے دوران یہ آرڈر بدل گیا۔ دوبارہ ترمیم کھولیں۔",
     "editOrderNoChanges": "ابھی کچھ نہیں بدلا",
     "editOrderCalculating": "حساب ہو رہا ہے…",
-    "editOrderTakePayment": "اضافی {amount} آرڈر سے ادائیگی کے طور پر لیں"
+    "editOrderTakePayment": "انہیں {amount} کم کریں۔ اضافی رقم ادائیگی لیں سے لیں۔",
+    "editOrderAllRemovedPaid": "ادا شدہ {amount} بھی مٹ جائے گا اور رقم کی واپسی کے طور پر درج نہیں ہوگا۔ پیسے خود واپس کریں۔",
+    "editOrderOwnersFailed": "مالکان لوڈ نہیں ہو سکے۔ ترمیم بند کر کے دوبارہ کوشش کریں۔",
+    "editOrderQuantity": "{name} کی مقدار"
   },
   "pos": {
     "addCustomer": "گاہک شامل کریں",

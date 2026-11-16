@@ -883,7 +883,10 @@
     "editOrderChanged": "L'ordine è cambiato mentre lo modificavi. Riapri Modifica.",
     "editOrderNoChanges": "Ancora nessuna modifica",
     "editOrderCalculating": "Calcolo…",
-    "editOrderTakePayment": "Incassa i {amount} in più come pagamento dall'ordine"
+    "editOrderTakePayment": "Riduci di {amount}. Incassa il resto con Ricevi pagamento.",
+    "editOrderAllRemovedPaid": "I {amount} pagati vengono cancellati e non registrati come rimborso. Restituisci tu il denaro.",
+    "editOrderOwnersFailed": "Impossibile caricare i titolari. Chiudi Modifica e riprova.",
+    "editOrderQuantity": "Quantità di {name}"
   },
   "pos": {
     "addCustomer": "Aggiungi cliente",

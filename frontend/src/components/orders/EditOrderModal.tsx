@@ -14,14 +14,19 @@ import {
 import toast from 'react-hot-toast';
 import { useTranslations } from 'use-intl';
 import { Button } from '@/components/ui/button';
+import CurrencyAmountInput from '@/components/ui/CurrencyAmountInput';
 import AddonModal from '@/components/pos/AddonModal';
 import api from '@/lib/api';
 import { getCurrencyFractionDigits } from '@countries';
+import { useAmountFormat } from '@/hooks/useAmountFormat';
 import { useFormatCurrency } from '@/hooks/useFormatCurrency';
 import { usePrinterStore } from '@/hooks/usePrinter';
+import { cartVariantUnitPrice } from '@/lib/cart-price';
 import { checkoutPaymentMethods, type CustomPaymentMethod } from '@/lib/payment-methods';
+import { showPrintWarningsToast } from '@/lib/printer/warnings-toast';
 import type { Addon, Order, OrderItem, Product, ProductVariant, Staff } from '@/lib/types';
 import { useAuthStore } from '@/store/auth';
+import { usePosSettingsStore } from '@/store/pos-settings';
 
 interface EditOrderModalProps {
   order: Order;
@@ -66,7 +71,7 @@ interface PaymentRow {
   label: string;
   method: string;
   payment_method_id: number | null;
-  amount: string;
+  amount: number | '';
   locked: boolean;
 }
 
@@ -76,6 +81,51 @@ function paymentKey(line: { method: string; payment_method_id?: number | null })
   return line.payment_method_id
     ? `custom:${Number(line.payment_method_id)}`
     : `builtin:${line.method.toLowerCase()}`;
+}
+
+const rowAmount = (row: PaymentRow): number => (row.amount === '' ? 0 : row.amount);
+
+/** Steps by one with the buttons; typing allows a weighed or part quantity such as 0.45. */
+function QuantityField({
+  value,
+  onChange,
+  label,
+  disabled,
+  testId,
+}: {
+  value: number;
+  onChange: (quantity: number) => void;
+  label: string;
+  disabled: boolean;
+  testId?: string;
+}) {
+  const [draft, setDraft] = useState(String(value));
+  const [focused, setFocused] = useState(false);
+  const shown = focused ? draft : String(value);
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      aria-label={label}
+      data-testid={testId}
+      value={shown}
+      disabled={disabled}
+      onFocus={() => {
+        setDraft(String(value));
+        setFocused(true);
+      }}
+      onBlur={() => setFocused(false)}
+      onChange={(event) => {
+        const text = event.target.value.replace(',', '.').replace(/[^\d.]/g, '');
+        setDraft(text);
+        const parsed = Number(text);
+        if (text !== '' && Number.isFinite(parsed) && parsed > 0) {
+          onChange(Number(parsed.toFixed(3)));
+        }
+      }}
+      className="h-9 w-14 rounded-md border border-border bg-background text-center text-sm font-semibold"
+    />
+  );
 }
 
 function newKey(): string {
@@ -105,6 +155,9 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
   const minorFactor = 10 ** decimals;
   const toMinor = useCallback((value: number) => Math.round(value * minorFactor), [minorFactor]);
   const { printKot } = usePrinterStore();
+  const autoPrintKot = usePosSettingsStore((state) => state.autoPrintKot);
+  const amountFormat = useAmountFormat();
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const [lines, setLines] = useState<ExistingLine[] | null>(null);
   const [added, setAdded] = useState<AddedLine[]>([]);
@@ -124,7 +177,10 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
   const [pin, setPin] = useState('');
   const [kotEnabled, setKotEnabled] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [loadError, setLoadError] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [ownersFailed, setOwnersFailed] = useState(false);
+  const initialPayloadKey = useRef<string | null>(null);
+  const saveAttempt = useRef<{ fingerprint: string; key: string } | null>(null);
 
   const itemsPayload = useMemo(() => {
     if (!lines) return null;
@@ -172,6 +228,9 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
         });
         if (cancelled) return;
         const result = firstPreview.data as EditResult;
+        initialPayloadKey.current = JSON.stringify(
+          startLines.map((line) => ({ id: line.item.id, quantity: line.quantity })),
+        );
         setLines(startLines);
         setInitial(result);
         setPreview(result);
@@ -189,7 +248,7 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
             label: tPos(method.labelKey.replace('pos.', '') as 'methodCash'),
             method: method.key,
             payment_method_id: null,
-            amount: '',
+            amount: '' as const,
             locked: false,
           })),
           ...customMethods.map((method) => ({
@@ -197,7 +256,7 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
             label: method.name,
             method: 'custom',
             payment_method_id: method.id,
-            amount: '',
+            amount: '' as const,
             locked: false,
           })),
         ];
@@ -206,7 +265,14 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
           if (startRows.some((row) => row.key === key)) continue;
           startRows.push({
             key,
-            label: key === 'builtin:wallet' ? t('editOrderLoyalty') : line.method,
+            label:
+              key === 'builtin:wallet'
+                ? t('editOrderLoyalty')
+                : key === 'builtin:card'
+                  ? tPos('methodCard')
+                  : key === 'builtin:cash'
+                    ? tPos('methodCash')
+                    : line.method,
             method: line.payment_method_id ? 'custom' : line.method,
             payment_method_id: line.payment_method_id ?? null,
             amount: '',
@@ -216,14 +282,13 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
         setRows(
           startRows.map((row) => {
             const minor = amounts.get(row.key) ?? 0;
-            return { ...row, amount: minor > 0 ? String(minor / minorFactor) : '' };
+            return { ...row, amount: minor > 0 ? minor / minorFactor : '' };
           }),
         );
       })
       .catch((error) => {
         if (cancelled) return;
-        toast.error(errorMessage(error) ?? t('editOrderFailed'));
-        setLoadError(true);
+        setLoadError(errorMessage(error) ?? t('editOrderFailed'));
       });
     api
       .get('/staff/approvers')
@@ -238,7 +303,9 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
         setOwnerId(preferred ? String(preferred.id) : '');
       })
       .catch(() => {
-        if (!cancelled) setOwners([]);
+        if (cancelled) return;
+        setOwners([]);
+        setOwnersFailed(true);
       });
     return () => {
       cancelled = true;
@@ -251,6 +318,13 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
   useEffect(() => {
     if (!initial || !itemsPayload) return;
     const seq = ++previewSeq.current;
+    if (sendToKitchen && JSON.stringify(itemsPayload) === initialPayloadKey.current) {
+      // Back to the order as loaded: the first preview already priced it.
+      setPreview(initial);
+      setPreviewError(null);
+      setPreviewing(false);
+      return;
+    }
     setPreviewing(true);
     const timer = setTimeout(() => {
       api
@@ -278,20 +352,20 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
   const tookMoney = !!initial && (initial.payments_must_match_total || initial.paid_amount > 0);
   const newTotal = preview ? (preview.bill_total ?? preview.order_total) : 0;
   const newTotalMinor = toMinor(newTotal);
-  const paidMinor = rows.reduce((sum, row) => sum + toMinor(Number(row.amount) || 0), 0);
+  const paidMinor = rows.reduce((sum, row) => sum + toMinor(rowAmount(row)), 0);
   const allRemoved = !!itemsPayload && itemsPayload.length === 0;
   const mustMatch = !!initial?.payments_must_match_total;
 
   // While the cashier has not touched the split, a bill paid one way keeps being paid that way.
   useEffect(() => {
     if (!preview || !tookMoney || paymentsTouched || allRemoved) return;
-    const paidRows = rows.filter((row) => toMinor(Number(row.amount) || 0) > 0);
+    const paidRows = rows.filter((row) => toMinor(rowAmount(row)) > 0);
     if (paidRows.length !== 1 || paidRows[0].locked || !mustMatch) return;
-    const others = paidMinor - toMinor(Number(paidRows[0].amount) || 0);
+    const others = paidMinor - toMinor(rowAmount(paidRows[0]));
     const next = Math.max(0, newTotalMinor - others) / minorFactor;
-    if (Number(paidRows[0].amount) === next) return;
+    if (rowAmount(paidRows[0]) === next) return;
     setRows((current) =>
-      current.map((row) => (row.key === paidRows[0].key ? { ...row, amount: String(next) } : row)),
+      current.map((row) => (row.key === paidRows[0].key ? { ...row, amount: next } : row)),
     );
     // Only a new total should move the amounts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -308,7 +382,7 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
       const key = paymentKey(line);
       before.set(key, (before.get(key) ?? 0) + toMinor(Number(line.amount) || 0));
     }
-    return rows.some((row) => (before.get(row.key) ?? 0) !== toMinor(Number(row.amount) || 0));
+    return rows.some((row) => (before.get(row.key) ?? 0) !== toMinor(rowAmount(row)));
   }, [initial, rows, toMinor]);
 
   const difference = newTotalMinor - toMinor(initial?.paid_amount ?? 0);
@@ -325,6 +399,7 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
     !previewing &&
     !previewError &&
     !!initial &&
+    !loadError &&
     (itemsChanged || paymentsChanged) &&
     paymentsOk &&
     !!selectedOwner &&
@@ -334,7 +409,7 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
     !!lines?.some((line) => !line.removed && line.quantity > Number(line.item.quantity));
 
   const setQuantity = (index: number, quantity: number) => {
-    if (quantity < 1) return;
+    if (!(quantity > 0)) return;
     setLines((current) =>
       current ? current.map((line, i) => (i === index ? { ...line, quantity } : line)) : current,
     );
@@ -390,52 +465,70 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
     });
   };
 
-  const setRowAmount = (key: string, value: string) => {
+  const setRowAmount = (key: string, value: number | '') => {
     setPaymentsTouched(true);
     setRows((current) => current.map((row) => (row.key === key ? { ...row, amount: value } : row)));
   };
   const putRest = (key: string) => {
     const others = rows
       .filter((row) => row.key !== key)
-      .reduce((sum, row) => sum + toMinor(Number(row.amount) || 0), 0);
-    setRowAmount(key, String(Math.max(0, capMinor - others) / minorFactor));
+      .reduce((sum, row) => sum + toMinor(rowAmount(row)), 0);
+    setRowAmount(key, Math.max(0, capMinor - others) / minorFactor);
   };
 
   const save = async () => {
     if (!canSave || !initial || !itemsPayload) return;
     setSaving(true);
+    const change = {
+      expected_version: initial.version,
+      items: itemsPayload,
+      send_to_kitchen: sendToKitchen,
+      ...(tookMoney && !allRemoved
+        ? {
+            payments: rows.map((row) => ({
+              method: row.method,
+              ...(row.payment_method_id ? { payment_method_id: row.payment_method_id } : {}),
+              amount: toMinor(rowAmount(row)) / minorFactor,
+            })),
+          }
+        : {}),
+    };
+    // The same change keeps its key, so a retry after a dropped connection is not applied twice.
+    const fingerprint = JSON.stringify(change);
+    if (saveAttempt.current?.fingerprint !== fingerprint) {
+      saveAttempt.current = { fingerprint, key: newKey() };
+    }
     try {
-      const { data } = await api.post(`/orders/${order.id}/edit`, {
-        expected_version: initial.version,
-        items: itemsPayload,
-        send_to_kitchen: sendToKitchen,
-        ...(tookMoney && !allRemoved
-          ? {
-              payments: rows.map((row) => ({
-                method: row.method,
-                ...(row.payment_method_id ? { payment_method_id: row.payment_method_id } : {}),
-                amount: toMinor(Number(row.amount) || 0) / minorFactor,
-              })),
-            }
-          : {}),
-        approver_id: ownerId,
-        override_pin: pin,
-      });
+      const { data } = await api.post(
+        `/orders/${order.id}/edit`,
+        { ...change, approver_id: ownerId, override_pin: pin },
+        { headers: { 'Idempotency-Key': saveAttempt.current.key } },
+      );
       const result = data as EditResult;
       toast.success(result.deleted ? t('orderDeleted') : t('editOrderSaved'));
-      if (!result.deleted && sendToKitchen && kotEnabled && result.kitchen_items.length > 0) {
-        printKot(order, { items: result.kitchen_items }).catch(() =>
-          toast.error(tPos('kotPrintFailed')),
-        );
+      if (
+        !result.deleted &&
+        sendToKitchen &&
+        kotEnabled &&
+        autoPrintKot &&
+        result.kitchen_items.length > 0
+      ) {
+        printKot(order, { items: result.kitchen_items })
+          .then(showPrintWarningsToast)
+          .catch(() => toast.error(tPos('kotPrintFailed')));
       }
       onSaved({ deleted: result.deleted });
     } catch (error) {
       const status = (error as { response?: { status?: number } })?.response?.status;
-      if (status === 403) toast.error(t('deleteOrderWrongPin'));
-      else if (status === 409 && /changed after you opened/.test(errorMessage(error) ?? ''))
+      if (status === 409 && /changed after you opened/.test(errorMessage(error) ?? '')) {
+        // The loaded order is out of date; reopening shows what is saved now.
         toast.error(t('editOrderChanged'));
+        onSaved({ deleted: false });
+        return;
+      }
+      if (status === 403) toast.error(t('deleteOrderWrongPin'));
       else toast.error(errorMessage(error) ?? t('editOrderFailed'));
-      setPin('');
+      if (status === 403 || status === 429) setPin('');
     } finally {
       setSaving(false);
     }
@@ -445,13 +538,54 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
     (product) => !search || product.name.toLowerCase().includes(search.toLowerCase()),
   );
 
+  useEffect(() => {
+    dialogRef.current?.focus();
+  }, []);
+
+  const onDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape' && !saving && !addonProduct) {
+      event.stopPropagation();
+      onClose();
+      return;
+    }
+    if (event.key !== 'Tab' || !dialogRef.current) return;
+    const focusable = Array.from(
+      dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (
+      event.shiftKey &&
+      (document.activeElement === first || document.activeElement === dialogRef.current)
+    ) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
+  const unitPriceOfAdded = (line: AddedLine) =>
+    cartVariantUnitPrice(line, Boolean(order.online_platform)) +
+    line.addons.reduce(
+      (sum, addon) => sum + Number(addon.price || 0) * Number(addon.quantity || 1),
+      0,
+    );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="editOrderTitle"
-        className="bg-card rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[92vh] flex flex-col"
+        tabIndex={-1}
+        onKeyDown={onDialogKeyDown}
+        className="bg-card rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[92vh] flex flex-col outline-none"
       >
         <div className="px-5 pt-5 pb-3 border-b border-border">
           <h2 id="editOrderTitle" className="text-lg font-bold text-foreground">
@@ -468,6 +602,16 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
             </div>
           )}
 
+          {loadError && (
+            <p
+              role="alert"
+              className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200"
+            >
+              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+              {loadError}
+            </p>
+          )}
+
           {lines && (
             <section className="space-y-2">
               <h3 className="text-xs font-semibold uppercase text-muted-foreground">
@@ -481,6 +625,7 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
                 >
                   <div className="flex-1 min-w-0">
                     <span
+                      title={line.item.product_name}
                       className={`block truncate text-sm font-medium text-foreground ${line.removed ? 'line-through' : ''}`}
                     >
                       {line.item.variant_selection?.name
@@ -504,23 +649,25 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
                         size="icon"
                         className="size-9"
                         aria-label={t('editOrderLess', { name: line.item.product_name })}
-                        onClick={() => setQuantity(index, line.quantity - 1)}
-                        disabled={line.quantity <= 1}
+                        onClick={() => setQuantity(index, Number((line.quantity - 1).toFixed(3)))}
+                        disabled={saving || line.quantity - 1 <= 0}
                       >
                         <Minus size={14} />
                       </Button>
-                      <span
-                        className="w-8 text-center text-sm font-semibold"
-                        data-testid="edit-order-qty"
-                      >
-                        {line.quantity}
-                      </span>
+                      <QuantityField
+                        value={line.quantity}
+                        onChange={(quantity) => setQuantity(index, quantity)}
+                        label={t('editOrderQuantity', { name: line.item.product_name })}
+                        disabled={saving}
+                        testId="edit-order-qty"
+                      />
                       <Button
                         variant="outline"
                         size="icon"
                         className="size-9"
                         aria-label={t('editOrderMore', { name: line.item.product_name })}
-                        onClick={() => setQuantity(index, line.quantity + 1)}
+                        onClick={() => setQuantity(index, Number((line.quantity + 1).toFixed(3)))}
+                        disabled={saving}
                       >
                         <Plus size={14} />
                       </Button>
@@ -536,6 +683,7 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
                         : `${tCommon('remove')} ${line.item.product_name}`
                     }
                     onClick={() => toggleRemoved(index)}
+                    disabled={saving}
                   >
                     {line.removed ? <Undo2 size={15} /> : <Trash2 size={15} />}
                   </Button>
@@ -548,7 +696,10 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
                   className="flex items-center gap-2 rounded-lg border border-green-300 bg-green-50/60 p-2 dark:border-green-800/50 dark:bg-green-950/30"
                 >
                   <div className="flex-1 min-w-0">
-                    <span className="block truncate text-sm font-medium text-foreground">
+                    <span
+                      title={line.product.name}
+                      className="block truncate text-sm font-medium text-foreground"
+                    >
                       {line.variant
                         ? `${line.product.name} (${line.variant.name})`
                         : line.product.name}
@@ -561,6 +712,9 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
                         {line.addons.map((addon) => addon.name).join(', ')}
                       </span>
                     )}
+                    <span className="text-xs text-muted-foreground">
+                      {fmt(unitPriceOfAdded(line))}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Button
@@ -571,17 +725,28 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
                       onClick={() =>
                         setAdded((current) =>
                           current.map((entry) =>
-                            entry.key === line.key && entry.quantity > 1
-                              ? { ...entry, quantity: entry.quantity - 1 }
+                            entry.key === line.key && entry.quantity - 1 > 0
+                              ? { ...entry, quantity: Number((entry.quantity - 1).toFixed(3)) }
                               : entry,
                           ),
                         )
                       }
-                      disabled={line.quantity <= 1}
+                      disabled={saving || line.quantity - 1 <= 0}
                     >
                       <Minus size={14} />
                     </Button>
-                    <span className="w-8 text-center text-sm font-semibold">{line.quantity}</span>
+                    <QuantityField
+                      value={line.quantity}
+                      onChange={(quantity) =>
+                        setAdded((current) =>
+                          current.map((entry) =>
+                            entry.key === line.key ? { ...entry, quantity } : entry,
+                          ),
+                        )
+                      }
+                      label={t('editOrderQuantity', { name: line.product.name })}
+                      disabled={saving}
+                    />
                     <Button
                       variant="outline"
                       size="icon"
@@ -591,11 +756,12 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
                         setAdded((current) =>
                           current.map((entry) =>
                             entry.key === line.key
-                              ? { ...entry, quantity: entry.quantity + 1 }
+                              ? { ...entry, quantity: Number((entry.quantity + 1).toFixed(3)) }
                               : entry,
                           ),
                         )
                       }
+                      disabled={saving}
                     >
                       <Plus size={14} />
                     </Button>
@@ -608,6 +774,7 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
                     onClick={() =>
                       setAdded((current) => current.filter((entry) => entry.key !== line.key))
                     }
+                    disabled={saving}
                   >
                     <Trash2 size={15} />
                   </Button>
@@ -615,7 +782,7 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
               ))}
 
               {!pickerOpen ? (
-                <Button variant="outline" size="sm" onClick={openPicker}>
+                <Button variant="outline" size="sm" onClick={openPicker} disabled={saving}>
                   <Plus size={14} className="me-1.5" />
                   {t('editOrderAddItem')}
                 </Button>
@@ -646,6 +813,7 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
                         key={product.id}
                         type="button"
                         onClick={() => pickProduct(product)}
+                        disabled={saving}
                         className="flex w-full items-center justify-between border-b border-border/50 px-3 py-2 text-start last:border-0 hover:bg-muted"
                       >
                         <span className="text-sm font-medium text-foreground">{product.name}</span>
@@ -670,6 +838,7 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
                     type="checkbox"
                     checked={sendToKitchen}
                     onChange={(e) => setSendToKitchen(e.target.checked)}
+                    disabled={saving}
                     className="size-4"
                   />
                   {t('editOrderSendToKitchen')}
@@ -681,7 +850,12 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
           {allRemoved && (
             <p className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200">
               <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-              {t('editOrderAllRemoved')}
+              <span>
+                {t('editOrderAllRemoved')}
+                {tookMoney && initial
+                  ? ` ${t('editOrderAllRemovedPaid', { amount: fmt(initial.paid_amount) })}`
+                  : ''}
+              </span>
             </p>
           )}
 
@@ -742,18 +916,15 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
                   >
                     {row.label}
                   </label>
-                  <input
+                  <CurrencyAmountInput
                     id={`edit-pay-${row.key}`}
-                    type="text"
-                    inputMode="decimal"
                     autoComplete="off"
                     value={row.amount}
+                    onValueChange={(value) => setRowAmount(row.key, value)}
+                    format={amountFormat}
                     disabled={row.locked || saving}
                     placeholder="0"
-                    onChange={(e) =>
-                      setRowAmount(row.key, e.target.value.replace(/[^\d.]/g, '').slice(0, 12))
-                    }
-                    className="min-h-10 w-full rounded-lg border border-border bg-background px-3 py-2 text-end text-sm"
+                    className="min-h-10 w-full min-w-0 rounded-lg border border-border bg-background px-3 py-2 text-end text-sm"
                   />
                   {!row.locked && (
                     <Button
@@ -790,12 +961,12 @@ export default function EditOrderModal({ order, onClose, onSaved }: EditOrderMod
             </section>
           )}
 
-          {owners !== null && owners.length === 0 && (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              {t('deleteOrderNoOwnerPin')}
+          {!loadError && owners !== null && owners.length === 0 && (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-100">
+              {ownersFailed ? t('editOrderOwnersFailed') : t('deleteOrderNoOwnerPin')}
             </p>
           )}
-          {owners !== null && owners.length > 0 && (
+          {!loadError && owners !== null && owners.length > 0 && (
             <section className="grid gap-3 sm:grid-cols-2">
               {owners.length > 1 ? (
                 <div>

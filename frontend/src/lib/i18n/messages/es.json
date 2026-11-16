@@ -883,7 +883,10 @@
     "editOrderChanged": "Este pedido cambió mientras lo editabas. Abre Editar de nuevo.",
     "editOrderNoChanges": "Aún no hay cambios",
     "editOrderCalculating": "Calculando…",
-    "editOrderTakePayment": "Cobra los {amount} extra como pago desde el pedido"
+    "editOrderTakePayment": "Bájalos en {amount}. Cobra el dinero extra con Cobrar pago.",
+    "editOrderAllRemovedPaid": "Los {amount} pagados se borran con él y no se registran como reembolso. Devuelve el dinero tú mismo.",
+    "editOrderOwnersFailed": "No se pudieron cargar los propietarios. Cierra Editar e inténtalo de nuevo.",
+    "editOrderQuantity": "Cantidad de {name}"
   },
   "pos": {
     "addCustomer": "Agregar Cliente",

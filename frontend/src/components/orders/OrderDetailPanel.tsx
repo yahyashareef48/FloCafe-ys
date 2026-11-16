@@ -57,6 +57,7 @@ import {
   whatsappReceiptStatusBadge,
   ORDER_TYPE_KEYS,
 } from './OrderCard';
+import { canEditOrder } from '@/lib/order-edit';
 
 /** Callbacks the Orders page already owns; the panel composes them and never
  * reimplements billing, checkout, cancel or refund behaviour. */
@@ -393,7 +394,7 @@ function OrderDetailContent({
                     </DropdownMenuItem>
                   </>
                 )}
-                {onEditOrder && order.status !== 'cancelled' && (
+                {onEditOrder && canEditOrder(order) && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => onEditOrder(order)}>
