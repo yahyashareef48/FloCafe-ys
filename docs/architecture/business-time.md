@@ -57,6 +57,11 @@ transition. If the timezone is unusable it falls back to `utcDayBounds`.
 an instant that falls before the start belongs to the previous calendar date. That is what makes a
 store that opens at 06:00 not split its 01:00 trade into the previous day's revenue.
 
+Daily order and bill numbering follows the same business date through `businessDateStamp` in
+`main/db.ts`: with the day starting at 02:00, an order at 00:30 continues the previous day's count
+and carries its date, and the count, so the bill token, restarts at 02:00. Monthly and
+financial-year invoice numbering keep calendar periods.
+
 ## The trap: an unresolved timezone silently means UTC
 
 This is the single most consequential failure mode in the codebase, and it is silent.

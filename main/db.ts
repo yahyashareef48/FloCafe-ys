@@ -8728,6 +8728,14 @@ export function dateStampInTimezone(timezone: string): string {
   }
 }
 
+/**
+ * The store's business date as YYYYMMDD. Before the configured day start (`business_day_start_time`)
+ * an instant still belongs to the previous day, so daily numbering restarts when the day ends.
+ */
+export function businessDateStamp(timezone: string, instant: Date = new Date()): string {
+  return localDateInTimezone(instant, timezone, tenantBusinessDayStartTime()).replace(/-/g, '');
+}
+
 type InvoiceResetPeriod = 'never' | 'daily' | 'monthly' | 'financial_year';
 
 function datePartsInTimezone(timezone: string): { year: number; month: number; day: number } {
@@ -8777,10 +8785,9 @@ function invoicePeriodSegment(
   startMonth: number,
   startDay: number,
 ): string {
-  const date = dateStampInTimezone(timezone);
-  if (period === 'monthly') return date.slice(0, 6);
+  if (period === 'monthly') return dateStampInTimezone(timezone).slice(0, 6);
   if (period === 'financial_year') return financialYearSegment(timezone, startMonth, startDay);
-  return date;
+  return businessDateStamp(timezone);
 }
 
 // Strip non-alphanumeric characters to prevent collision with hyphen separators.
@@ -8810,10 +8817,11 @@ export function generateOrderNumber(): string {
   const timezone = requireTenantTimezone();
 
   // Per-day bucket when reset daily, otherwise a single bucket.
-  const bucket = resetDaily ? dateStampInTimezone(timezone) : 'ALL';
+  const businessDate = businessDateStamp(timezone);
+  const bucket = resetDaily ? businessDate : 'ALL';
   const next = getNextSequence('orders', bucket);
 
-  const dateSegment = includeDate ? dateStampInTimezone(timezone) : '';
+  const dateSegment = includeDate ? businessDate : '';
   return [prefix, dateSegment, String(next).padStart(4, '0')].filter(Boolean).join('-');
 }
 
