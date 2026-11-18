@@ -161,6 +161,21 @@ async function run() {
       'KDS: Station assignments configured',
     );
 
+    const lifetimeHours = (token: string) => {
+      const claims = require('jsonwebtoken').decode(token) as { iat: number; exp: number };
+      return (claims.exp - claims.iat) / 3600;
+    };
+    assertEqual(lifetimeHours(kdsRes1.body.access_token), 24, 'KDS: login lasts 24 hours');
+    const kdsRemember = await request(kdsUrl)
+      .post('/api/auth/login')
+      .send({ email: 'chef@flocafe.local', password: 'ChefPass1234!', rememberMe: true });
+    assertEqual(kdsRemember.status, 200, 'KDS: Remember me login succeeds');
+    assertEqual(
+      lifetimeHours(kdsRemember.body.access_token),
+      240,
+      'KDS: Remember me keeps the kitchen screen signed in for 10 days',
+    );
+
     // KDS Test 2: Uppercase email
     const kdsRes2 = await request(kdsUrl)
       .post('/api/auth/login')
