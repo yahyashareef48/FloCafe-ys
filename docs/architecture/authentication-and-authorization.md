@@ -83,7 +83,8 @@ That module owns the only copy of the cache;
 secret must go through it or pre-rotation tokens would keep validating.
 
 **Issuance.** `jwt.sign` runs on login and on the token-refresh paths. A token without the remember
-option expires in 24 hours; with it, in 10 days.
+option expires in 24 hours; with it, in 10 days. The staff login, kitchen display and Server App
+sign-in forms tick Remember me by default.
 
 **Verification.** `requireAuth` in
 [`main/server.ts`](../../main/server.ts) guards paths under `/api`. It passes through `/api/health`,
