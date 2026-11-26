@@ -59,6 +59,18 @@ async function run() {
     .send({ email: 'owner@flocafe.local', password: 'Pass1234!' });
   assertEqual(res1.status, 200, 'Exact lowercase email login succeeds');
   assert(!!res1.body.access_token, 'Login returns access token');
+  const mainRemember = await request(app)
+    .post('/api/auth/login')
+    .send({ email: 'owner@flocafe.local', password: 'Pass1234!', rememberMe: true });
+  const mainClaims = require('jsonwebtoken').decode(mainRemember.body.access_token) as {
+    iat: number;
+    exp: number;
+  };
+  assertEqual(
+    (mainClaims.exp - mainClaims.iat) / 86400,
+    30,
+    'Main API: Remember me keeps staff signed in for 30 days',
+  );
 
   // Test 2: Uppercase / Mixed-case email
   const res2 = await request(app)
@@ -172,8 +184,8 @@ async function run() {
     assertEqual(kdsRemember.status, 200, 'KDS: Remember me login succeeds');
     assertEqual(
       lifetimeHours(kdsRemember.body.access_token),
-      240,
-      'KDS: Remember me keeps the kitchen screen signed in for 10 days',
+      720,
+      'KDS: Remember me keeps the kitchen screen signed in for 30 days',
     );
 
     // KDS Test 2: Uppercase email

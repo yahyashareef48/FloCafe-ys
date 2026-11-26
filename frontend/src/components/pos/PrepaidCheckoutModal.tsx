@@ -35,6 +35,7 @@ import { useCurrencyUnitAdapter } from '@/hooks/useCurrencyUnitAdapter';
 import { getCountryByCode, getCurrencyMinorUnitFactor } from '@/lib/countries';
 import { getDiscountInputStep, normalizeFixedDiscountValue } from '@/lib/currency-input';
 import { CurrencyTouchNumberPad } from '@/components/pos/TouchNumberPad';
+import { usePadOnlyAmountEntry } from '@/hooks/usePadOnlyAmountEntry';
 import {
   defaultDiscountTypeForMode,
   isDiscountTypeAllowed,
@@ -121,6 +122,7 @@ export default function PrepaidCheckoutModal({
   const cart = useCartStore();
   const customer = cart.customer;
   const t = useTranslations('pos');
+  const padOnlyAmounts = usePadOnlyAmountEntry();
   const tCommon = useTranslations('common');
   const currencyFmt = useFormatCurrency();
   const fmtNum = useFormatNumber();
@@ -895,6 +897,7 @@ export default function PrepaidCheckoutModal({
               }
               step={getDiscountInputStep(unitAdapter.maxDecimals, discountType)}
               inputMode="none"
+              readOnly={padOnlyAmounts}
               className="w-full min-h-11 ps-8 pe-3 py-2 text-sm border border-purple-200 dark:border-purple-800/40 rounded-lg outline-none focus:ring-2 focus:ring-purple-400 bg-card"
             />
           </div>
@@ -994,6 +997,7 @@ export default function PrepaidCheckoutModal({
                     onChange={(e) => updatePaymentAmount(idx, e.target.value)}
                     placeholder="0.00"
                     inputMode="none"
+                    readOnly={padOnlyAmounts}
                     className="min-w-0 flex-1 px-2 py-2 text-end text-base font-semibold outline-none rounded-e-xl"
                     step={inputCurrencyStep}
                     min="0"
@@ -1076,6 +1080,7 @@ export default function PrepaidCheckoutModal({
                 placeholder="0.00"
                 disabled={walletBalance <= 0}
                 inputMode="none"
+                readOnly={padOnlyAmounts}
                 className="min-w-0 flex-1 px-2 py-2 text-end text-base font-semibold outline-none rounded-e-xl disabled:bg-muted"
                 step={inputCurrencyStep}
                 min="0"

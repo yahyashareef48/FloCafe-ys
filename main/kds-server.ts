@@ -293,7 +293,7 @@ export function startKdsServer(): Promise<void> {
         const token = jwt.sign(
           { userId: user.id, email: user.email, role: user.role, remember, jti: randomUUID() },
           getJWTSecret(),
-          { expiresIn: remember ? '10d' : '24h' },
+          { expiresIn: remember ? '30d' : '24h' },
         );
 
         res.json({
