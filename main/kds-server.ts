@@ -289,10 +289,11 @@ export function startKdsServer(): Promise<void> {
 
         resetSuccessfulLogin(ip);
 
+        const remember = req.body?.rememberMe === true || req.body?.remember_me === true;
         const token = jwt.sign(
-          { userId: user.id, email: user.email, role: user.role, jti: randomUUID() },
+          { userId: user.id, email: user.email, role: user.role, remember, jti: randomUUID() },
           getJWTSecret(),
-          { expiresIn: '24h' },
+          { expiresIn: remember ? '10d' : '24h' },
         );
 
         res.json({
