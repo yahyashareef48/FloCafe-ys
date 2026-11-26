@@ -53,8 +53,8 @@ import {
 const router = Router();
 
 const JWT_EXPIRES_IN = '24h';
-const JWT_REMEMBER_EXPIRES_IN = '10d';
-const JWT_REMEMBER_EXPIRES_IN_SECONDS = 10 * 24 * 60 * 60;
+const JWT_REMEMBER_EXPIRES_IN = '30d';
+const JWT_REMEMBER_EXPIRES_IN_SECONDS = 30 * 24 * 60 * 60;
 
 function expiresInFor(remember: boolean): SignOptions['expiresIn'] {
   return remember ? JWT_REMEMBER_EXPIRES_IN : JWT_EXPIRES_IN;
@@ -969,7 +969,9 @@ router.post('/setup/initialize', (req: Request, res: Response) => {
     }
 
     if (!VALID_BUSINESS_TYPES.has(normalizedBusinessType)) {
-      return res.status(400).json({ error: 'Al Baik POS setup only supports restaurant businesses' });
+      return res
+        .status(400)
+        .json({ error: 'Al Baik POS setup only supports restaurant businesses' });
     }
 
     if (!VALID_SETUP_PROFILES.has(normalizedSetupProfile)) {

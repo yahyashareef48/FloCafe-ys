@@ -319,7 +319,7 @@ export function startServerApp(): Promise<void> {
         const token = jwt.sign(
           { userId: user.id, email: user.email, role: user.role, jti: randomUUID() },
           getJWTSecret(),
-          { expiresIn: remember_me ? '10d' : '24h' },
+          { expiresIn: remember_me ? '30d' : '24h' },
         );
 
         res.json({
