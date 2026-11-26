@@ -50,6 +50,7 @@ import { sendBillViaFlo, shareBillViaWhatsApp } from '@/lib/whatsapp-share';
 import { useAuthStore } from '@/store/auth';
 import { tenantCan } from '@/lib/permissions';
 import { CurrencyTouchNumberPad } from '@/components/pos/TouchNumberPad';
+import { usePadOnlyAmountEntry } from '@/hooks/usePadOnlyAmountEntry';
 import {
   defaultDiscountTypeForMode,
   isDiscountTypeAllowed,
@@ -149,6 +150,7 @@ export default function PaymentModal({
   const effectiveCustomerId = bill.customer_id || cartCustomerId || null;
   const { confirm, ConfirmDialog } = useConfirm();
   const t = useTranslations('pos');
+  const padOnlyAmounts = usePadOnlyAmountEntry();
   const tExpenses = useTranslations('expenses');
   const locale = useLocale();
   const tCommon = useTranslations('common');
@@ -1829,6 +1831,7 @@ export default function PaymentModal({
                         }
                         step={getDiscountInputStep(unitAdapter.maxDecimals, discountType)}
                         inputMode="none"
+                        readOnly={padOnlyAmounts}
                         className="w-full min-h-11 ps-8 pe-3 py-2 text-sm border border-purple-200 dark:border-purple-800/40 rounded-lg outline-none focus:ring-2 focus:ring-purple-400 bg-card"
                       />
                     </div>
@@ -2101,6 +2104,7 @@ export default function PaymentModal({
                           onChange={(e) => updatePaymentAmount(idx, e.target.value)}
                           placeholder="0.00"
                           inputMode="none"
+                          readOnly={padOnlyAmounts}
                           className="min-w-0 flex-1 px-2 py-2 text-end text-base font-semibold outline-none rounded-e-xl"
                           step={inputCurrencyStep}
                           min="0"
@@ -2112,7 +2116,9 @@ export default function PaymentModal({
                         type="button"
                         data-testid="show-upi-qr"
                         disabled={!active}
-                        onClick={() => setUpiQrAmount(toStoredUnit(parseFloat(payment.amount) || 0))}
+                        onClick={() =>
+                          setUpiQrAmount(toStoredUnit(parseFloat(payment.amount) || 0))
+                        }
                         className="flex w-full min-h-11 items-center justify-center gap-2 rounded-xl border border-brand px-3 py-2 text-sm font-semibold text-brand hover:bg-brand/10 disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted"
                       >
                         <QrCode size={16} />
@@ -2233,6 +2239,7 @@ export default function PaymentModal({
                       placeholder="0.00"
                       disabled={processing || attemptLocked || walletBalance <= 0}
                       inputMode="none"
+                      readOnly={padOnlyAmounts}
                       className="min-w-0 flex-1 px-2 py-2 text-end text-base font-semibold outline-none rounded-e-xl disabled:bg-muted"
                       step={inputCurrencyStep}
                       min="0"
